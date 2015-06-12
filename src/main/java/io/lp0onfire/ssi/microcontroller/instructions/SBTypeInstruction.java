@@ -25,6 +25,7 @@ public abstract class SBTypeInstruction extends RV32Instruction {
   }
  
   public SBTypeInstruction(int instruction) {
+    super(instruction);
     // immediate is split over four fields
     imm = (instruction & 0b10000000000000000000000000000000) >> (31-12) 
         | (instruction & 0b01111110000000000000000000000000) >>> (25-5)

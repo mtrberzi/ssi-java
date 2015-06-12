@@ -26,6 +26,7 @@ public abstract class STypeInstruction extends RV32Instruction {
   }
  
   public STypeInstruction(int instruction) {
+    super(instruction);
     // immediate is split over two fields
     imm = (instruction & 0b11111110000000000000000000000000) >> (25-5) 
         | (instruction & 0b00000000000000000000111110000000) >>> 7;

@@ -30,6 +30,7 @@ public abstract class RTypeInstruction extends RV32Instruction {
   }
   
   public RTypeInstruction(int instruction) {
+    super(instruction);
     funct7 = (instruction & 0b11111110000000000000000000000000) >>> 25;
     rs2 = (instruction & 0b00000001111100000000000000000000) >>> 20;
     rs1 = (instruction & 0b00000000000011111000000000000000) >>> 15;
