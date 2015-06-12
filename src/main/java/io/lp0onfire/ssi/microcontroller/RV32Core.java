@@ -1,5 +1,7 @@
 package io.lp0onfire.ssi.microcontroller;
 
+import io.lp0onfire.ssi.microcontroller.instructions.*;
+
 public class RV32Core {
 
   private int xRegister[] = new int[32];
@@ -24,6 +26,42 @@ public class RV32Core {
     for (int i = 0; i < 32; ++i) {
       xRegister[i] = 0;
     }
+  }
+  public void execute(RV32_ADDI rv32_ADDI) {
+    // TODO Auto-generated method stub
+    
+  }
+  public void execute(RV32_ANDI rv32_ANDI) {
+    // TODO Auto-generated method stub
+    
+  }
+  public void execute(RV32_ORI rv32_ORI) {
+    // TODO Auto-generated method stub
+    
+  }
+  public void execute(RV32_SLLI rv32_SLLI) {
+    // TODO Auto-generated method stub
+    
+  }
+  public void execute(RV32_SLTI rv32_SLTI) {
+    // TODO Auto-generated method stub
+    
+  }
+  public void execute(RV32_SLTIU rv32_SLTIU) {
+    // TODO Auto-generated method stub
+    
+  }
+  public void execute(RV32_SRAI rv32_SRAI) {
+    // TODO Auto-generated method stub
+    
+  }
+  public void execute(RV32_SRLI rv32_SRLI) {
+    // TODO Auto-generated method stub
+    
+  }
+  public void execute(RV32_XORI rv32_XORI) {
+    // TODO Auto-generated method stub
+    
   }
   
 }

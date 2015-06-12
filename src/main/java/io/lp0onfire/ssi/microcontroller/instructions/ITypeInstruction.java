@@ -26,6 +26,7 @@ public abstract class ITypeInstruction extends RV32Instruction {
   }
   
   public ITypeInstruction(int instruction) {
+    super(instruction);
     imm = (instruction & 0b11111111111100000000000000000000) >> 20;
     rs1 = (instruction & 0b00000000000011111000000000000000) >>> 15;
     funct3 = (instruction & 0b00000000000000000111000000000000) >>> 12;

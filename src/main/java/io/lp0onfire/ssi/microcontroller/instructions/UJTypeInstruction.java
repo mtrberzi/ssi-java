@@ -17,6 +17,7 @@ public abstract class UJTypeInstruction extends RV32Instruction {
   }
   
   public UJTypeInstruction(int instruction) {
+    super(instruction);
     // immediate is broken over effectively four fields
     // [20] [10:1] [11] [19:12]
     imm = (instruction & 0x80000000) >> (31-20) // [20]
