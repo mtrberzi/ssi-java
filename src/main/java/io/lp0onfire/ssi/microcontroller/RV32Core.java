@@ -28,8 +28,8 @@ public class RV32Core {
     }
   }
   public void execute(RV32_ADDI rv32_ADDI) {
-    // TODO Auto-generated method stub
-    
+    int rs1 = getXRegister(rv32_ADDI.getRs1());
+    setXRegister(rv32_ADDI.getRd(), rs1 + rv32_ADDI.getImm());
   }
   public void execute(RV32_ANDI rv32_ANDI) {
     // TODO Auto-generated method stub
