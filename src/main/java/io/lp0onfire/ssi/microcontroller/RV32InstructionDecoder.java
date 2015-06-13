@@ -52,8 +52,12 @@ public class RV32InstructionDecoder {
     // 23: 48b
     // 24: BRANCH
     // 25: JALR
+    case 0b11001:
+      return new RV32_JALR(insn);
     // 26: reserved
     // 27: JAL
+    case 0b11011:
+      return new RV32_JAL(insn);
     // 28: SYSTEM
     // 29: reserved
     // 30: custom-3
