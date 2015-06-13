@@ -63,4 +63,16 @@ public class TestRV32Core {
     assertEquals(0x0000000F, cpu.getXRegister(1));
   }
   
+  @Test
+  public void testExecuteORI() throws IllegalInstructionException {
+    // load x1 with 0xFF000F0F
+    // and mask it with 0x000000FF
+    // to get 0xFF000FFF
+    RV32_ORI insn = new RV32_ORI(0b00001111111100001110000010010011);
+    RV32Core cpu = new RV32Core();
+    cpu.setXRegister(1, 0xFF000F0F);
+    cpu.execute(insn);
+    assertEquals(0xFF000FFF, cpu.getXRegister(1));
+  }
+  
 }
