@@ -33,7 +33,7 @@ public class TestRV32Core {
   }
   
   @Test
-  public void testExecuteADDI_PositiveImmediate() throws IllegalInstructionException {
+  public void testExecuteADDI_PositiveImmediate() {
     // ADDI x1, x0, 1
     RV32_ADDI insn = new RV32_ADDI(0b00000000000100000000000010010011);
     RV32Core cpu = new RV32Core();
@@ -42,7 +42,7 @@ public class TestRV32Core {
   }
   
   @Test
-  public void testExecuteADDI_NegativeImmediate() throws IllegalInstructionException {
+  public void testExecuteADDI_NegativeImmediate() {
     // ADDI x1, x0, -1
     RV32_ADDI insn = new RV32_ADDI(0b11111111111100000000000010010011);
     RV32Core cpu = new RV32Core();
@@ -51,9 +51,9 @@ public class TestRV32Core {
   }
   
   @Test
-  public void testExecuteANDI() throws IllegalInstructionException {
+  public void testExecuteANDI() {
     // load x1 with 0xFF000F0F
-    // and mask it with 0x000000FF
+    // and AND it with 0x000000FF
     // to get 0x0000000F
     // so ANDI x1, x1, 0x0FF
     RV32_ANDI insn = new RV32_ANDI(0b00001111111100001111000010010011);
@@ -64,15 +64,29 @@ public class TestRV32Core {
   }
   
   @Test
-  public void testExecuteORI() throws IllegalInstructionException {
+  public void testExecuteORI() {
     // load x1 with 0xFF000F0F
-    // and mask it with 0x000000FF
+    // and OR it with 0x0FF
     // to get 0xFF000FFF
+    // so ORI x1, x1, 0x0FF
     RV32_ORI insn = new RV32_ORI(0b00001111111100001110000010010011);
     RV32Core cpu = new RV32Core();
     cpu.setXRegister(1, 0xFF000F0F);
     cpu.execute(insn);
     assertEquals(0xFF000FFF, cpu.getXRegister(1));
+  }
+  
+  @Test
+  public void testExecuteXORI() {
+    // load x1 with 0xFF00F00F
+    // and XOR it with 0x0FF
+    // to get 0xFF00F0F0
+    // so XORI x1, x1, 0x0FF
+    RV32_XORI insn = new RV32_XORI(0b00001111111100001100000010010011);
+    RV32Core cpu = new RV32Core();
+    cpu.setXRegister(1, 0xFF00F00F);
+    cpu.execute(insn);
+    assertEquals(0xFF00F0F0, cpu.getXRegister(1));
   }
   
 }
