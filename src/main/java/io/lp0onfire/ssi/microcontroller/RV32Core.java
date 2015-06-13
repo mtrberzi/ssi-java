@@ -28,40 +28,50 @@ public class RV32Core {
     }
   }
   public void execute(RV32_ADD rv32_ADD) {
-    // TODO Auto-generated method stub
-    
+    int rs1 = getXRegister(rv32_ADD.getRs1());
+    int rs2 = getXRegister(rv32_ADD.getRs2());
+    setXRegister(rv32_ADD.getRd(), rs1 + rs2);
   }
   public void execute(RV32_ADDI rv32_ADDI) {
     int rs1 = getXRegister(rv32_ADDI.getRs1());
     setXRegister(rv32_ADDI.getRd(), rs1 + rv32_ADDI.getImm());
   }
   public void execute(RV32_AND rv32_AND) {
-    // TODO Auto-generated method stub
-    
+    int rs1 = getXRegister(rv32_AND.getRs1());
+    int rs2 = getXRegister(rv32_AND.getRs2());
+    setXRegister(rv32_AND.getRd(), rs1 & rs2);
   }
   public void execute(RV32_ANDI rv32_ANDI) {
     int rs1 = getXRegister(rv32_ANDI.getRs1());
     setXRegister(rv32_ANDI.getRd(), rs1 & rv32_ANDI.getImm());
   }
   public void execute(RV32_OR rv32_OR) {
-    // TODO Auto-generated method stub
-    
+    int rs1 = getXRegister(rv32_OR.getRs1());
+    int rs2 = getXRegister(rv32_OR.getRs2());
+    setXRegister(rv32_OR.getRd(), rs1 | rs2);
   }
   public void execute(RV32_ORI rv32_ORI) {
     int rs1 = getXRegister(rv32_ORI.getRs1());
     setXRegister(rv32_ORI.getRd(), rs1 | rv32_ORI.getImm());
   }
   public void execute(RV32_SLL rv32_SLL) {
-    // TODO Auto-generated method stub
-    
+    int rs1 = getXRegister(rv32_SLL.getRs1());
+    int rs2 = getXRegister(rv32_SLL.getRs2());
+    setXRegister(rv32_SLL.getRd(), rs1 << (rs2 & 0x0000001F));
   }
   public void execute(RV32_SLLI rv32_SLLI) {
     int rs1 = getXRegister(rv32_SLLI.getRs1());
     setXRegister(rv32_SLLI.getRd(), rs1 << rv32_SLLI.getShamt());
   }
   public void execute(RV32_SLT rv32_SLT) {
-    // TODO Auto-generated method stub
-    
+    int rs1 = getXRegister(rv32_SLT.getRs1());
+    int rs2 = getXRegister(rv32_SLT.getRs2());
+    boolean isLT = rs1 < rs2;
+    if (isLT) {
+      setXRegister(rv32_SLT.getRd(), 1);
+    } else {
+      setXRegister(rv32_SLT.getRd(), 0);
+    }
   }
   public void execute(RV32_SLTI rv32_SLTI) {
     int rs1 = getXRegister(rv32_SLTI.getRs1());
@@ -72,8 +82,14 @@ public class RV32Core {
     }
   }
   public void execute(RV32_SLTU rv32_SLTU) {
-    // TODO Auto-generated method stub
-    
+    int rs1 = getXRegister(rv32_SLTU.getRs1());
+    int rs2 = getXRegister(rv32_SLTU.getRs2());
+    boolean isLT = (rs1 < rs2) ^ (rs1 < 0) ^ (rs2 < 0);
+    if (isLT) {
+      setXRegister(rv32_SLTU.getRd(), 1);
+    } else {
+      setXRegister(rv32_SLTU.getRd(), 0);
+    }
   }
   public void execute(RV32_SLTIU rv32_SLTIU) {
     int i = getXRegister(rv32_SLTIU.getRs1());
@@ -86,28 +102,32 @@ public class RV32Core {
     }
   }
   public void execute(RV32_SRA rv32_SRA) {
-    // TODO Auto-generated method stub
-    
+    int rs1 = getXRegister(rv32_SRA.getRs1());
+    int rs2 = getXRegister(rv32_SRA.getRs2());
+    setXRegister(rv32_SRA.getRd(), rs1 >> (rs2 & 0x0000001F));
   }
   public void execute(RV32_SRAI rv32_SRAI) {
     int rs1 = getXRegister(rv32_SRAI.getRs1());
     setXRegister(rv32_SRAI.getRd(), rs1 >> rv32_SRAI.getShamt());
   }
   public void execute(RV32_SRL rv32_SRL) {
-    // TODO Auto-generated method stub
-    
+    int rs1 = getXRegister(rv32_SRL.getRs1());
+    int rs2 = getXRegister(rv32_SRL.getRs2());
+    setXRegister(rv32_SRL.getRd(), rs1 >>> (rs2 & 0x0000001F));
   }
   public void execute(RV32_SUB rv32_SUB) {
-    // TODO Auto-generated method stub
-    
+    int rs1 = getXRegister(rv32_SUB.getRs1());
+    int rs2 = getXRegister(rv32_SUB.getRs2());
+    setXRegister(rv32_SUB.getRd(), rs1 + rs2);
   }
   public void execute(RV32_SRLI rv32_SRLI) {
     int rs1 = getXRegister(rv32_SRLI.getRs1());
     setXRegister(rv32_SRLI.getRd(), rs1 >>> rv32_SRLI.getShamt());
   }
   public void execute(RV32_XOR rv32_XOR) {
-    // TODO Auto-generated method stub
-    
+    int rs1 = getXRegister(rv32_XOR.getRs1());
+    int rs2 = getXRegister(rv32_XOR.getRs2());
+    setXRegister(rv32_XOR.getRd(), rs1 ^ rs2);
   }
   public void execute(RV32_XORI rv32_XORI) {
     int rs1 = getXRegister(rv32_XORI.getRs1());
