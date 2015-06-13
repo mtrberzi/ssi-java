@@ -50,4 +50,17 @@ public class TestRV32Core {
     assertEquals(-1, cpu.getXRegister(1));
   }
   
+  @Test
+  public void testExecuteANDI() throws IllegalInstructionException {
+    // load x1 with 0xFF000F0F
+    // and mask it with 0x000000FF
+    // to get 0x0000000F
+    // so ANDI x1, x1, 0x0FF
+    RV32_ANDI insn = new RV32_ANDI(0b00001111111100001111000010010011);
+    RV32Core cpu = new RV32Core();
+    cpu.setXRegister(1, 0xFF000F0F);
+    cpu.execute(insn);
+    assertEquals(0x0000000F, cpu.getXRegister(1));
+  }
+  
 }
