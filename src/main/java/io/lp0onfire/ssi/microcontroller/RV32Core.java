@@ -64,6 +64,50 @@ public class RV32Core {
   public void execute(RV32_AUIPC rv32_AUIPC) {
     setXRegister(rv32_AUIPC.getRd(), getPC() + rv32_AUIPC.getImm());
   }
+  public void execute(RV32_BEQ rv32_BEQ) {
+    int rs1 = getXRegister(rv32_BEQ.getRs1());
+    int rs2 = getXRegister(rv32_BEQ.getRs2());
+    if (rs1 == rs2) {
+      setNextPC(getPC() + rv32_BEQ.getImm());
+    }
+  }
+  public void execute(RV32_BGE rv32_BGE) {
+    int rs1 = getXRegister(rv32_BGE.getRs1());
+    int rs2 = getXRegister(rv32_BGE.getRs2());
+    if (rs1 >= rs2) {
+      setNextPC(getPC() + rv32_BGE.getImm());
+    }
+  }
+  public void execute(RV32_BGEU rv32_BGEU) {
+    int rs1 = getXRegister(rv32_BGEU.getRs1());
+    int rs2 = getXRegister(rv32_BGEU.getRs2());
+    boolean isLT = (rs1 < rs2) ^ (rs1 < 0) ^ (rs2 < 0);
+    if (!isLT) {
+      setNextPC(getPC() + rv32_BGEU.getImm());
+    }
+  }
+  public void execute(RV32_BLT rv32_BLT) {
+    int rs1 = getXRegister(rv32_BLT.getRs1());
+    int rs2 = getXRegister(rv32_BLT.getRs2());
+    if (rs1 < rs2) {
+      setNextPC(getPC() + rv32_BLT.getImm());
+    }
+  }
+  public void execute(RV32_BLTU rv32_BLTU) {
+    int rs1 = getXRegister(rv32_BLTU.getRs1());
+    int rs2 = getXRegister(rv32_BLTU.getRs2());
+    boolean isLT = (rs1 < rs2) ^ (rs1 < 0) ^ (rs2 < 0);
+    if (isLT) {
+      setNextPC(getPC() + rv32_BLTU.getImm());
+    }
+  }
+  public void execute(RV32_BNE rv32_BNE) {
+    int rs1 = getXRegister(rv32_BNE.getRs1());
+    int rs2 = getXRegister(rv32_BNE.getRs2());
+    if (rs1 != rs2) {
+      setNextPC(getPC() + rv32_BNE.getImm());
+    }
+  }
   public void execute(RV32_JAL rv32_JAL) {
     int target = getPC() + rv32_JAL.getImm();
     setNextPC(target);

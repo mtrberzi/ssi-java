@@ -51,6 +51,8 @@ public class RV32InstructionDecoder {
     // 22: custom-2
     // 23: 48b
     // 24: BRANCH
+    case 0b11000:
+      return decode_BRANCH(insn);
     // 25: JALR
     case 0b11001:
       return new RV32_JALR(insn);
@@ -153,6 +155,28 @@ public class RV32InstructionDecoder {
       return new RV32_OR(insn);
     case 0b111:
       return new RV32_AND(insn);
+    default:
+      return new RV32IllegalInstruction(insn);
+    }
+  }
+  
+  private RV32Instruction decode_BRANCH(int insn) {
+    // opcode = 1100011
+    // now decode funct3
+    int funct3 = (insn & 0b00000000000000000111000000000000) >>> 12;
+    switch (funct3) {
+    case 0b000:
+      return new RV32_BEQ(insn);
+    case 0b001:
+      return new RV32_BNE(insn);
+    case 0b100:
+      return new RV32_BLT(insn);
+    case 0b101:
+      return new RV32_BGE(insn);
+    case 0b110:
+      return new RV32_BLTU(insn);
+    case 0b111:
+      return new RV32_BGEU(insn);
     default:
       return new RV32IllegalInstruction(insn);
     }
