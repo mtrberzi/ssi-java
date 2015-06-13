@@ -33,6 +33,8 @@ public class RV32InstructionDecoder {
     // 10: custom-1
     // 11: AMO
     // 12: OP
+    case 0b01100:
+      return decode_OP(insn);
     // 13: LUI
     // 14: OP-32
     // 15: 64b
@@ -98,7 +100,52 @@ public class RV32InstructionDecoder {
     case 0b111:
       return new RV32_ANDI(insn);
     default:
-      // TODO
+      return new RV32IllegalInstruction(insn);
+    }
+  }
+  
+  private RV32Instruction decode_OP(int insn) {
+    // opcode = 0110011
+    // now decode funct3
+    int funct3 = (insn & 0b00000000000000000111000000000000) >>> 12;
+    switch (funct3) {
+    case 0b000:
+    {
+      // decode funct7
+      int funct7 = (insn & 0b11111110000000000000000000000000) >>> 25;
+      if (funct7 == 0b0000000) {
+        return new RV32_ADD(insn);
+      } else if (funct7 == 0b0100000) {
+        return new RV32_SUB(insn);
+      } else {
+        return new RV32IllegalInstruction(insn);
+      }
+    }
+    case 0b001:
+      return new RV32_SLL(insn);
+    case 0b010:
+      return new RV32_SLT(insn);
+    case 0b011:
+      return new RV32_SLTU(insn);
+    case 0b100:
+      return new RV32_XOR(insn);
+    case 0b101:
+    {
+      // decode funct7
+      int funct7 = (insn & 0b11111110000000000000000000000000) >>> 25;
+      if (funct7 == 0b0000000) {
+        return new RV32_SRL(insn);
+      } else if (funct7 == 0b0100000) {
+        return new RV32_SRA(insn);
+      } else {
+        return new RV32IllegalInstruction(insn);
+      }
+    }
+    case 0b110:
+      return new RV32_OR(insn);
+    case 0b111:
+      return new RV32_AND(insn);
+    default:
       return new RV32IllegalInstruction(insn);
     }
   }
