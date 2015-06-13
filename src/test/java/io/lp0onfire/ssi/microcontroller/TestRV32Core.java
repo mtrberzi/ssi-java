@@ -77,6 +77,51 @@ public class TestRV32Core {
   }
   
   @Test
+  public void testExecuteSLLI() {
+    fail("not yet implemented");
+  }
+  
+  @Test
+  public void testExecuteSLTI_WritesOne() {
+    // load -5 into x1 and compare it to -1
+    // should place 1 into x2
+    // so SLTI x2, x1, -1
+    RV32_SLTI insn = new RV32_SLTI(0b11111111111100001010000100010011);
+    RV32Core cpu = new RV32Core();
+    cpu.setXRegister(1, -5);
+    cpu.execute(insn);
+    assertEquals(1, cpu.getXRegister(2));
+  }
+  
+  @Test
+  public void testExecuteSLTI_WritesZero() {
+    // load 3 into x1 and compare it to -1
+    // should place 0 into x2
+    // so SLTI x2, x1, -1
+    RV32_SLTI insn = new RV32_SLTI(0b11111111111100001010000100010011);
+    RV32Core cpu = new RV32Core();
+    cpu.setXRegister(1, 3);
+    cpu.setXRegister(2, -50); // allows us to check that x2 actually gets written
+    cpu.execute(insn);
+    assertEquals(0, cpu.getXRegister(2));
+  }
+  
+  @Test
+  public void testExecuteSLTIU() {
+    fail("not yet implemented");
+  }
+  
+  @Test
+  public void testExecuteSRAI() {
+    fail("not yet implemented");
+  }
+  
+  @Test
+  public void testExecuteSRLI() {
+    fail("not yet implemented");
+  }
+  
+  @Test
   public void testExecuteXORI() {
     // load x1 with 0xFF00F00F
     // and XOR it with 0x0FF

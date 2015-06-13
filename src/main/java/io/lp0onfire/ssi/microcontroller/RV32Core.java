@@ -44,8 +44,12 @@ public class RV32Core {
     
   }
   public void execute(RV32_SLTI rv32_SLTI) {
-    // TODO Auto-generated method stub
-    
+    int rs1 = getXRegister(rv32_SLTI.getRs1());
+    if (rs1 < rv32_SLTI.getImm()) {
+      setXRegister(rv32_SLTI.getRd(), 1);
+    } else {
+      setXRegister(rv32_SLTI.getRd(), 0);
+    }
   }
   public void execute(RV32_SLTIU rv32_SLTIU) {
     // TODO Auto-generated method stub
