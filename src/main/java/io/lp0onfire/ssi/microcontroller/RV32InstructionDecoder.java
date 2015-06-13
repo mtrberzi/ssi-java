@@ -26,6 +26,8 @@ public class RV32InstructionDecoder {
     case 0b00100:
       return decode_OP_IMM(insn);
     // 5: AUIPC
+    case 0b00101:
+      return new RV32_AUIPC(insn);
     // 6: OP-IMM-32
     // 7: 48b
     // 8: STORE
@@ -36,6 +38,8 @@ public class RV32InstructionDecoder {
     case 0b01100:
       return decode_OP(insn);
     // 13: LUI
+    case 0b01101:
+      return new RV32_LUI(insn);
     // 14: OP-32
     // 15: 64b
     // 16: MADD

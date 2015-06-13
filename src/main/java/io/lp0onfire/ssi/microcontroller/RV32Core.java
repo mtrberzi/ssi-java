@@ -22,6 +22,14 @@ public class RV32Core {
     }
   }
   
+  private int pc = 0;
+  protected int getPC() {
+    return this.pc;
+  }
+  protected void setPC(int value) {
+    this.pc = value;
+  }
+  
   public RV32Core() {
     for (int i = 0; i < 32; ++i) {
       xRegister[i] = 0;
@@ -44,6 +52,12 @@ public class RV32Core {
   public void execute(RV32_ANDI rv32_ANDI) {
     int rs1 = getXRegister(rv32_ANDI.getRs1());
     setXRegister(rv32_ANDI.getRd(), rs1 & rv32_ANDI.getImm());
+  }
+  public void execute(RV32_AUIPC rv32_AUIPC) {
+    setXRegister(rv32_AUIPC.getRd(), getPC() + rv32_AUIPC.getImm());
+  }
+  public void execute(RV32_LUI rv32_LUI) {
+    setXRegister(rv32_LUI.getRd(), rv32_LUI.getImm());
   }
   public void execute(RV32_OR rv32_OR) {
     int rs1 = getXRegister(rv32_OR.getRs1());
