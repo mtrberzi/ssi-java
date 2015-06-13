@@ -40,8 +40,8 @@ public class RV32Core {
     setXRegister(rv32_ORI.getRd(), rs1 | rv32_ORI.getImm());
   }
   public void execute(RV32_SLLI rv32_SLLI) {
-    // TODO Auto-generated method stub
-    
+    int rs1 = getXRegister(rv32_SLLI.getRs1());
+    setXRegister(rv32_SLLI.getRd(), rs1 << rv32_SLLI.getShamt());
   }
   public void execute(RV32_SLTI rv32_SLTI) {
     int rs1 = getXRegister(rv32_SLTI.getRs1());
@@ -52,16 +52,22 @@ public class RV32Core {
     }
   }
   public void execute(RV32_SLTIU rv32_SLTIU) {
-    // TODO Auto-generated method stub
-    
+    int i = getXRegister(rv32_SLTIU.getRs1());
+    int j = rv32_SLTIU.getImm();
+    boolean isLT = (i < j) ^ (i < 0) ^ (j < 0);
+    if (isLT) {
+      setXRegister(rv32_SLTIU.getRd(), 1);
+    } else {
+      setXRegister(rv32_SLTIU.getRd(), 0);
+    }
   }
   public void execute(RV32_SRAI rv32_SRAI) {
-    // TODO Auto-generated method stub
-    
+    int rs1 = getXRegister(rv32_SRAI.getRs1());
+    setXRegister(rv32_SRAI.getRd(), rs1 >> rv32_SRAI.getShamt());
   }
   public void execute(RV32_SRLI rv32_SRLI) {
-    // TODO Auto-generated method stub
-    
+    int rs1 = getXRegister(rv32_SRLI.getRs1());
+    setXRegister(rv32_SRLI.getRd(), rs1 >>> rv32_SRLI.getShamt());
   }
   public void execute(RV32_XORI rv32_XORI) {
     int rs1 = getXRegister(rv32_XORI.getRs1());

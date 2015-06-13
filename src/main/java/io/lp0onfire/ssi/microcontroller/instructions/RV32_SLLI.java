@@ -5,8 +5,14 @@ import io.lp0onfire.ssi.microcontroller.RV32Core;
 
 public class RV32_SLLI extends RTypeInstruction {
 
+  private final int shamt;
+  public int getShamt() {
+    return this.shamt;
+  }
+  
   public RV32_SLLI(int instruction) {
     super(instruction);
+    this.shamt = (instruction & 0b00000001111100000000000000000000) >>> 20;
   }
 
   @Override

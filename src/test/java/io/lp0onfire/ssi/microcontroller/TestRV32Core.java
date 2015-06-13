@@ -78,7 +78,15 @@ public class TestRV32Core {
   
   @Test
   public void testExecuteSLLI() {
-    fail("not yet implemented");
+    // load x1 with 0x000000FF
+    // and shift left by 8
+    // to get 0x0000FF00
+    // so SLLI x1, x1, 8
+    RV32_SLLI insn = new RV32_SLLI(0b00000000100000001001000010010011);
+    RV32Core cpu = new RV32Core();
+    cpu.setXRegister(1, 0x000000FF);
+    cpu.execute(insn);
+    assertEquals(0x0000FF00, cpu.getXRegister(1));
   }
   
   @Test
@@ -107,18 +115,42 @@ public class TestRV32Core {
   }
   
   @Test
-  public void testExecuteSLTIU() {
-    fail("not yet implemented");
+  public void testExecuteSLTIU_CompareToZero() {
+    // load -1 into x1 and compare it to 0
+    // should place 0 into x2
+    // so SLTIU x2, x1, 0
+    RV32_SLTIU insn = new RV32_SLTIU(0b00000000000000001011000100010011);
+    RV32Core cpu = new RV32Core();
+    cpu.setXRegister(1, -1);
+    cpu.setXRegister(2, -50);
+    cpu.execute(insn);
+    assertEquals(0, cpu.getXRegister(2));
   }
   
   @Test
   public void testExecuteSRAI() {
-    fail("not yet implemented");
+    // load x1 with 0xFF000000
+    // and shift right by 8
+    // to get 0xFFFF0000
+    // so SRLI x1, x1, 8
+    RV32_SRAI insn = new RV32_SRAI(0b01000000100000001101000010010011);
+    RV32Core cpu = new RV32Core();
+    cpu.setXRegister(1, 0xFF000000);
+    cpu.execute(insn);
+    assertEquals(0xFFFF0000, cpu.getXRegister(1));
   }
   
   @Test
   public void testExecuteSRLI() {
-    fail("not yet implemented");
+    // load x1 with 0x0000FF00
+    // and shift right by 8
+    // to get 0x000000FF
+    // so SRLI x1, x1, 8
+    RV32_SRLI insn = new RV32_SRLI(0b00000000100000001101000010010011);
+    RV32Core cpu = new RV32Core();
+    cpu.setXRegister(1, 0x0000FF00);
+    cpu.execute(insn);
+    assertEquals(0x000000FF, cpu.getXRegister(1));
   }
   
   @Test
