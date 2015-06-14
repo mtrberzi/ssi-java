@@ -19,6 +19,8 @@ public class RV32InstructionDecoder {
     
     switch (opcodeTag) {
     // 0: LOAD
+    case 0b00000:
+      return decode_LOAD(insn);
     // 1: LOAD-FP
     // 2: custom-0
     // 3: MISC-MEM
@@ -66,6 +68,26 @@ public class RV32InstructionDecoder {
     // 31: >= 80b
     default:
       // TODO
+      return new RV32IllegalInstruction(insn);
+    }
+  }
+  
+  private RV32Instruction decode_LOAD(int insn) {
+    // opcode = 0000011
+    // now decode funct3
+    int funct3 = (insn & 0b00000000000000000111000000000000) >>> 12;
+    switch (funct3) {
+    case 0b000:
+      return new RV32_LB(insn);
+    case 0b001:
+      return new RV32_LH(insn);
+    case 0b010:
+      return new RV32_LW(insn);
+    case 0b100:
+      return new RV32_LBU(insn);
+    case 0b101:
+      return new RV32_LHU(insn);
+    default:
       return new RV32IllegalInstruction(insn);
     }
   }

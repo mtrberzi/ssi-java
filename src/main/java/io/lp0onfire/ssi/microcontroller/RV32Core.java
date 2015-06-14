@@ -47,6 +47,9 @@ public class RV32Core {
     systemBus = new RV32SystemBus();
   }
   
+  private void addressTrap(AddressTrapException e) {
+    // TODO
+  }
   
   public void execute(RV32_ADD rv32_ADD) {
     int rs1 = getXRegister(rv32_ADD.getRs1());
@@ -123,8 +126,33 @@ public class RV32Core {
     setNextPC(target);
     setXRegister(rv32_JALR.getRd(), getPC() + 4);
   }
+  public void execute(RV32_LB rv32_LB) {
+    // TODO Auto-generated method stub
+    
+  }
+  public void execute(RV32_LBU rv32_LBU) {
+    // TODO Auto-generated method stub
+    
+  }
+  public void execute(RV32_LH rv32_LH) {
+    // TODO Auto-generated method stub
+    
+  }
+  public void execute(RV32_LHU rv32_LHU) {
+    // TODO Auto-generated method stub
+    
+  }
   public void execute(RV32_LUI rv32_LUI) {
     setXRegister(rv32_LUI.getRd(), rv32_LUI.getImm());
+  }
+  public void execute(RV32_LW rv32_LW) {
+    int addr = getXRegister(rv32_LW.getRs1()) + rv32_LW.getImm();
+    try {
+      int data = systemBus.loadWord(addr);
+      setXRegister(rv32_LW.getRd(), data);
+    } catch (AddressTrapException e) {
+      addressTrap(e);
+    }
   }
   public void execute(RV32_OR rv32_OR) {
     int rs1 = getXRegister(rv32_OR.getRs1());

@@ -11,8 +11,8 @@ public class RV32SystemBus {
   
   private static final int LAST_VALID_PAGE = 0xFFFFFFFF >>> 10;
   
-  public void attachPeripheral(SystemBusPeripheral p) {
-    int basePage = p.getBaseAddress() >>> 10;
+  public void attachPeripheral(SystemBusPeripheral p, int baseAddress) {
+    int basePage = baseAddress >>> 10;
     // first pass to validate, don't map anything yet
     for (int i = basePage; i < basePage + p.getNumberOfPages(); ++i) {
       if (i > LAST_VALID_PAGE) {
