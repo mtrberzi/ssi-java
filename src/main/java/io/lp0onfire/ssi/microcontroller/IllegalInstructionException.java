@@ -1,12 +1,13 @@
 package io.lp0onfire.ssi.microcontroller;
 
-public class IllegalInstructionException extends Exception {
+public class IllegalInstructionException extends ProcessorTrapException {
 
   private static final long serialVersionUID = 1L;
 
   private final int insn;
   
   public IllegalInstructionException(int insn) {
+    super(2);
     this.insn = insn;
   }
   
