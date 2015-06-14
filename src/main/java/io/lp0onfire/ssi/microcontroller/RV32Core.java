@@ -38,11 +38,16 @@ public class RV32Core {
     this.next_pc = value;
   }
   
+  private RV32SystemBus systemBus;
+  
   public RV32Core() {
     for (int i = 0; i < 32; ++i) {
       xRegister[i] = 0;
     }
+    systemBus = new RV32SystemBus();
   }
+  
+  
   public void execute(RV32_ADD rv32_ADD) {
     int rs1 = getXRegister(rv32_ADD.getRs1());
     int rs2 = getXRegister(rv32_ADD.getRs2());
