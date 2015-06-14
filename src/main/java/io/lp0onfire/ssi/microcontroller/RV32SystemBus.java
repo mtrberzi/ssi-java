@@ -29,8 +29,12 @@ public class RV32SystemBus {
   }
   
   public int loadByte(int address) throws AddressTrapException {
-    // TODO
-    throw new UnsupportedOperationException("not yet implemented");
+    int pageNumber = (address & 0xFFFFF800) >>> 10;
+    if (mappedPages.containsKey(pageNumber)) {
+      return mappedPages.get(pageNumber).readByte(address);
+    } else {
+      throw new AddressTrapException(5, address);
+    }
   }
   
   public int loadHalfword(int address) throws AddressTrapException {
