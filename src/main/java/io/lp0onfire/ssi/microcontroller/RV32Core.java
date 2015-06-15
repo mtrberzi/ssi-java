@@ -47,8 +47,23 @@ public class RV32Core {
     systemBus = new RV32SystemBus();
   }
   
-  private void addressTrap(AddressTrapException e) {
+  public void step() {
+    try {
+      // fetch + decode
+      RV32Instruction instruction = systemBus.fetchInstruction(pc);
+      next_pc = pc + 4;
+      instruction.execute(this);
+      pc = next_pc;
+    } catch (ProcessorTrapException e) {
+      processorTrap(e);
+    }
+  }
+  
+  private void processorTrap(ProcessorTrapException e) {
     // TODO
+    if (e instanceof AddressTrapException) {
+      // TODO set mbadaddr
+    }
     throw new IllegalStateException("unhandled trap");
   }
   
@@ -135,7 +150,7 @@ public class RV32Core {
       data = (data << 24) >> 24;
       setXRegister(rv32_LB.getRd(), data);
     } catch (AddressTrapException e) {
-      addressTrap(e);
+      processorTrap(e);
     }
   }
   public void execute(RV32_LBU rv32_LBU) {
@@ -146,7 +161,7 @@ public class RV32Core {
       data = (data & 0x000000FF);
       setXRegister(rv32_LBU.getRd(), data);
     } catch (AddressTrapException e) {
-      addressTrap(e);
+      processorTrap(e);
     }
   }
   public void execute(RV32_LH rv32_LH) {
@@ -157,7 +172,7 @@ public class RV32Core {
       data = (data << 16) >> 16;
       setXRegister(rv32_LH.getRd(), data);
     } catch (AddressTrapException e) {
-      addressTrap(e);
+      processorTrap(e);
     }
   }
   public void execute(RV32_LHU rv32_LHU) {
@@ -168,7 +183,7 @@ public class RV32Core {
       data = (data & 0x0000FFFF);
       setXRegister(rv32_LHU.getRd(), data);
     } catch (AddressTrapException e) {
-      addressTrap(e);
+      processorTrap(e);
     }
   }
   public void execute(RV32_LUI rv32_LUI) {
@@ -180,7 +195,7 @@ public class RV32Core {
       int data = systemBus.loadWord(addr);
       setXRegister(rv32_LW.getRd(), data);
     } catch (AddressTrapException e) {
-      addressTrap(e);
+      processorTrap(e);
     }
   }
   public void execute(RV32_OR rv32_OR) {
@@ -198,7 +213,7 @@ public class RV32Core {
     try {
       systemBus.storeByte(addr, data);
     } catch (AddressTrapException e) {
-      addressTrap(e);
+      processorTrap(e);
     }
   }
   public void execute(RV32_SH rv32_SH) {
@@ -207,7 +222,7 @@ public class RV32Core {
     try {
       systemBus.storeHalfword(addr, data);
     } catch (AddressTrapException e) {
-      addressTrap(e);
+      processorTrap(e);
     }
   }
   public void execute(RV32_SLL rv32_SLL) {
@@ -286,7 +301,7 @@ public class RV32Core {
     try {
       systemBus.storeWord(addr, data);
     } catch (AddressTrapException e) {
-      addressTrap(e);
+      processorTrap(e);
     }
   }
   public void execute(RV32_XOR rv32_XOR) {

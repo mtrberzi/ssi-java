@@ -166,4 +166,22 @@ public class TestRV32Core {
     assertEquals(0xFF00F0F0, cpu.getXRegister(1));
   }
   
+  @Test
+  public void testExecuteJALR() {
+    // load x1 with 0x76543210
+    // set the program counter to 0xFEDCBA98
+    // and JALR x2, 0(x1)
+    // then check that next_pc = 0x76543210
+    // and x2 = 0xFEDCBA98 + 4
+    
+    RV32_JALR insn = new RV32_JALR(0b00000000000000001000000101100111);
+    RV32Core cpu = new RV32Core();
+    cpu.setXRegister(1, 0x76543210);
+    cpu.setPC(0xFEDCBA98);
+    cpu.execute(insn);
+    assertEquals(0x76543210, cpu.getNextPC());
+    assertEquals(0xFEDCBA98 + 4, cpu.getXRegister(2));
+    
+  }
+  
 }

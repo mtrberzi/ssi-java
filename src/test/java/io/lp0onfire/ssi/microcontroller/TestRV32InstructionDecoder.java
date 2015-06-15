@@ -77,4 +77,11 @@ public class TestRV32InstructionDecoder {
     assertTrue(insn instanceof RV32_SLLI);
   }
   
+  @Test
+  public void testDecodeJALR() {
+    RV32InstructionDecoder dec = new RV32InstructionDecoder();
+    RV32Instruction insn = dec.decode(0x00008067);
+    assertTrue(insn instanceof RV32_JALR);
+  }
+  
 }
