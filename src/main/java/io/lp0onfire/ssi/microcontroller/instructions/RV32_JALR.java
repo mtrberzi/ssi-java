@@ -3,16 +3,10 @@ package io.lp0onfire.ssi.microcontroller.instructions;
 import io.lp0onfire.ssi.microcontroller.IllegalInstructionException;
 import io.lp0onfire.ssi.microcontroller.RV32Core;
 
-public class RV32_SRLI extends RTypeInstruction {
+public class RV32_JALR extends ITypeInstruction {
 
-  private final int shamt;
-  public int getShamt() {
-    return this.shamt;
-  }
-  
-  public RV32_SRLI(int instruction) {
+  public RV32_JALR(int instruction) {
     super(instruction);
-    this.shamt = (instruction & 0b00000001111100000000000000000000) >>> 20;
   }
 
   @Override

@@ -19,6 +19,8 @@ public class RV32InstructionDecoder {
     
     switch (opcodeTag) {
     // 0: LOAD
+    case 0b00000:
+      return decode_LOAD(insn);
     // 1: LOAD-FP
     // 2: custom-0
     // 3: MISC-MEM
@@ -26,14 +28,22 @@ public class RV32InstructionDecoder {
     case 0b00100:
       return decode_OP_IMM(insn);
     // 5: AUIPC
+    case 0b00101:
+      return new RV32_AUIPC(insn);
     // 6: OP-IMM-32
     // 7: 48b
     // 8: STORE
+    case 0b01000:
+      return decode_STORE(insn);
     // 9: STORE-FP
     // 10: custom-1
     // 11: AMO
     // 12: OP
+    case 0b01100:
+      return decode_OP(insn);
     // 13: LUI
+    case 0b01101:
+      return new RV32_LUI(insn);
     // 14: OP-32
     // 15: 64b
     // 16: MADD
@@ -45,15 +55,41 @@ public class RV32InstructionDecoder {
     // 22: custom-2
     // 23: 48b
     // 24: BRANCH
+    case 0b11000:
+      return decode_BRANCH(insn);
     // 25: JALR
+    case 0b11001:
+      return new RV32_JALR(insn);
     // 26: reserved
     // 27: JAL
+    case 0b11011:
+      return new RV32_JAL(insn);
     // 28: SYSTEM
     // 29: reserved
     // 30: custom-3
     // 31: >= 80b
     default:
       // TODO
+      return new RV32IllegalInstruction(insn);
+    }
+  }
+  
+  private RV32Instruction decode_LOAD(int insn) {
+    // opcode = 0000011
+    // now decode funct3
+    int funct3 = (insn & 0b00000000000000000111000000000000) >>> 12;
+    switch (funct3) {
+    case 0b000:
+      return new RV32_LB(insn);
+    case 0b001:
+      return new RV32_LH(insn);
+    case 0b010:
+      return new RV32_LW(insn);
+    case 0b100:
+      return new RV32_LBU(insn);
+    case 0b101:
+      return new RV32_LHU(insn);
+    default:
       return new RV32IllegalInstruction(insn);
     }
   }
@@ -98,7 +134,90 @@ public class RV32InstructionDecoder {
     case 0b111:
       return new RV32_ANDI(insn);
     default:
-      // TODO
+      return new RV32IllegalInstruction(insn);
+    }
+  }
+  
+  private RV32Instruction decode_STORE(int insn) {
+    // opcode = 0100011
+    // now decode funct3
+    int funct3 = (insn & 0b00000000000000000111000000000000) >>> 12;
+    switch (funct3) {
+    case 0b000:
+      return new RV32_SB(insn);
+    case 0b001:
+      return new RV32_SH(insn);
+    case 0b010:
+      return new RV32_SW(insn);
+    default:
+      return new RV32IllegalInstruction(insn);
+    }
+  }
+  
+  private RV32Instruction decode_OP(int insn) {
+    // opcode = 0110011
+    // now decode funct3
+    int funct3 = (insn & 0b00000000000000000111000000000000) >>> 12;
+    switch (funct3) {
+    case 0b000:
+    {
+      // decode funct7
+      int funct7 = (insn & 0b11111110000000000000000000000000) >>> 25;
+      if (funct7 == 0b0000000) {
+        return new RV32_ADD(insn);
+      } else if (funct7 == 0b0100000) {
+        return new RV32_SUB(insn);
+      } else {
+        return new RV32IllegalInstruction(insn);
+      }
+    }
+    case 0b001:
+      return new RV32_SLL(insn);
+    case 0b010:
+      return new RV32_SLT(insn);
+    case 0b011:
+      return new RV32_SLTU(insn);
+    case 0b100:
+      return new RV32_XOR(insn);
+    case 0b101:
+    {
+      // decode funct7
+      int funct7 = (insn & 0b11111110000000000000000000000000) >>> 25;
+      if (funct7 == 0b0000000) {
+        return new RV32_SRL(insn);
+      } else if (funct7 == 0b0100000) {
+        return new RV32_SRA(insn);
+      } else {
+        return new RV32IllegalInstruction(insn);
+      }
+    }
+    case 0b110:
+      return new RV32_OR(insn);
+    case 0b111:
+      return new RV32_AND(insn);
+    default:
+      return new RV32IllegalInstruction(insn);
+    }
+  }
+  
+  private RV32Instruction decode_BRANCH(int insn) {
+    // opcode = 1100011
+    // now decode funct3
+    int funct3 = (insn & 0b00000000000000000111000000000000) >>> 12;
+    switch (funct3) {
+    case 0b000:
+      return new RV32_BEQ(insn);
+    case 0b001:
+      return new RV32_BNE(insn);
+    case 0b100:
+      return new RV32_BLT(insn);
+    case 0b101:
+      return new RV32_BGE(insn);
+    case 0b110:
+      return new RV32_BLTU(insn);
+    case 0b111:
+      return new RV32_BGEU(insn);
+    default:
       return new RV32IllegalInstruction(insn);
     }
   }
