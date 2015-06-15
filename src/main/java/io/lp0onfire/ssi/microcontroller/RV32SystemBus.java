@@ -11,6 +11,12 @@ public class RV32SystemBus {
   
   private static final int LAST_VALID_PAGE = 0xFFFFFFFF >>> 10;
   
+  private RV32InstructionDecoder decoder;
+  
+  public RV32SystemBus() {
+    this.decoder = new RV32InstructionDecoder();
+  }
+  
   public void attachPeripheral(SystemBusPeripheral p, int baseAddress) {
     int basePage = baseAddress >>> 10;
     // first pass to validate, don't map anything yet
@@ -63,22 +69,27 @@ public class RV32SystemBus {
     }
   }
   
-  public int fetchInstruction(int address) throws ProcessorTrapException {
+  public RV32Instruction fetchInstruction(int address) throws AddressTrapException {
     // must be 4-byte aligned
     if ((address & 0x00000003) != 0) {
       throw new AddressTrapException(0, address);
     }
     int pageNumber = (address & 0xFFFFF800) >>> 10;
     if (mappedPages.containsKey(pageNumber)) {
-      return mappedPages.get(pageNumber).readWord(address);
+      int insn = mappedPages.get(pageNumber).readWord(address);
+      return decoder.decode(insn);
     } else {
       throw new AddressTrapException(1, address);
     }
   }
   
   public void storeByte(int address, int value) throws AddressTrapException {
-    // TODO
-    throw new UnsupportedOperationException("not yet implemented");
+    int pageNumber = (address & 0xFFFFF800) >>> 10;
+    if (mappedPages.containsKey(pageNumber)) {
+      mappedPages.get(pageNumber).writeByte(address, value);
+    } else {
+      throw new AddressTrapException(7, address);
+    }
   }
   
   public void storeHalfword(int address, int value) throws AddressTrapException {
@@ -86,8 +97,12 @@ public class RV32SystemBus {
     if ((address & 0x00000001) != 0) {
       throw new AddressTrapException(6, address);
     }
-    // TODO
-    throw new UnsupportedOperationException("not yet implemented");
+    int pageNumber = (address & 0xFFFFF800) >>> 10;
+    if (mappedPages.containsKey(pageNumber)) {
+      mappedPages.get(pageNumber).writeHalfword(address, value);
+    } else {
+      throw new AddressTrapException(7, address);
+    }
   }
   
   public void storeWord(int address, int value) throws AddressTrapException {
@@ -95,8 +110,12 @@ public class RV32SystemBus {
     if ((address & 0x00000003) != 0) {
       throw new AddressTrapException(6, address);
     }
-    // TODO
-    throw new UnsupportedOperationException("not yet implemented");
+    int pageNumber = (address & 0xFFFFF800) >>> 10;
+    if (mappedPages.containsKey(pageNumber)) {
+      mappedPages.get(pageNumber).writeWord(address, value);
+    } else {
+      throw new AddressTrapException(7, address);
+    }
   }
   
 }

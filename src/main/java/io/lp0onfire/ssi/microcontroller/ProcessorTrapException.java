@@ -4,6 +4,8 @@ public class ProcessorTrapException extends Exception {
 
   private static final long serialVersionUID = 1L;
   
+  // TODO use an enum instead of an int for mcause
+  
   private final int mcause;
   public int getMCause() {
     return this.mcause;
