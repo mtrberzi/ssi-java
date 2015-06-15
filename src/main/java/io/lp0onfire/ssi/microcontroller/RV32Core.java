@@ -49,6 +49,7 @@ public class RV32Core {
   
   private void addressTrap(AddressTrapException e) {
     // TODO
+    throw new IllegalStateException("unhandled trap");
   }
   
   public void execute(RV32_ADD rv32_ADD) {
@@ -127,20 +128,48 @@ public class RV32Core {
     setXRegister(rv32_JALR.getRd(), getPC() + 4);
   }
   public void execute(RV32_LB rv32_LB) {
-    // TODO Auto-generated method stub
-    
+    int addr = getXRegister(rv32_LB.getRs1()) + rv32_LB.getImm();
+    try {
+      int data = systemBus.loadWord(addr);
+      // sign-extend to 32 bits
+      data = (data << 24) >> 24;
+      setXRegister(rv32_LB.getRd(), data);
+    } catch (AddressTrapException e) {
+      addressTrap(e);
+    }
   }
   public void execute(RV32_LBU rv32_LBU) {
-    // TODO Auto-generated method stub
-    
+    int addr = getXRegister(rv32_LBU.getRs1()) + rv32_LBU.getImm();
+    try {
+      int data = systemBus.loadWord(addr);
+      // zero-extend to 32 bits
+      data = (data & 0x000000FF);
+      setXRegister(rv32_LBU.getRd(), data);
+    } catch (AddressTrapException e) {
+      addressTrap(e);
+    }
   }
   public void execute(RV32_LH rv32_LH) {
-    // TODO Auto-generated method stub
-    
+    int addr = getXRegister(rv32_LH.getRs1()) + rv32_LH.getImm();
+    try {
+      int data = systemBus.loadWord(addr);
+      // sign-extend to 32 bits
+      data = (data << 16) >> 16;
+      setXRegister(rv32_LH.getRd(), data);
+    } catch (AddressTrapException e) {
+      addressTrap(e);
+    }
   }
   public void execute(RV32_LHU rv32_LHU) {
-    // TODO Auto-generated method stub
-    
+    int addr = getXRegister(rv32_LHU.getRs1()) + rv32_LHU.getImm();
+    try {
+      int data = systemBus.loadWord(addr);
+      // zero-extend to 32 bits
+      data = (data & 0x0000FFFF);
+      setXRegister(rv32_LHU.getRd(), data);
+    } catch (AddressTrapException e) {
+      addressTrap(e);
+    }
   }
   public void execute(RV32_LUI rv32_LUI) {
     setXRegister(rv32_LUI.getRd(), rv32_LUI.getImm());
@@ -162,6 +191,24 @@ public class RV32Core {
   public void execute(RV32_ORI rv32_ORI) {
     int rs1 = getXRegister(rv32_ORI.getRs1());
     setXRegister(rv32_ORI.getRd(), rs1 | rv32_ORI.getImm());
+  }
+  public void execute(RV32_SB rv32_SB) {
+    int addr = getXRegister(rv32_SB.getRs1()) + rv32_SB.getImm();
+    int data = getXRegister(rv32_SB.getRs2()) & 0x000000FF;
+    try {
+      systemBus.storeByte(addr, data);
+    } catch (AddressTrapException e) {
+      addressTrap(e);
+    }
+  }
+  public void execute(RV32_SH rv32_SH) {
+    int addr = getXRegister(rv32_SH.getRs1()) + rv32_SH.getImm();
+    int data = getXRegister(rv32_SH.getRs2()) & 0x0000FFFF;
+    try {
+      systemBus.storeHalfword(addr, data);
+    } catch (AddressTrapException e) {
+      addressTrap(e);
+    }
   }
   public void execute(RV32_SLL rv32_SLL) {
     int rs1 = getXRegister(rv32_SLL.getRs1());
@@ -224,14 +271,23 @@ public class RV32Core {
     int rs2 = getXRegister(rv32_SRL.getRs2());
     setXRegister(rv32_SRL.getRd(), rs1 >>> (rs2 & 0x0000001F));
   }
+  public void execute(RV32_SRLI rv32_SRLI) {
+    int rs1 = getXRegister(rv32_SRLI.getRs1());
+    setXRegister(rv32_SRLI.getRd(), rs1 >>> rv32_SRLI.getShamt());
+  }
   public void execute(RV32_SUB rv32_SUB) {
     int rs1 = getXRegister(rv32_SUB.getRs1());
     int rs2 = getXRegister(rv32_SUB.getRs2());
     setXRegister(rv32_SUB.getRd(), rs1 + rs2);
   }
-  public void execute(RV32_SRLI rv32_SRLI) {
-    int rs1 = getXRegister(rv32_SRLI.getRs1());
-    setXRegister(rv32_SRLI.getRd(), rs1 >>> rv32_SRLI.getShamt());
+  public void execute(RV32_SW rv32_SW) {
+    int addr = getXRegister(rv32_SW.getRs1()) + rv32_SW.getImm();
+    int data = getXRegister(rv32_SW.getRs2());
+    try {
+      systemBus.storeWord(addr, data);
+    } catch (AddressTrapException e) {
+      addressTrap(e);
+    }
   }
   public void execute(RV32_XOR rv32_XOR) {
     int rs1 = getXRegister(rv32_XOR.getRs1());

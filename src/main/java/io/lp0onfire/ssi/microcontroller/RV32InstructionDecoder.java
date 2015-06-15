@@ -33,6 +33,8 @@ public class RV32InstructionDecoder {
     // 6: OP-IMM-32
     // 7: 48b
     // 8: STORE
+    case 0b01000:
+      return decode_STORE(insn);
     // 9: STORE-FP
     // 10: custom-1
     // 11: AMO
@@ -131,6 +133,22 @@ public class RV32InstructionDecoder {
       return new RV32_ORI(insn);
     case 0b111:
       return new RV32_ANDI(insn);
+    default:
+      return new RV32IllegalInstruction(insn);
+    }
+  }
+  
+  private RV32Instruction decode_STORE(int insn) {
+    // opcode = 0100011
+    // now decode funct3
+    int funct3 = (insn & 0b00000000000000000111000000000000) >>> 12;
+    switch (funct3) {
+    case 0b000:
+      return new RV32_SB(insn);
+    case 0b001:
+      return new RV32_SH(insn);
+    case 0b010:
+      return new RV32_SW(insn);
     default:
       return new RV32IllegalInstruction(insn);
     }
