@@ -39,6 +39,9 @@ public class RV32Core {
   }
   
   private RV32SystemBus systemBus;
+  public RV32SystemBus getSystemBus() {
+    return this.systemBus;
+  }
   
   public RV32Core() {
     for (int i = 0; i < 32; ++i) {
