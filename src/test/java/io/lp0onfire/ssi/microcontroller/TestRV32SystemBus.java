@@ -71,4 +71,69 @@ public class TestRV32SystemBus {
     bus.loadByte(0xE1234120);
   }
   
+  @Test
+  public void testLoadByte_UnmappedPage() {
+    try {
+      bus.loadByte(0xABADD00D);
+      fail("access to unmapped page not detected");
+    } catch (AddressTrapException e) {
+      assertEquals(5, e.getMCause());
+      assertEquals(0xABADD00D, e.getBadAddr());
+    }
+  }
+  
+  @Test
+  public void testLoadHalfword() throws AddressTrapException {
+    bus.loadHalfword(0xE1234120);
+  }
+  
+  @Test
+  public void testLoadHalfword_UnmappedPage() {
+    try {
+      bus.loadHalfword(0xABADD00E);
+      fail("access to unmapped page not detected");
+    } catch (AddressTrapException e) {
+      assertEquals(5, e.getMCause());
+      assertEquals(0xABADD00E, e.getBadAddr());
+    }
+  }
+  
+  @Test
+  public void testLoadHalfword_UnalignedAddress() {
+    try {
+      bus.loadHalfword(0xABADD00D);
+      fail("unaligned access not detected");
+    } catch (AddressTrapException e) {
+      assertEquals(4, e.getMCause());
+      assertEquals(0xABADD00D, e.getBadAddr());
+    }
+  }
+  
+  @Test
+  public void testLoadWord() throws AddressTrapException {
+    bus.loadWord(0xE1234120);
+  }
+  
+  @Test
+  public void testLoadWord_UnmappedPage() {
+    try {
+      bus.loadWord(0xABADD00C);
+      fail("access to unmapped page not detected");
+    } catch (AddressTrapException e) {
+      assertEquals(5, e.getMCause());
+      assertEquals(0xABADD00C, e.getBadAddr());
+    }
+  }
+  
+  @Test
+  public void testLoadWord_UnalignedAccess() {
+    try {
+      bus.loadWord(0xABADD00D);
+      fail("unaligned access not detected");
+    } catch (AddressTrapException e) {
+      assertEquals(4, e.getMCause());
+      assertEquals(0xABADD00D, e.getBadAddr());
+    }
+  }
+  
 }
