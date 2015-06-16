@@ -105,7 +105,30 @@ public class IntTestCodeExecutionCPUOnly {
       assertEquals("failed test case " + Integer.toString(i), 
           expected_a0[i], cpu.getXRegister(10));
     }
+  }
+  
+  @Test
+  public void testMaxU() {
+    // puts the larger of a0 and a1 into a0 (unsigned compare)
+    int[] program = {
+        0x00a5e463,
+        0x00058513,
+        0x00008067,
+    };
     
+    int[] testData_a0 = {1, 12, 4,  0xFFFF0000};
+    int[] testData_a1 = {0, 6,  23, 0x0000000F};
+    int[] expected_a0 = {1, 12, 23, 0xFFFF0000};
+    
+    for (int i = 0; i < expected_a0.length; ++i) {
+      setup();
+      loadProgram(program);
+      cpu.setXRegister(10, testData_a0[i]);
+      cpu.setXRegister(11, testData_a1[i]);
+      run(3);
+      assertEquals("failed test case " + Integer.toString(i), 
+          expected_a0[i], cpu.getXRegister(10));
+    }
   }
   
 }

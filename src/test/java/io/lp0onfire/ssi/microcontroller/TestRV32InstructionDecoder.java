@@ -91,4 +91,11 @@ public class TestRV32InstructionDecoder {
     assertTrue(insn instanceof RV32_BLT);
   }
   
+  @Test
+  public void testDecodeBLTU() {
+    RV32InstructionDecoder dec = new RV32InstructionDecoder();
+    RV32Instruction insn = dec.decode(0x00a5e463);
+    assertTrue(insn instanceof RV32_BLTU);
+  }
+  
 }
