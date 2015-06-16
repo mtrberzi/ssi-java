@@ -1,5 +1,7 @@
 package io.lp0onfire.ssi.microcontroller;
 
+import static org.junit.Assert.*;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -64,6 +66,46 @@ public class IntTestCodeExecutionCPUOnly {
     };
     loadProgram(program);
     run(1);
+  }
+  
+  @Test
+  public void testDoubleA0() {
+    // copies the value in a0 to t0,
+    // then adds a0 and t0 and places the result in a0
+    int[] program = {
+      0x00050293,
+      0x00550533,
+      0x00008067,
+    };
+    loadProgram(program);
+    cpu.setXRegister(10, 21);
+    run(3);
+    assertEquals(42, cpu.getXRegister(10));
+  }
+  
+  @Test
+  public void testMaxS() {
+    // puts the larger of a0 and a1 into a0 (signed compare)
+    int[] program = {
+        0x00a5c463,
+        0x00058513,
+        0x00008067,
+    };
+    
+    int[] testData_a0 = {1, 12, 4,  -3};
+    int[] testData_a1 = {0, 6,  23, -2};
+    int[] expected_a0 = {1, 12, 23, -2};
+    
+    for (int i = 0; i < expected_a0.length; ++i) {
+      setup();
+      loadProgram(program);
+      cpu.setXRegister(10, testData_a0[i]);
+      cpu.setXRegister(11, testData_a1[i]);
+      run(3);
+      assertEquals("failed test case " + Integer.toString(i), 
+          expected_a0[i], cpu.getXRegister(10));
+    }
+    
   }
   
 }

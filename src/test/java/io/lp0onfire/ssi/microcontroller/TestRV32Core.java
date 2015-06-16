@@ -180,8 +180,33 @@ public class TestRV32Core {
     cpu.setPC(0xFEDCBA98);
     cpu.execute(insn);
     assertEquals(0x76543210, cpu.getNextPC());
-    assertEquals(0xFEDCBA98 + 4, cpu.getXRegister(2));
-    
+    assertEquals(0xFEDCBA98 + 4, cpu.getXRegister(2));    
+  }
+  
+  @Test
+  public void testExecuteBLT_Taken() {
+    // load x10 with -1, load x11 with 1
+    // and BLT x11, x10, +8
+    // since the branch is taken next_pc should be 8
+    RV32_BLT insn = new RV32_BLT(0x00b54463);
+    RV32Core cpu = new RV32Core();
+    cpu.setXRegister(10, -1);
+    cpu.setXRegister(11, 1);
+    cpu.execute(insn);
+    assertEquals(8, cpu.getNextPC());
+  }
+  
+  @Test
+  public void testExecuteBLT_NotTaken() {
+    // load x10 with 1, load x11 with -1
+    // and BLT x11, x10, +8
+    // since the branch is taken next_pc should not be 8
+    RV32_BLT insn = new RV32_BLT(0x00b54463);
+    RV32Core cpu = new RV32Core();
+    cpu.setXRegister(10, 1);
+    cpu.setXRegister(11, -1);
+    cpu.execute(insn);
+    assertNotEquals(8, cpu.getNextPC());
   }
   
 }
