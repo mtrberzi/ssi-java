@@ -28,6 +28,9 @@ public class IntTestCodeExecutionCPUOnly {
     cpu.getSystemBus().attachPeripheral(textMemory, textMemoryBase);
     dataMemory = new RAM(dataMemoryPages);
     cpu.getSystemBus().attachPeripheral(dataMemory, dataMemoryBase);
+    // stack pointer initially goes to top of RAM, 16-byte aligned
+    int dataMemoryTop = dataMemoryBase + (dataMemoryPages * 1024) - 1;
+    cpu.setXRegister(2, dataMemoryTop & 0xFFFFFFF0);
   }
   
   private void loadProgram(int[] text) {
@@ -174,6 +177,55 @@ public class IntTestCodeExecutionCPUOnly {
         assertEquals("failed test case " + Integer.toString(i), 
             testArray[testArray.length - 1], cpu.getXRegister(10));
       }
+    }
+    
+  }
+  
+  // TODO comment this out and test these instructions separately
+  @Test
+  public void testFibonacciRecursive() {
+    // call with n in a0, returns fib(n) in a0
+    int[] program = {
+        0xfe010113,
+        0x00112e23,
+        0x00812c23,
+        0x00912a23,
+        0x02010413,
+        0xfea42623,
+        0xfec42703,
+        0x00100793,
+        0x00e7c663,
+        0xfec42783,
+        0x0300006f,
+        0xfec42783,
+        0xfff78793,
+        0x00078513,
+        0xfc9ff0ef,
+        0x00050493,
+        0xfec42783,
+        0xffe78793,
+        0x00078513,
+        0xfb5ff0ef,
+        0x00050793,
+        0x00f487b3,
+        0x00078513,
+        0x01c12083,
+        0x01812403,
+        0x01412483,
+        0x02010113,
+        0x00008067,
+    };
+    
+    int[] fib = {0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610};
+    
+    for (int i = 0; i < 16; ++i) {
+      setup();
+      loadProgram(program);
+      int expected = fib[i];
+      cpu.setXRegister(10, i);
+      System.err.println("computing fib(" + i + ")");
+      run(45000);
+      assertEquals(expected, cpu.getXRegister(10));
     }
     
   }
