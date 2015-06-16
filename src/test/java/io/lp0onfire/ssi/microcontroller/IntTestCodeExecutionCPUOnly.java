@@ -223,8 +223,8 @@ public class IntTestCodeExecutionCPUOnly {
       loadProgram(program);
       int expected = fib[i];
       cpu.setXRegister(10, i);
-      System.err.println("computing fib(" + i + ")");
-      run(45000);
+      //System.err.println("computing fib(" + i + ")");
+      run(42415); // EXACT for fib(15)
       assertEquals(expected, cpu.getXRegister(10));
     }
     
