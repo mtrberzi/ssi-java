@@ -7,6 +7,42 @@ import org.junit.Test;
 
 public class TestRV32Core {
 
+  class TestPeripheral implements SystemBusPeripheral {
+    
+    @Override
+    public int getNumberOfPages() {
+      return 1;
+    }
+
+    @Override
+    public int readByte(int address) throws AddressTrapException {
+      return 0x042;
+    }
+
+    @Override
+    public int readHalfword(int address) throws AddressTrapException {
+      return 0x02142;
+    }
+
+    @Override
+    public int readWord(int address) throws AddressTrapException {
+      return 0xabadd00d;
+    }
+
+    @Override
+    public void writeByte(int address, int value) throws AddressTrapException {
+    }
+
+    @Override
+    public void writeHalfword(int address, int value) throws AddressTrapException {
+    }
+
+    @Override
+    public void writeWord(int address, int value) throws AddressTrapException {
+    }
+    
+  }
+  
   @Test
   public void testReadAfterWrite() {
     RV32Core cpu = new RV32Core();
@@ -231,6 +267,17 @@ public class TestRV32Core {
     cpu.setXRegister(11, -1);
     cpu.execute(insn);
     assertNotEquals(8, cpu.getNextPC());
+  }
+  
+  @Test
+  public void testExecuteLW() {
+    // lw a0, 0(t0)
+    RV32_LW insn = new RV32_LW(0x0002a503);
+    RV32Core cpu = new RV32Core();
+    cpu.getSystemBus().attachPeripheral(new TestPeripheral(), 0x10000000);
+    cpu.setXRegister(5, 0x10000000);
+    cpu.execute(insn);
+    assertEquals(0xabadd00d, cpu.getXRegister(10));
   }
   
 }

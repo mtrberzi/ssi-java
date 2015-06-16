@@ -131,4 +131,51 @@ public class IntTestCodeExecutionCPUOnly {
     }
   }
   
+  @Test
+  public void testLastElementOfArray() throws AddressTrapException {
+    // puts the last element of an array into a0,
+    // or -1 if the array is empty
+    int[] program = {
+          0x00058c63,
+          0xfff58293,
+          0x00229293,
+          0x00a282b3,
+          0x0002a503, 
+          0x00008067,
+          0xfff00513,
+          0x00008067,
+    };
+    
+    int[][] testData = {
+        {},
+        {1},
+        {1, 2, 3},
+        {-4, -3, -2, -1},
+        {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20},
+    };
+    
+    for (int i = 0; i < testData.length; ++i) {
+      setup();
+      loadProgram(program);
+      int[] testArray = testData[i];
+      for (int aPtr = 0; aPtr < testArray.length; ++aPtr) {
+        int address = dataMemoryBase + 4*aPtr;
+        dataMemory.writeWord(address, testArray[aPtr]);
+      }
+      // put the address of the array into a0
+      cpu.setXRegister(10, dataMemoryBase);
+      // put the length of the array into a1
+      cpu.setXRegister(11, testArray.length);
+      run(6);
+      if (testArray.length == 0) {
+        assertEquals("failed test case " + Integer.toString(i), 
+            -1, cpu.getXRegister(10));
+      } else {
+        assertEquals("failed test case " + Integer.toString(i), 
+            testArray[testArray.length - 1], cpu.getXRegister(10));
+      }
+    }
+    
+  }
+  
 }
