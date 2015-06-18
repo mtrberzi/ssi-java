@@ -43,6 +43,54 @@ public class RV32Core {
     return this.systemBus;
   }
   
+  // split mstatus register, because we only need two fields
+  private boolean mstatus_ie = false;
+  private boolean mstatus_ie1 = false;
+  protected int getMstatus() {
+    // [31:6] are all zeroes
+    // [5:4] = "11"
+    // [3] is mstatus_ie1
+    // [2:1] = "11"
+    // [0] is mstatus_ie
+    int mstatus = 0x00000036;
+    if (mstatus_ie) mstatus |= 0x00000001;
+    if (mstatus_ie1) mstatus |= 0x00000008;
+    return mstatus;
+  }
+  protected void setMstatus(int mstatus) {
+    mstatus_ie = ((mstatus & 0x00000001) != 0);
+    mstatus_ie1 = ((mstatus & 0x00000008) != 0);
+  }
+  
+  private int mscratch;
+  
+  // machine exception program counter
+  private int mepc;
+  
+  // machine exception cause
+  private int mcause;
+  
+  // machine bad address register
+  private int mbadaddr;
+  
+  protected int readCSR(int csr) throws IllegalInstructionException {
+    switch (csr) {
+    default:
+      // attempts to access a non-existent CSR raise an illegal instruction exception
+      throw new IllegalInstructionException(0);
+    }
+  }
+  
+  protected int writeCSR(int csr, int value) throws IllegalInstructionException {
+    switch (csr) {
+    default:
+      // attmpts to access a non-existent CSR
+      // or write to a read-only CSR 
+      // raise an illegal instruction exception
+      throw new IllegalInstructionException(0);
+    }
+  }
+  
   public RV32Core() {
     for (int i = 0; i < 32; ++i) {
       xRegister[i] = 0;
@@ -63,11 +111,23 @@ public class RV32Core {
   }
   
   private void processorTrap(ProcessorTrapException e) {
-    // TODO
     if (e instanceof AddressTrapException) {
-      // TODO set mbadaddr
+      mbadaddr = ((AddressTrapException)e).getBadAddr();
     }
-    throw new IllegalStateException("unhandled trap");
+    // when a trap is taken, the mstatus stack is pushed to the left
+    // and IE is set to 0
+    mstatus_ie1 = mstatus_ie;
+    mstatus_ie = false;
+    // save program counter
+    // TODO there are exceptions where we actually save pc+4
+    mepc = pc;
+    // set mcause
+    mcause = e.getMCause();
+    // jump to the correct trap handler, which is always at 0x100 + whatever offset
+    if (true) {
+      // trap from machine mode
+      pc = 0x000001C0;
+    }
   }
   
   public void execute(RV32_ADD rv32_ADD) {
@@ -134,6 +194,89 @@ public class RV32Core {
     if (rs1 != rs2) {
       setNextPC(getPC() + rv32_BNE.getImm());
     }
+  }
+  public void execute(RV32_CSRRC rv32_CSRRC) throws IllegalInstructionException {
+    try {
+      int csr = rv32_CSRRC.getImm();
+      int old_value = readCSR(csr);
+      if (rv32_CSRRC.getRs1() != 0) {
+        writeCSR(csr, old_value & ~getXRegister(rv32_CSRRC.getRs1()));
+      }
+      setXRegister(rv32_CSRRC.getRd(), old_value);
+    } catch (IllegalInstructionException e) {
+      // re-raise with correct instruction word
+      throw new IllegalInstructionException(rv32_CSRRC.getInsn());
+    }
+  }
+  public void execute(RV32_CSRRCI rv32_CSRRCI) throws IllegalInstructionException {
+    try {
+      int csr = rv32_CSRRCI.getImm();
+      int old_value = readCSR(csr);
+      if (rv32_CSRRCI.getRs1() != 0) {
+        writeCSR(csr, old_value | rv32_CSRRCI.getRs1());
+      }
+      setXRegister(rv32_CSRRCI.getRd(), old_value);
+    } catch (IllegalInstructionException e) {
+      // re-raise with correct instruction word
+      throw new IllegalInstructionException(rv32_CSRRCI.getInsn());
+    }
+  }
+  public void execute(RV32_CSRRS rv32_CSRRS) throws IllegalInstructionException {
+    try {
+      int csr = rv32_CSRRS.getImm();
+      int old_value = readCSR(csr);
+      if (rv32_CSRRS.getRs1() != 0) {
+        writeCSR(csr, old_value | getXRegister(rv32_CSRRS.getRs1()));
+      }
+      setXRegister(rv32_CSRRS.getRd(), old_value);
+    } catch (IllegalInstructionException e) {
+      // re-raise with correct instruction word
+      throw new IllegalInstructionException(rv32_CSRRS.getInsn());
+    }
+  }
+  public void execute(RV32_CSRRSI rv32_CSRRSI) throws IllegalInstructionException {
+    try {
+      int csr = rv32_CSRRSI.getImm();
+      int old_value = readCSR(csr);
+      if (rv32_CSRRSI.getRs1() != 0) {
+        writeCSR(csr, old_value | rv32_CSRRSI.getRs1());
+      }
+      setXRegister(rv32_CSRRSI.getRd(), old_value);
+    } catch (IllegalInstructionException e) {
+      // re-raise with correct instruction word
+      throw new IllegalInstructionException(rv32_CSRRSI.getInsn());
+    }
+  }
+  public void execute(RV32_CSRRW rv32_CSRRW) throws IllegalInstructionException {
+    try {
+      int csr = rv32_CSRRW.getImm();
+      int old_value = readCSR(csr);
+      writeCSR(csr, getXRegister(rv32_CSRRW.getRs1()));
+      setXRegister(rv32_CSRRW.getRd(), old_value);
+    } catch (IllegalInstructionException e) {
+      // re-raise with correct instruction word
+      throw new IllegalInstructionException(rv32_CSRRW.getInsn());
+    }
+  }
+  public void execute(RV32_CSRRWI rv32_CSRRWI) throws IllegalInstructionException {
+    try {
+      int csr = rv32_CSRRWI.getImm();
+      int old_value = readCSR(csr);
+      if (rv32_CSRRWI.getRs1() != 0) {
+        writeCSR(csr, rv32_CSRRWI.getRs1());
+      }
+      setXRegister(rv32_CSRRWI.getRd(), old_value);
+    } catch (IllegalInstructionException e) {
+      // re-raise with correct instruction word
+      throw new IllegalInstructionException(rv32_CSRRWI.getInsn());
+    }
+  }
+  public void execute(RV32_ERET rv32_ERET) {
+    // pop the interrupt stack to the right and set 
+    // the leftmost entry to interrupts enabled
+    mstatus_ie = mstatus_ie1;
+    mstatus_ie1 = true;
+    next_pc = mepc;
   }
   public void execute(RV32_JAL rv32_JAL) {
     int target = getPC() + rv32_JAL.getImm();

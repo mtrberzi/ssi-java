@@ -65,6 +65,8 @@ public class RV32InstructionDecoder {
     case 0b11011:
       return new RV32_JAL(insn);
     // 28: SYSTEM
+    case 0b11100:
+      return decode_SYSTEM(insn);
     // 29: reserved
     // 30: custom-3
     // 31: >= 80b
@@ -217,6 +219,39 @@ public class RV32InstructionDecoder {
       return new RV32_BLTU(insn);
     case 0b111:
       return new RV32_BGEU(insn);
+    default:
+      return new RV32IllegalInstruction(insn);
+    }
+  }
+  
+  private RV32Instruction decode_SYSTEM(int insn) {
+    // opcode = 1110011
+    // now decode funct3
+    int funct3 = (insn & 0b00000000000000000111000000000000) >>> 12;
+    switch (funct3) {
+    case 0b000:
+    {
+      // decode imm (funct12)
+      int imm = (insn & 0b11111111111100000000000000000000) >>> 20;
+      switch (imm) {
+      case 0b000100000000:
+        return new RV32_ERET(insn);
+      default:
+        return new RV32IllegalInstruction(insn);
+      }
+    }
+    case 0b001: 
+      return new RV32_CSRRW(insn);
+    case 0b010: 
+      return new RV32_CSRRS(insn);
+    case 0b011: 
+      return new RV32_CSRRC(insn);
+    case 0b101: 
+      return new RV32_CSRRWI(insn);
+    case 0b110: 
+      return new RV32_CSRRSI(insn);
+    case 0b111: 
+      return new RV32_CSRRCI(insn);
     default:
       return new RV32IllegalInstruction(insn);
     }

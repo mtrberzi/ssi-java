@@ -218,7 +218,7 @@ public class IntTestCodeExecutionCPUOnly {
     
     int[] fib = {0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610};
     
-    for (int i = 0; i < 16; ++i) {
+    for (int i = 15; i < 16; ++i) {
       setup();
       loadProgram(program);
       int expected = fib[i];
