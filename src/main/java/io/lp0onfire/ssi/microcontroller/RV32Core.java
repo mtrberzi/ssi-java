@@ -75,16 +75,36 @@ public class RV32Core {
   
   protected int readCSR(int csr) throws IllegalInstructionException {
     switch (csr) {
+    case 0x300:
+      return getMstatus();
+    case 0x341:
+      return mepc;
+    case 0x342:
+      return mcause;
+    case 0x343:
+      return mbadaddr;
     default:
       // attempts to access a non-existent CSR raise an illegal instruction exception
       throw new IllegalInstructionException(0);
     }
   }
   
-  protected int writeCSR(int csr, int value) throws IllegalInstructionException {
+  protected void writeCSR(int csr, int value) throws IllegalInstructionException {
     switch (csr) {
+    case 0x300:
+      setMstatus(value);
+      break;
+    case 0x341:
+      mepc = value;
+      break;
+    case 0x342:
+      mcause = value;
+      break;
+    case 0x343:
+      mbadaddr = value;
+      break;
     default:
-      // attmpts to access a non-existent CSR
+      // attempts to access a non-existent CSR
       // or write to a read-only CSR 
       // raise an illegal instruction exception
       throw new IllegalInstructionException(0);
