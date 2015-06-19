@@ -280,4 +280,20 @@ public class TestRV32Core {
     assertEquals(0xabadd00d, cpu.getXRegister(10));
   }
   
+  @Test
+  public void testExecuteCSRRW() throws IllegalInstructionException {
+    // preload scratch register, RMW it, check the read and written values
+    // scratch is 0x340
+    // csrrw x2, 0x340, x1
+    RV32_CSRRW insn = new RV32_CSRRW(0x34009173);
+    RV32Core cpu = new RV32Core();
+    int initialValue = 0xDEADBEEF;
+    int updatedValue = 0xABADD00D;
+    cpu.writeCSR(0x340, initialValue);
+    cpu.setXRegister(1, updatedValue);
+    cpu.execute(insn);
+    assertEquals(initialValue, cpu.getXRegister(2));
+    assertEquals(updatedValue, cpu.readCSR(0x340));
+  }
+  
 }
