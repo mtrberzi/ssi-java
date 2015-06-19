@@ -77,12 +77,28 @@ public class RV32Core {
     switch (csr) {
     case 0x300:
       return getMstatus();
+    case 0x340:
+        return mscratch;
     case 0x341:
       return mepc;
     case 0x342:
       return mcause;
     case 0x343:
       return mbadaddr;
+    case 0xF00:
+      // mcpuid
+      // base 00 (RV32I),
+      // extensions I, M, A
+      return 0b00000000000000000001000100000001;
+    case 0xF01:
+      // mimpid
+      // 0x8000 = anonymous source
+      // this is microcontroller version 0.0.1,
+      // patch level 0
+      return 0x00108000;
+    case 0xF10:
+      // mhartid
+      return 0;
     default:
       // attempts to access a non-existent CSR raise an illegal instruction exception
       throw new IllegalInstructionException(0);
@@ -93,6 +109,9 @@ public class RV32Core {
     switch (csr) {
     case 0x300:
       setMstatus(value);
+      break;
+    case 0x340:
+      mscratch = value;
       break;
     case 0x341:
       mepc = value;
