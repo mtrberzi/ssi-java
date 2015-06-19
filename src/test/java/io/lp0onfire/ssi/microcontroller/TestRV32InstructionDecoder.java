@@ -103,7 +103,55 @@ public class TestRV32InstructionDecoder {
     RV32InstructionDecoder dec = new RV32InstructionDecoder();
     RV32Instruction insn = dec.decode(0x0002a503);
     assertTrue(insn instanceof RV32_LW);
-    
+  }
+  
+  @Test
+  public void testDecodeCSRRW() {
+    RV32InstructionDecoder dec = new RV32InstructionDecoder();
+    RV32Instruction insn = dec.decode(0b11111111111100000001101011110011);
+    assertTrue(insn instanceof RV32_CSRRW);
+  }
+  
+  @Test
+  public void testDecodeCSRRS() {
+    RV32InstructionDecoder dec = new RV32InstructionDecoder();
+    RV32Instruction insn = dec.decode(0b11111111111100000010101011110011);
+    assertTrue(insn instanceof RV32_CSRRS);
+  }
+  
+  @Test
+  public void testDecodeCSRRC() {
+    RV32InstructionDecoder dec = new RV32InstructionDecoder();
+    RV32Instruction insn = dec.decode(0b11111111111100000011101011110011);
+    assertTrue(insn instanceof RV32_CSRRC);
+  }
+  
+  @Test
+  public void testDecodeCSRRWI() {
+    RV32InstructionDecoder dec = new RV32InstructionDecoder();
+    RV32Instruction insn = dec.decode(0b11111111111100000101101011110011);
+    assertTrue(insn instanceof RV32_CSRRWI);
+  }
+  
+  @Test
+  public void testDecodeCSRRSI() {
+    RV32InstructionDecoder dec = new RV32InstructionDecoder();
+    RV32Instruction insn = dec.decode(0b11111111111100000110101011110011);
+    assertTrue(insn instanceof RV32_CSRRSI);
+  }
+  
+  @Test
+  public void testDecodeCSRRCI() {
+    RV32InstructionDecoder dec = new RV32InstructionDecoder();
+    RV32Instruction insn = dec.decode(0b11111111111100000111101011110011);
+    assertTrue(insn instanceof RV32_CSRRCI);
+  }
+  
+  @Test
+  public void testDecodeERET() {
+    RV32InstructionDecoder dec = new RV32InstructionDecoder();
+    RV32Instruction insn = dec.decode(0b00010000000000000000000001110011);
+    assertTrue(insn instanceof RV32_ERET);
   }
   
 }
