@@ -158,7 +158,6 @@ public class RV32Core {
     mstatus_ie1 = mstatus_ie;
     mstatus_ie = false;
     // save program counter
-    // TODO there are exceptions where we actually save pc+4
     mepc = pc;
     // set mcause
     mcause = e.getMCause();
@@ -177,6 +176,42 @@ public class RV32Core {
   public void execute(RV32_ADDI rv32_ADDI) {
     int rs1 = getXRegister(rv32_ADDI.getRs1());
     setXRegister(rv32_ADDI.getRd(), rs1 + rv32_ADDI.getImm());
+  }
+  public void execute(RV32_AMOADDW rv32_AMOADDW) {
+    // TODO Auto-generated method stub
+    
+  }
+  public void execute(RV32_AMOANDW rv32_AMOANDW) {
+    // TODO Auto-generated method stub
+    
+  }
+  public void execute(RV32_AMOMAXUW rv32_AMOMAXUW) {
+    // TODO Auto-generated method stub
+    
+  }
+  public void execute(RV32_AMOMAXW rv32_AMOMAXW) {
+    // TODO Auto-generated method stub
+    
+  }
+  public void execute(RV32_AMOMINUW rv32_AMOMINUW) {
+    // TODO Auto-generated method stub
+    
+  }
+  public void execute(RV32_AMOMINW rv32_AMOMINW) {
+    // TODO Auto-generated method stub
+    
+  }
+  public void execute(RV32_AMOORW rv32_AMOORW) {
+    // TODO Auto-generated method stub
+    
+  }
+  public void execute(RV32_AMOSWAPW rv32_AMOSWAPW) {
+    // TODO Auto-generated method stub
+    
+  }
+  public void execute(RV32_AMOXORW rv32_AMOXORW) {
+    // TODO Auto-generated method stub
+    
   }
   public void execute(RV32_AND rv32_AND) {
     int rs1 = getXRegister(rv32_AND.getRs1());
@@ -379,6 +414,10 @@ public class RV32Core {
       processorTrap(e);
     }
   }
+  public void execute(RV32_LRW rv32_LRW) {
+    // TODO Auto-generated method stub
+    
+  }
   public void execute(RV32_LUI rv32_LUI) {
     setXRegister(rv32_LUI.getRd(), rv32_LUI.getImm());
   }
@@ -433,6 +472,10 @@ public class RV32Core {
       processorTrap(e);
     }
   }
+  public void execute(RV32_SCW rv32_SCW) {
+    // TODO Auto-generated method stub
+    
+  }  
   public void execute(RV32_SH rv32_SH) {
     int addr = getXRegister(rv32_SH.getRs1()) + rv32_SH.getImm();
     int data = getXRegister(rv32_SH.getRs2()) & 0x0000FFFF;
@@ -529,5 +572,5 @@ public class RV32Core {
   public void execute(RV32_XORI rv32_XORI) {
     int rs1 = getXRegister(rv32_XORI.getRs1());
     setXRegister(rv32_XORI.getRd(), rs1 ^ rv32_XORI.getImm());
-  }  
+  }
 }

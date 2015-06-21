@@ -38,6 +38,8 @@ public class RV32InstructionDecoder {
     // 9: STORE-FP
     // 10: custom-1
     // 11: AMO
+    case 0b01011:
+      return decode_AMO(insn);
     // 12: OP
     case 0b01100:
       return decode_OP(insn);
@@ -152,6 +154,34 @@ public class RV32InstructionDecoder {
     case 0b010:
       return new RV32_SW(insn);
     default:
+      return new RV32IllegalInstruction(insn);
+    }
+  }
+  
+  private RV32Instruction decode_AMO(int insn) {
+    // opcode = 0101111
+    int funct7 = (insn & 0b11111110000000000000000000000000) >>> 25;
+    int funct3 = (insn & 0b00000000000000000111000000000000) >>> 12;
+    // check funct3 = 010
+    if (funct3 == 0b010) {
+      // decode the 5 highest bits of funct7
+      int amofunct = funct7 >>> 2;
+      switch (amofunct) {
+      case 0b00010: return new RV32_LRW(insn);
+      case 0b00011: return new RV32_SCW(insn);
+      case 0b00001: return new RV32_AMOSWAPW(insn);
+      case 0b00000: return new RV32_AMOADDW(insn);
+      case 0b00100: return new RV32_AMOXORW(insn);
+      case 0b01100: return new RV32_AMOANDW(insn);
+      case 0b01000: return new RV32_AMOORW(insn);
+      case 0b10000: return new RV32_AMOMINW(insn);
+      case 0b10100: return new RV32_AMOMAXW(insn);
+      case 0b11000: return new RV32_AMOMINUW(insn);
+      case 0b11100: return new RV32_AMOMAXUW(insn);
+      default:
+        return new RV32IllegalInstruction(insn);
+      }
+    } else {
       return new RV32IllegalInstruction(insn);
     }
   }
