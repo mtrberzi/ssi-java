@@ -180,40 +180,104 @@ public class RV32Core {
     setXRegister(rv32_ADDI.getRd(), rs1 + rv32_ADDI.getImm());
   }
   public void execute(RV32_AMOADDW rv32_AMOADDW) {
-    // TODO Auto-generated method stub
-    
+    try {
+      int addr = getXRegister(rv32_AMOADDW.getRs1());
+      int appliedValue = getXRegister(rv32_AMOADDW.getRs2());
+      int loadedValue = systemBus.loadWord(addr);
+      setXRegister(rv32_AMOADDW.getRd(), loadedValue);
+      systemBus.storeWord(addr, loadedValue + appliedValue);
+    } catch (AddressTrapException e) {
+      processorTrap(e);
+    }
   }
   public void execute(RV32_AMOANDW rv32_AMOANDW) {
-    // TODO Auto-generated method stub
-    
+    try {
+      int addr = getXRegister(rv32_AMOANDW.getRs1());
+      int appliedValue = getXRegister(rv32_AMOANDW.getRs2());
+      int loadedValue = systemBus.loadWord(addr);
+      setXRegister(rv32_AMOANDW.getRd(), loadedValue);
+      systemBus.storeWord(addr, loadedValue & appliedValue);
+    } catch (AddressTrapException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
   }
   public void execute(RV32_AMOMAXUW rv32_AMOMAXUW) {
-    // TODO Auto-generated method stub
-    
+    try {
+      int addr = getXRegister(rv32_AMOMAXUW.getRs1());
+      int appliedValue = getXRegister(rv32_AMOMAXUW.getRs2());
+      int loadedValue = systemBus.loadWord(addr);
+      setXRegister(rv32_AMOMAXUW.getRd(), loadedValue);
+      systemBus.storeWord(addr, Integer.compareUnsigned(loadedValue, appliedValue) > 0 ? loadedValue : appliedValue);
+    } catch (AddressTrapException e) {
+      processorTrap(e);
+    }
   }
   public void execute(RV32_AMOMAXW rv32_AMOMAXW) {
-    // TODO Auto-generated method stub
-    
+    try {
+      int addr = getXRegister(rv32_AMOMAXW.getRs1());
+      int appliedValue = getXRegister(rv32_AMOMAXW.getRs2());
+      int loadedValue = systemBus.loadWord(addr);
+      setXRegister(rv32_AMOMAXW.getRd(), loadedValue);
+      systemBus.storeWord(addr, loadedValue > appliedValue ? loadedValue : appliedValue);
+    } catch (AddressTrapException e) {
+      processorTrap(e);
+    }
   }
   public void execute(RV32_AMOMINUW rv32_AMOMINUW) {
-    // TODO Auto-generated method stub
-    
+    try {
+      int addr = getXRegister(rv32_AMOMINUW.getRs1());
+      int appliedValue = getXRegister(rv32_AMOMINUW.getRs2());
+      int loadedValue = systemBus.loadWord(addr);
+      setXRegister(rv32_AMOMINUW.getRd(), loadedValue);
+      systemBus.storeWord(addr, Integer.compareUnsigned(loadedValue, appliedValue) < 0 ? loadedValue : appliedValue);
+    } catch (AddressTrapException e) {
+      processorTrap(e);
+    }
   }
   public void execute(RV32_AMOMINW rv32_AMOMINW) {
-    // TODO Auto-generated method stub
-    
+    try {
+      int addr = getXRegister(rv32_AMOMINW.getRs1());
+      int appliedValue = getXRegister(rv32_AMOMINW.getRs2());
+      int loadedValue = systemBus.loadWord(addr);
+      setXRegister(rv32_AMOMINW.getRd(), loadedValue);
+      systemBus.storeWord(addr, loadedValue < appliedValue ? loadedValue : appliedValue);
+    } catch (AddressTrapException e) {
+      processorTrap(e);
+    }
   }
   public void execute(RV32_AMOORW rv32_AMOORW) {
-    // TODO Auto-generated method stub
-    
+    try {
+      int addr = getXRegister(rv32_AMOORW.getRs1());
+      int appliedValue = getXRegister(rv32_AMOORW.getRs2());
+      int loadedValue = systemBus.loadWord(addr);
+      setXRegister(rv32_AMOORW.getRd(), loadedValue);
+      systemBus.storeWord(addr, loadedValue | appliedValue);
+    } catch (AddressTrapException e) {
+      processorTrap(e);
+    }
   }
   public void execute(RV32_AMOSWAPW rv32_AMOSWAPW) {
-    // TODO Auto-generated method stub
-    
+    try {
+      int addr = getXRegister(rv32_AMOSWAPW.getRs1());
+      int appliedValue = getXRegister(rv32_AMOSWAPW.getRs2());
+      int loadedValue = systemBus.loadWord(addr);
+      setXRegister(rv32_AMOSWAPW.getRd(), loadedValue);
+      systemBus.storeWord(addr, appliedValue);
+    } catch (AddressTrapException e) {
+      processorTrap(e);
+    }
   }
   public void execute(RV32_AMOXORW rv32_AMOXORW) {
-    // TODO Auto-generated method stub
-    
+    try {
+      int addr = getXRegister(rv32_AMOXORW.getRs1());
+      int appliedValue = getXRegister(rv32_AMOXORW.getRs2());
+      int loadedValue = systemBus.loadWord(addr);
+      setXRegister(rv32_AMOXORW.getRd(), loadedValue);
+      systemBus.storeWord(addr, loadedValue ^ appliedValue);
+    } catch (AddressTrapException e) {
+      processorTrap(e);
+    }
   }
   public void execute(RV32_AND rv32_AND) {
     int rs1 = getXRegister(rv32_AND.getRs1());
