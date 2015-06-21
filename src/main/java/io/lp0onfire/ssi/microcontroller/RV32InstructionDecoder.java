@@ -158,45 +158,70 @@ public class RV32InstructionDecoder {
   
   private RV32Instruction decode_OP(int insn) {
     // opcode = 0110011
-    // now decode funct3
+    // first decode funct7 as MUL/DIV have a different prefix
+    int funct7 = (insn & 0b11111110000000000000000000000000) >>> 25;
     int funct3 = (insn & 0b00000000000000000111000000000000) >>> 12;
-    switch (funct3) {
-    case 0b000:
+    switch (funct7) {
+    case 0b0000000:
+      // standard integer ops
     {
-      // decode funct7
-      int funct7 = (insn & 0b11111110000000000000000000000000) >>> 25;
-      if (funct7 == 0b0000000) {
+      switch (funct3) {
+      case 0b000:
         return new RV32_ADD(insn);
-      } else if (funct7 == 0b0100000) {
-        return new RV32_SUB(insn);
-      } else {
-        return new RV32IllegalInstruction(insn);
-      }
-    }
-    case 0b001:
-      return new RV32_SLL(insn);
-    case 0b010:
-      return new RV32_SLT(insn);
-    case 0b011:
-      return new RV32_SLTU(insn);
-    case 0b100:
-      return new RV32_XOR(insn);
-    case 0b101:
-    {
-      // decode funct7
-      int funct7 = (insn & 0b11111110000000000000000000000000) >>> 25;
-      if (funct7 == 0b0000000) {
+      case 0b001:
+        return new RV32_SLL(insn);
+      case 0b010:
+        return new RV32_SLT(insn);
+      case 0b011:
+        return new RV32_SLTU(insn);
+      case 0b100:
+        return new RV32_XOR(insn);
+      case 0b101:
         return new RV32_SRL(insn);
-      } else if (funct7 == 0b0100000) {
-        return new RV32_SRA(insn);
-      } else {
+      case 0b110:
+        return new RV32_OR(insn);
+      case 0b111:
+        return new RV32_AND(insn);
+      default:
         return new RV32IllegalInstruction(insn);
       }
     }
-    case 0b110:
-      return new RV32_OR(insn);
-    case 0b111:
-      return new RV32_AND(insn);
+    case 0b0000001:
+      // MUL/DIV
+    {
+      switch (funct3) {
+      case 0b000: 
+        return new RV32_MUL(insn);
+      case 0b001: 
+        return new RV32_MULH(insn);
+      case 0b010: 
+        return new RV32_MULHSU(insn);
+      case 0b011: 
+        return new RV32_MULHU(insn);
+      case 0b100: 
+        return new RV32_DIV(insn);
+      case 0b101: 
+        return new RV32_DIVU(insn);
+      case 0b110: 
+        return new RV32_REM(insn);
+      case 0b111: 
+        return new RV32_REMU(insn);
+      default:
+        return new RV32IllegalInstruction(insn);
+      }
+    }
+    case 0b0100000:
+      // other standard integer ops
+    {
+      switch (funct3) {
+      case 0b000:
+        return new RV32_SUB(insn);
+      case 0b101:
+        return new RV32_SRA(insn);
+        default:
+          return new RV32IllegalInstruction(insn);
+      }
+    }
     default:
       return new RV32IllegalInstruction(insn);
     }

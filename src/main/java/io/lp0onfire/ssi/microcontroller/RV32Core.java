@@ -310,6 +310,14 @@ public class RV32Core {
       throw new IllegalInstructionException(rv32_CSRRWI.getInsn());
     }
   }
+  public void execute(RV32_DIV rv32_DIV) {
+    // TODO Auto-generated method stub
+    
+  }
+  public void execute(RV32_DIVU rv32_DIVU) {
+    // TODO Auto-generated method stub
+    
+  }
   public void execute(RV32_ERET rv32_ERET) {
     // pop the interrupt stack to the right and set 
     // the leftmost entry to interrupts enabled
@@ -383,6 +391,22 @@ public class RV32Core {
       processorTrap(e);
     }
   }
+  public void execute(RV32_MUL rv32_MUL) {
+    // TODO Auto-generated method stub
+    
+  }
+  public void execute(RV32_MULH rv32_MULH) {
+    // TODO Auto-generated method stub
+    
+  }
+  public void execute(RV32_MULHSU rv32_MULHSU) {
+    // TODO Auto-generated method stub
+    
+  }
+  public void execute(RV32_MULHU rv32_MULHU) {
+    // TODO Auto-generated method stub
+    
+  }
   public void execute(RV32_OR rv32_OR) {
     int rs1 = getXRegister(rv32_OR.getRs1());
     int rs2 = getXRegister(rv32_OR.getRs2());
@@ -391,6 +415,14 @@ public class RV32Core {
   public void execute(RV32_ORI rv32_ORI) {
     int rs1 = getXRegister(rv32_ORI.getRs1());
     setXRegister(rv32_ORI.getRd(), rs1 | rv32_ORI.getImm());
+  }
+  public void execute(RV32_REM rv32_REM) {
+    // TODO Auto-generated method stub
+    
+  }
+  public void execute(RV32_REMU rv32_REMU) {
+    // TODO Auto-generated method stub
+    
   }
   public void execute(RV32_SB rv32_SB) {
     int addr = getXRegister(rv32_SB.getRs1()) + rv32_SB.getImm();
@@ -497,6 +529,5 @@ public class RV32Core {
   public void execute(RV32_XORI rv32_XORI) {
     int rs1 = getXRegister(rv32_XORI.getRs1());
     setXRegister(rv32_XORI.getRd(), rs1 ^ rv32_XORI.getImm());
-  }
-  
+  }  
 }
