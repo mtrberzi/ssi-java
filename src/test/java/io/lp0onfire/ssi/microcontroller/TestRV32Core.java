@@ -296,4 +296,22 @@ public class TestRV32Core {
     assertEquals(updatedValue, cpu.readCSR(0x340));
   }
   
+  @Test
+  public void testExecuteLR_SC() {
+    // lr.w x2, (x1)
+    // sc.w x3, x0, (x1)
+    RV32_LRW lr = new RV32_LRW(0x1000a12f);
+    RV32_SCW sc = new RV32_SCW(0x1800a1af);
+    RV32Core cpu = new RV32Core();
+    cpu.getSystemBus().attachPeripheral(new TestPeripheral(), 0x10000000);
+    cpu.setXRegister(1, 0x10000000);
+    cpu.setXRegister(3, -1);
+    cpu.execute(lr);
+    assertEquals(0xabadd00d, cpu.getXRegister(2));
+    assertTrue(cpu.getSystemBus().isReserved(0x10000000));
+    cpu.execute(sc);
+    assertEquals(0, cpu.getXRegister(3));
+    assertFalse(cpu.getSystemBus().isReserved(0x10000000));
+  }
+  
 }
