@@ -348,12 +348,27 @@ public class RV32Core {
     }
   }
   public void execute(RV32_DIV rv32_DIV) {
-    // TODO Auto-generated method stub
-    
+    int rs1 = getXRegister(rv32_DIV.getRs1());
+    int rs2 = getXRegister(rv32_DIV.getRs2());
+    if (rs2 == 0) {
+      // DIV/0
+      setXRegister(rv32_DIV.getRd(), -1);
+    } else if(rs1 == Integer.MIN_VALUE && rs2 == -1) {
+      // signed overflow
+      setXRegister(rv32_DIV.getRd(), Integer.MIN_VALUE);
+    } else {
+      setXRegister(rv32_DIV.getRd(), rs1 / rs2);
+    }
   }
   public void execute(RV32_DIVU rv32_DIVU) {
-    // TODO Auto-generated method stub
-    
+    int rs1 = getXRegister(rv32_DIVU.getRs1());
+    int rs2 = getXRegister(rv32_DIVU.getRs2());
+    if (rs2 == 0) {
+      // DIV/0
+      setXRegister(rv32_DIVU.getRd(), 0xFFFFFFFF);
+    } else {
+      setXRegister(rv32_DIVU.getRd(), Integer.divideUnsigned(rs1, rs2));
+    }
   }
   public void execute(RV32_ERET rv32_ERET) {
     // pop the interrupt stack to the right and set 
@@ -441,20 +456,27 @@ public class RV32Core {
     }
   }
   public void execute(RV32_MUL rv32_MUL) {
-    // TODO Auto-generated method stub
-    
+    int rs1 = getXRegister(rv32_MUL.getRs1());
+    int rs2 = getXRegister(rv32_MUL.getRs2());
+    setXRegister(rv32_MUL.getRd(), rs1 * rs2);
   }
   public void execute(RV32_MULH rv32_MULH) {
-    // TODO Auto-generated method stub
-    
+    int rs1 = getXRegister(rv32_MULH.getRs1());
+    int rs2 = getXRegister(rv32_MULH.getRs2());
+    long product = (long)rs1 * (long)rs2;
+    setXRegister(rv32_MULH.getRd(), (int)(product >>> 32));
   }
   public void execute(RV32_MULHSU rv32_MULHSU) {
-    // TODO Auto-generated method stub
-    
+    int rs1 = getXRegister(rv32_MULHSU.getRs1());
+    int rs2 = getXRegister(rv32_MULHSU.getRs2());
+    long product = ((long)rs1) * ((long)rs2)&0x00000000FFFFFFFFL;
+    setXRegister(rv32_MULHSU.getRd(), (int)(product >>> 32));
   }
   public void execute(RV32_MULHU rv32_MULHU) {
-    // TODO Auto-generated method stub
-    
+    int rs1 = getXRegister(rv32_MULHU.getRs1());
+    int rs2 = getXRegister(rv32_MULHU.getRs2());
+    long product = ((long)rs1)&0x00000000FFFFFFFFL * ((long)rs2)&0x00000000FFFFFFFFL;
+    setXRegister(rv32_MULHU.getRd(), (int)(product >>> 32));
   }
   public void execute(RV32_OR rv32_OR) {
     int rs1 = getXRegister(rv32_OR.getRs1());
@@ -466,12 +488,27 @@ public class RV32Core {
     setXRegister(rv32_ORI.getRd(), rs1 | rv32_ORI.getImm());
   }
   public void execute(RV32_REM rv32_REM) {
-    // TODO Auto-generated method stub
-    
+    int rs1 = getXRegister(rv32_REM.getRs1());
+    int rs2 = getXRegister(rv32_REM.getRs2());
+    if (rs2 == 0) {
+      // DIV/0
+      setXRegister(rv32_REM.getRd(), rs1);
+    } else if(rs1 == Integer.MIN_VALUE && rs2 == -1) {
+      // signed overflow
+      setXRegister(rv32_REM.getRd(), 0);
+    } else {
+      setXRegister(rv32_REM.getRd(), rs1 % rs2);
+    }
   }
   public void execute(RV32_REMU rv32_REMU) {
-    // TODO Auto-generated method stub
-    
+    int rs1 = getXRegister(rv32_REMU.getRs1());
+    int rs2 = getXRegister(rv32_REMU.getRs2());
+    if (rs2 == 0) {
+      // DIV/0
+      setXRegister(rv32_REMU.getRd(), 0xFFFFFFFF);
+    } else {
+      setXRegister(rv32_REMU.getRd(), Integer.remainderUnsigned(rs1, rs2));
+    }
   }
   public void execute(RV32_SB rv32_SB) {
     int addr = getXRegister(rv32_SB.getRs1()) + rv32_SB.getImm();
