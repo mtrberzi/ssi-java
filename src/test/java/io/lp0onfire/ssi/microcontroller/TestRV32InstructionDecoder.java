@@ -154,4 +154,18 @@ public class TestRV32InstructionDecoder {
     assertTrue(insn instanceof RV32_ERET);
   }
   
+  @Test
+  public void testDecodeLRW() {
+    RV32InstructionDecoder dec = new RV32InstructionDecoder();
+    RV32Instruction insn = dec.decode(0x100120af);
+    assertTrue(insn instanceof RV32_LRW);
+  }
+  
+  @Test
+  public void testDecodeSCW() {
+    RV32InstructionDecoder dec = new RV32InstructionDecoder();
+    RV32Instruction insn = dec.decode(0x1821a0af);
+    assertTrue(insn instanceof RV32_SCW);
+  }
+  
 }

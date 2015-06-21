@@ -161,6 +161,8 @@ public class RV32Core {
     mepc = pc;
     // set mcause
     mcause = e.getMCause();
+    // counts as a context switch
+    systemBus.clearAllReservations();
     // jump to the correct trap handler, which is always at 0x100 + whatever offset
     if (true) {
       // trap from machine mode
@@ -359,6 +361,8 @@ public class RV32Core {
     mstatus_ie = mstatus_ie1;
     mstatus_ie1 = true;
     next_pc = mepc;
+    // counts as a context switch
+    systemBus.clearAllReservations();
   }
   public void execute(RV32_JAL rv32_JAL) {
     int target = getPC() + rv32_JAL.getImm();
@@ -415,8 +419,14 @@ public class RV32Core {
     }
   }
   public void execute(RV32_LRW rv32_LRW) {
-    // TODO Auto-generated method stub
-    
+    int addr = getXRegister(rv32_LRW.getRs1());
+    try {
+      int data = systemBus.loadWord(addr);
+      setXRegister(rv32_LRW.getRd(), data);
+      systemBus.setReservation(addr);
+    } catch (AddressTrapException e) {
+      processorTrap(e);
+    }
   }
   public void execute(RV32_LUI rv32_LUI) {
     setXRegister(rv32_LUI.getRd(), rv32_LUI.getImm());
@@ -473,8 +483,19 @@ public class RV32Core {
     }
   }
   public void execute(RV32_SCW rv32_SCW) {
-    // TODO Auto-generated method stub
-    
+    int addr = getXRegister(rv32_SCW.getRs1());
+    int data = getXRegister(rv32_SCW.getRs2());
+    if (systemBus.isReserved(addr)) {
+      try {
+        systemBus.storeWord(addr, data);
+      } catch (AddressTrapException e) {
+        processorTrap(e);
+      }
+      setXRegister(rv32_SCW.getRd(), 0);
+    } else {
+      // fail
+      setXRegister(rv32_SCW.getRd(), 1);
+    }
   }  
   public void execute(RV32_SH rv32_SH) {
     int addr = getXRegister(rv32_SH.getRs1()) + rv32_SH.getImm();
