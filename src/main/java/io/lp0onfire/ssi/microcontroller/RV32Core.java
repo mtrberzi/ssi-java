@@ -220,8 +220,7 @@ public class RV32Core {
       setXRegister(rv32_AMOANDW.getRd(), loadedValue);
       systemBus.storeWord(addr, loadedValue & appliedValue);
     } catch (AddressTrapException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      processorTrap(e);
     }
   }
   public void execute(RV32_AMOMAXUW rv32_AMOMAXUW) {
