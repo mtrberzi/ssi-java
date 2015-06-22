@@ -605,12 +605,12 @@ public class RV32Core {
     }
   }
   public void execute(RV32_SBREAK rv32_SBREAK) {
-    // TODO Auto-generated method stub
-    
+    // causes a "breakpoint" exception
+    processorTrap(new ProcessorTrapException(3));
   }
   public void execute(RV32_SCALL rv32_SCALL) {
-    // TODO Auto-generated method stub
-    
+    // causes an "environment call" exception
+    processorTrap(new ProcessorTrapException(11));
   }
   public void execute(RV32_SCW rv32_SCW) {
     int addr = getXRegister(rv32_SCW.getRs1());
