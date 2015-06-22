@@ -289,6 +289,10 @@ public class RV32InstructionDecoder {
       // decode imm (funct12)
       int imm = (insn & 0b11111111111100000000000000000000) >>> 20;
       switch (imm) {
+      case 0b000000000000:
+        return new RV32_SCALL(insn);
+      case 0b000000000001:
+        return new RV32_SBREAK(insn);
       case 0b000100000000:
         return new RV32_ERET(insn);
       default:
@@ -297,7 +301,7 @@ public class RV32InstructionDecoder {
     }
     case 0b001: 
       return new RV32_CSRRW(insn);
-    case 0b010: 
+    case 0b010:
       return new RV32_CSRRS(insn);
     case 0b011: 
       return new RV32_CSRRC(insn);

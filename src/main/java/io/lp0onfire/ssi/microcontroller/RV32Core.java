@@ -73,6 +73,9 @@ public class RV32Core {
   // machine bad address register
   private int mbadaddr;
   
+  // instructions-retired counter
+  private int instret = 0;
+  
   protected int readCSR(int csr) throws IllegalInstructionException {
     switch (csr) {
     case 0x300:
@@ -85,6 +88,24 @@ public class RV32Core {
       return mcause;
     case 0x343:
       return mbadaddr;
+    case 0xC00:
+      // TODO RDCYCLE
+      throw new IllegalInstructionException(0);
+    case 0xC80:
+      // TODO RDCYCLEH
+      throw new IllegalInstructionException(0);
+    case 0xC01:
+      // TODO RDTIME
+      throw new IllegalInstructionException(0);
+    case 0xC81:
+      // TODO RDTIMEH
+      throw new IllegalInstructionException(0); 
+    case 0xC02:
+      // RDINSTRET
+      return (int)(instret & 0x00000000FFFFFFFFL);
+    case 0xC82:
+      // RDINSTRETH
+      return (int)((instret & 0xFFFFFFFF00000000L) >>> 32); 
     case 0xF00:
       // mcpuid
       // base 00 (RV32I),
@@ -143,6 +164,7 @@ public class RV32Core {
       RV32Instruction instruction = systemBus.fetchInstruction(pc);
       next_pc = pc + 4;
       instruction.execute(this);
+      instret += 1L;
       pc = next_pc;
     } catch (ProcessorTrapException e) {
       processorTrap(e);
@@ -582,6 +604,14 @@ public class RV32Core {
     } catch (AddressTrapException e) {
       processorTrap(e);
     }
+  }
+  public void execute(RV32_SBREAK rv32_SBREAK) {
+    // TODO Auto-generated method stub
+    
+  }
+  public void execute(RV32_SCALL rv32_SCALL) {
+    // TODO Auto-generated method stub
+    
   }
   public void execute(RV32_SCW rv32_SCW) {
     int addr = getXRegister(rv32_SCW.getRs1());
