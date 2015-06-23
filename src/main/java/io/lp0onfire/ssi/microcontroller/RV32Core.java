@@ -464,6 +464,12 @@ public class RV32Core {
     // counts as a context switch
     systemBus.clearAllReservations();
   }
+  public void execute(RV32_FENCE rv32_FENCE) {
+    // this should just be a no-op on this implementation...
+  }
+  public void execute(RV32_FENCEI rv32_FENCEI) {
+    systemBus.clearInstructionCache();
+  }
   public void execute(RV32_JAL rv32_JAL) {
     int target = getPC() + rv32_JAL.getImm();
     setNextPC(target);

@@ -61,7 +61,7 @@ public class IntTestCodeExecutionCPUOnly {
     }
     throw new IllegalStateException("CPU did not terminate after " + Integer.toString(maxCycles) + " steps");
   }
-  
+
   @Test
   public void testReturnOnly() {
     int[] program = {
@@ -180,7 +180,7 @@ public class IntTestCodeExecutionCPUOnly {
     }
     
   }
-  
+
   // TODO comment this out and test these instructions separately
   @Test
   public void testFibonacciRecursive() {
@@ -227,7 +227,6 @@ public class IntTestCodeExecutionCPUOnly {
       run(42415); // EXACT for fib(15)
       assertEquals(expected, cpu.getXRegister(10));
     }
-    
   }
   
 }
