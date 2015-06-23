@@ -314,4 +314,36 @@ public class TestRV32Core {
     assertFalse(cpu.getSystemBus().isReserved(0x10000000));
   }
   
+  @Test
+  public void testExecuteSCALL() {
+    RV32_SCALL insn = new RV32_SCALL(0b00000000000000000000000001110011);
+    RV32Core cpu = new RV32Core();
+    cpu.setPC(0xabcd1234);
+    cpu.execute(insn);
+    // check that we have entered the "trap from machine mode" handler
+    assertEquals(0x000001C0, cpu.getPC());
+    // check that mepc = the last PC when we executed this instruction
+    assertEquals(0xabcd1234, cpu.mepc);
+    // check that mcause = 11 (envcall from M-mode)
+    assertEquals(11, cpu.mcause);
+    // check that mstatus[0] = 0 (interrupts disabled)
+    assertEquals(false, cpu.mstatus_ie);
+  }
+  
+  @Test
+  public void testExecuteSBREAK() {
+    RV32_SBREAK insn = new RV32_SBREAK(0b00000000000100000000000001110011);
+    RV32Core cpu = new RV32Core();
+    cpu.setPC(0xabcd1234);
+    cpu.execute(insn);
+    // check that we have entered the "trap from machine mode" handler
+    assertEquals(0x000001C0, cpu.getPC());
+    // check that mepc = the last PC when we executed this instruction
+    assertEquals(0xabcd1234, cpu.mepc);
+    // check that mcause = 3 (breakpoint)
+    assertEquals(3, cpu.mcause);
+    // check that mstatus[0] = 0 (interrupts disabled)
+    assertEquals(false, cpu.mstatus_ie);
+  }
+  
 }

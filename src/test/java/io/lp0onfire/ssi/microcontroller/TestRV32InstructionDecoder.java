@@ -168,4 +168,18 @@ public class TestRV32InstructionDecoder {
     assertTrue(insn instanceof RV32_SCW);
   }
   
+  @Test
+  public void testDecodeSCALL() {
+    RV32InstructionDecoder dec = new RV32InstructionDecoder();
+    RV32Instruction insn = dec.decode(0b00000000000000000000000001110011);
+    assertTrue(insn instanceof RV32_SCALL);
+  }
+  
+  @Test
+  public void testDecodeSBREAK() {
+    RV32InstructionDecoder dec = new RV32InstructionDecoder();
+    RV32Instruction insn = dec.decode(0b00000000000100000000000001110011);
+    assertTrue(insn instanceof RV32_SBREAK);
+  }
+  
 }

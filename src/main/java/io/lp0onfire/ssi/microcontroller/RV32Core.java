@@ -44,8 +44,8 @@ public class RV32Core {
   }
   
   // split mstatus register, because we only need two fields
-  private boolean mstatus_ie = false;
-  private boolean mstatus_ie1 = false;
+  protected boolean mstatus_ie = false;
+  protected boolean mstatus_ie1 = false;
   protected int getMstatus() {
     // [31:6] are all zeroes
     // [5:4] = "11"
@@ -62,19 +62,19 @@ public class RV32Core {
     mstatus_ie1 = ((mstatus & 0x00000008) != 0);
   }
   
-  private int mscratch;
+  protected int mscratch;
   
   // machine exception program counter
-  private int mepc;
+  protected int mepc;
   
   // machine exception cause
-  private int mcause;
+  protected int mcause;
   
   // machine bad address register
-  private int mbadaddr;
+  protected int mbadaddr;
   
   // instructions-retired counter
-  private int instret = 0;
+  protected int instret = 0;
   
   protected int readCSR(int csr) throws IllegalInstructionException {
     switch (csr) {
