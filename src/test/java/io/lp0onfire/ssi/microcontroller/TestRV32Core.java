@@ -346,4 +346,13 @@ public class TestRV32Core {
     assertEquals(false, cpu.mstatus_ie);
   }
   
+  @Test
+  public void testExecuteERET() {
+    RV32_ERET insn = new RV32_ERET(0b00010000000000000000000001110011);
+    RV32Core cpu = new RV32Core();
+    cpu.mepc = 0xabcd1234;
+    cpu.execute(insn);
+    assertEquals(0xabcd1234, cpu.mepc);
+  }
+  
 }
