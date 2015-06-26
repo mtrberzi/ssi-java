@@ -1,15 +1,30 @@
 package io.lp0onfire.ssi.microcontroller.peripherals;
 
 import io.lp0onfire.ssi.microcontroller.AddressTrapException;
+import io.lp0onfire.ssi.microcontroller.RV32Core;
 import io.lp0onfire.ssi.microcontroller.SystemBusPeripheral;
 
 public class InterruptController implements SystemBusPeripheral {
 
-  public InterruptController() {
+  private final RV32Core cpu;
+  
+  public InterruptController(RV32Core cpu) {
+    this.cpu = cpu;
     this.interruptEnabled = new boolean[32];
     for (int i = 0; i < 32; ++i) {
       this.interruptEnabled[i] = false;
     }
+    
+    this.interruptPending = new boolean[32];
+    for (int i = 0; i < 32; ++i) {
+      this.interruptPending[i] = false;
+    }
+    
+    this.interruptPriority = new int[32];
+    for (int i = 0; i < 32; ++i) {
+      this.interruptPriority[i] = 0;
+    }
+    
   }
   
   @Override
@@ -46,6 +61,8 @@ public class InterruptController implements SystemBusPeripheral {
       return (getMasterEnable() ? 0x80000000 : 0x00000000) | getCurrentInterrupt();
     case 1: // Interrupt Enable Register
       return this.interruptEnableRegister;
+    case 2: // Interrupt Pending Register
+      return this.interruptPendingRegister;
     default:
       throw new AddressTrapException(5, pAddr);
     }
@@ -65,6 +82,14 @@ public class InterruptController implements SystemBusPeripheral {
         value = value >>> 1;
       }
       break;
+    case 3: // Interrupt Acknowledge Register
+      for (int i = 0; i < 32; ++i) {
+        if ((value & 0x00000001) != 0) {
+          acknowledgeInterrupt(i);
+        }
+        value = value >>> 1;
+      }
+      break;
     default:
       throw new AddressTrapException(7, pAddr);
     }
@@ -76,9 +101,10 @@ public class InterruptController implements SystemBusPeripheral {
   }
   public void setMasterEnable(boolean b) {
     this.masterEnable = b;
+    stateChange = true;
   }
   
-  private int currentInterrupt = 0;
+  private int currentInterrupt = -1;
   public int getCurrentInterrupt() {
     return this.currentInterrupt;
   }
@@ -98,12 +124,62 @@ public class InterruptController implements SystemBusPeripheral {
     } else {
       interruptEnableRegister &= ~(1 << i);
     }
+    stateChange = true;
   }
+  
+  private boolean stateChange = false;
   
   @Override
   public void cycle() {
-    // TODO Auto-generated method stub
-    
+    if (stateChange) {
+      stateChange = false;
+        if (masterEnable) {
+        // recompute current interrupt
+        int nextInterrupt = -1;
+        int currentPriority = 32;
+        for (int i = 31; i >= 0; --i) {
+          if (interruptPending[i] && interruptEnabled[i]) {
+            // priority check: priority must be smaller than
+            // last priority, or equal priority and lower interrupt number
+            if (interruptPriority[i] <= currentPriority) {
+              nextInterrupt = i;
+              currentPriority = interruptPriority[i];
+            }
+          }
+        }
+        if (nextInterrupt != -1) {
+          // new interrupt pending
+          if (nextInterrupt != currentInterrupt) {
+            // interrupt the CPU
+            cpu.externalInterrupt();
+          }
+        }
+      }
+    }
   }
+  
+  private int interruptPendingRegister;
+  private boolean[] interruptPending;
+  
+  public void assertInterrupt(int irq) {
+    if (!interruptPending[irq]) {
+      interruptPending[irq] = true;
+      interruptPendingRegister |= (1 << irq);
+      stateChange = true;
+    }
+  }
+  
+  public void acknowledgeInterrupt(int irq) {
+    if (interruptPending[irq]) {
+      interruptPending[irq] = false;
+      interruptPendingRegister &= ~(1 << irq);
+      stateChange = true;
+      if (currentInterrupt == irq) {
+        currentInterrupt = -1;
+      }
+    }
+  }
+  
+  private int[] interruptPriority;
   
 }
