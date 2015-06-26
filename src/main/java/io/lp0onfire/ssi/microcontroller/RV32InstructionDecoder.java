@@ -24,6 +24,8 @@ public class RV32InstructionDecoder {
     // 1: LOAD-FP
     // 2: custom-0
     // 3: MISC-MEM
+    case 0b00011:
+      return decode_MISC_MEM(insn);
     // 4: OP-IMM
     case 0b00100:
       return decode_OP_IMM(insn);
@@ -38,6 +40,8 @@ public class RV32InstructionDecoder {
     // 9: STORE-FP
     // 10: custom-1
     // 11: AMO
+    case 0b01011:
+      return decode_AMO(insn);
     // 12: OP
     case 0b01100:
       return decode_OP(insn);
@@ -65,6 +69,8 @@ public class RV32InstructionDecoder {
     case 0b11011:
       return new RV32_JAL(insn);
     // 28: SYSTEM
+    case 0b11100:
+      return decode_SYSTEM(insn);
     // 29: reserved
     // 30: custom-3
     // 31: >= 80b
@@ -89,6 +95,20 @@ public class RV32InstructionDecoder {
       return new RV32_LBU(insn);
     case 0b101:
       return new RV32_LHU(insn);
+    default:
+      return new RV32IllegalInstruction(insn);
+    }
+  }
+  
+  private RV32Instruction decode_MISC_MEM(int insn) {
+    // opcode = 0001111
+    // now decode funct3
+    int funct3 = (insn & 0b00000000000000000111000000000000) >>> 12;
+    switch (funct3) {
+    case 0b000:
+      return new RV32_FENCE(insn);
+    case 0b001:
+      return new RV32_FENCEI(insn);
     default:
       return new RV32IllegalInstruction(insn);
     }
@@ -154,47 +174,100 @@ public class RV32InstructionDecoder {
     }
   }
   
+  private RV32Instruction decode_AMO(int insn) {
+    // opcode = 0101111
+    int funct7 = (insn & 0b11111110000000000000000000000000) >>> 25;
+    int funct3 = (insn & 0b00000000000000000111000000000000) >>> 12;
+    // check funct3 = 010
+    if (funct3 == 0b010) {
+      // decode the 5 highest bits of funct7
+      int amofunct = funct7 >>> 2;
+      switch (amofunct) {
+      case 0b00010: return new RV32_LRW(insn);
+      case 0b00011: return new RV32_SCW(insn);
+      case 0b00001: return new RV32_AMOSWAPW(insn);
+      case 0b00000: return new RV32_AMOADDW(insn);
+      case 0b00100: return new RV32_AMOXORW(insn);
+      case 0b01100: return new RV32_AMOANDW(insn);
+      case 0b01000: return new RV32_AMOORW(insn);
+      case 0b10000: return new RV32_AMOMINW(insn);
+      case 0b10100: return new RV32_AMOMAXW(insn);
+      case 0b11000: return new RV32_AMOMINUW(insn);
+      case 0b11100: return new RV32_AMOMAXUW(insn);
+      default:
+        return new RV32IllegalInstruction(insn);
+      }
+    } else {
+      return new RV32IllegalInstruction(insn);
+    }
+  }
+  
   private RV32Instruction decode_OP(int insn) {
     // opcode = 0110011
-    // now decode funct3
+    // first decode funct7 as MUL/DIV have a different prefix
+    int funct7 = (insn & 0b11111110000000000000000000000000) >>> 25;
     int funct3 = (insn & 0b00000000000000000111000000000000) >>> 12;
-    switch (funct3) {
-    case 0b000:
+    switch (funct7) {
+    case 0b0000000:
+      // standard integer ops
     {
-      // decode funct7
-      int funct7 = (insn & 0b11111110000000000000000000000000) >>> 25;
-      if (funct7 == 0b0000000) {
+      switch (funct3) {
+      case 0b000:
         return new RV32_ADD(insn);
-      } else if (funct7 == 0b0100000) {
-        return new RV32_SUB(insn);
-      } else {
-        return new RV32IllegalInstruction(insn);
-      }
-    }
-    case 0b001:
-      return new RV32_SLL(insn);
-    case 0b010:
-      return new RV32_SLT(insn);
-    case 0b011:
-      return new RV32_SLTU(insn);
-    case 0b100:
-      return new RV32_XOR(insn);
-    case 0b101:
-    {
-      // decode funct7
-      int funct7 = (insn & 0b11111110000000000000000000000000) >>> 25;
-      if (funct7 == 0b0000000) {
+      case 0b001:
+        return new RV32_SLL(insn);
+      case 0b010:
+        return new RV32_SLT(insn);
+      case 0b011:
+        return new RV32_SLTU(insn);
+      case 0b100:
+        return new RV32_XOR(insn);
+      case 0b101:
         return new RV32_SRL(insn);
-      } else if (funct7 == 0b0100000) {
-        return new RV32_SRA(insn);
-      } else {
+      case 0b110:
+        return new RV32_OR(insn);
+      case 0b111:
+        return new RV32_AND(insn);
+      default:
         return new RV32IllegalInstruction(insn);
       }
     }
-    case 0b110:
-      return new RV32_OR(insn);
-    case 0b111:
-      return new RV32_AND(insn);
+    case 0b0000001:
+      // MUL/DIV
+    {
+      switch (funct3) {
+      case 0b000: 
+        return new RV32_MUL(insn);
+      case 0b001: 
+        return new RV32_MULH(insn);
+      case 0b010: 
+        return new RV32_MULHSU(insn);
+      case 0b011: 
+        return new RV32_MULHU(insn);
+      case 0b100: 
+        return new RV32_DIV(insn);
+      case 0b101: 
+        return new RV32_DIVU(insn);
+      case 0b110: 
+        return new RV32_REM(insn);
+      case 0b111: 
+        return new RV32_REMU(insn);
+      default:
+        return new RV32IllegalInstruction(insn);
+      }
+    }
+    case 0b0100000:
+      // other standard integer ops
+    {
+      switch (funct3) {
+      case 0b000:
+        return new RV32_SUB(insn);
+      case 0b101:
+        return new RV32_SRA(insn);
+        default:
+          return new RV32IllegalInstruction(insn);
+      }
+    }
     default:
       return new RV32IllegalInstruction(insn);
     }
@@ -217,6 +290,43 @@ public class RV32InstructionDecoder {
       return new RV32_BLTU(insn);
     case 0b111:
       return new RV32_BGEU(insn);
+    default:
+      return new RV32IllegalInstruction(insn);
+    }
+  }
+  
+  private RV32Instruction decode_SYSTEM(int insn) {
+    // opcode = 1110011
+    // now decode funct3
+    int funct3 = (insn & 0b00000000000000000111000000000000) >>> 12;
+    switch (funct3) {
+    case 0b000:
+    {
+      // decode imm (funct12)
+      int imm = (insn & 0b11111111111100000000000000000000) >>> 20;
+      switch (imm) {
+      case 0b000000000000:
+        return new RV32_SCALL(insn);
+      case 0b000000000001:
+        return new RV32_SBREAK(insn);
+      case 0b000100000000:
+        return new RV32_ERET(insn);
+      default:
+        return new RV32IllegalInstruction(insn);
+      }
+    }
+    case 0b001: 
+      return new RV32_CSRRW(insn);
+    case 0b010:
+      return new RV32_CSRRS(insn);
+    case 0b011: 
+      return new RV32_CSRRC(insn);
+    case 0b101: 
+      return new RV32_CSRRWI(insn);
+    case 0b110: 
+      return new RV32_CSRRSI(insn);
+    case 0b111: 
+      return new RV32_CSRRCI(insn);
     default:
       return new RV32IllegalInstruction(insn);
     }

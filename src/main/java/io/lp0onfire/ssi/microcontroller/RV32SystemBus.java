@@ -1,7 +1,9 @@
 package io.lp0onfire.ssi.microcontroller;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class RV32SystemBus {
 
@@ -12,6 +14,11 @@ public class RV32SystemBus {
   private static final int LAST_VALID_PAGE = 0xFFFFFFFF >>> 10;
   
   private RV32InstructionDecoder decoder;
+  
+  // reservations are always made on word-aligned addresses
+  private Set<Integer> reservedAddresses = new HashSet<>();
+  
+  private Map<Integer, RV32Instruction> instructionCache = new HashMap<>();
   
   public RV32SystemBus() {
     this.decoder = new RV32InstructionDecoder();
@@ -70,6 +77,9 @@ public class RV32SystemBus {
   }
   
   public RV32Instruction fetchInstruction(int address) throws AddressTrapException {
+    if (instructionCache.containsKey(address)) {
+      return instructionCache.get(address);
+    }
     // must be 4-byte aligned
     if ((address & 0x00000003) != 0) {
       throw new AddressTrapException(0, address);
@@ -77,7 +87,9 @@ public class RV32SystemBus {
     int pageNumber = (address & 0xFFFFF800) >>> 10;
     if (mappedPages.containsKey(pageNumber)) {
       int insn = mappedPages.get(pageNumber).readWord(address);
-      return decoder.decode(insn);
+      RV32Instruction instruction = decoder.decode(insn);
+      instructionCache.put(address, instruction);
+      return instruction;
     } else {
       throw new AddressTrapException(1, address);
     }
@@ -87,6 +99,7 @@ public class RV32SystemBus {
     int pageNumber = (address & 0xFFFFF800) >>> 10;
     if (mappedPages.containsKey(pageNumber)) {
       mappedPages.get(pageNumber).writeByte(address, value);
+      clearReservation(address);
     } else {
       throw new AddressTrapException(7, address);
     }
@@ -100,6 +113,7 @@ public class RV32SystemBus {
     int pageNumber = (address & 0xFFFFF800) >>> 10;
     if (mappedPages.containsKey(pageNumber)) {
       mappedPages.get(pageNumber).writeHalfword(address, value);
+      clearReservation(address);
     } else {
       throw new AddressTrapException(7, address);
     }
@@ -113,9 +127,30 @@ public class RV32SystemBus {
     int pageNumber = (address & 0xFFFFF800) >>> 10;
     if (mappedPages.containsKey(pageNumber)) {
       mappedPages.get(pageNumber).writeWord(address, value);
+      clearReservation(address);
     } else {
       throw new AddressTrapException(7, address);
     }
+  }
+  
+  public void setReservation(int address) {
+    reservedAddresses.add(address >>> 2);
+  }
+  
+  public boolean isReserved(int address) {
+    return reservedAddresses.contains(address >>> 2);
+  }
+  
+  public void clearReservation(int address) {
+    reservedAddresses.remove(address >>> 2);
+  }
+  
+  public void clearAllReservations() {
+    reservedAddresses.clear();
+  }
+  
+  public void clearInstructionCache() {
+    instructionCache.clear();
   }
   
 }
