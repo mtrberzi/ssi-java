@@ -171,6 +171,10 @@ public class RV32Core {
     }
   }
   
+  public boolean interruptsEnabled() {
+    return mstatus_ie;
+  }
+  
   public void externalInterrupt() {
     processorTrap(new InterruptException(15));
   }

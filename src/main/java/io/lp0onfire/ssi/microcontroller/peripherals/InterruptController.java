@@ -129,29 +129,38 @@ public class InterruptController implements SystemBusPeripheral {
   
   private boolean stateChange = false;
   
+  public int nextInterrupt() {
+    if (!masterEnable) {
+      return -1;
+    }
+    int nextInterrupt = -1;
+    int currentPriority = 32;
+    for (int i = 31; i >= 0; --i) {
+      if (interruptPending[i] && interruptEnabled[i]) {
+        // priority check: priority must be smaller than
+        // last priority, or equal priority and lower interrupt number
+        if (interruptPriority[i] <= currentPriority) {
+          nextInterrupt = i;
+          currentPriority = interruptPriority[i];
+        }
+      }
+    }
+    return nextInterrupt;
+  }
+  
   @Override
   public void cycle() {
     if (stateChange) {
-      stateChange = false;
-        if (masterEnable) {
-        // recompute current interrupt
-        int nextInterrupt = -1;
-        int currentPriority = 32;
-        for (int i = 31; i >= 0; --i) {
-          if (interruptPending[i] && interruptEnabled[i]) {
-            // priority check: priority must be smaller than
-            // last priority, or equal priority and lower interrupt number
-            if (interruptPriority[i] <= currentPriority) {
-              nextInterrupt = i;
-              currentPriority = interruptPriority[i];
-            }
-          }
-        }
+      if (masterEnable) {
+        int nextInterrupt = nextInterrupt();
         if (nextInterrupt != -1) {
           // new interrupt pending
           if (nextInterrupt != currentInterrupt) {
-            // interrupt the CPU
-            cpu.externalInterrupt();
+            if (cpu.interruptsEnabled()) {
+              stateChange = false;
+              // interrupt the CPU
+              cpu.externalInterrupt();
+            }
           }
         }
       }
@@ -181,5 +190,12 @@ public class InterruptController implements SystemBusPeripheral {
   }
   
   private int[] interruptPriority;
+  public int getInterruptPriority(int irq) {
+    return interruptPriority[irq];
+  }
+  public void setInterruptPriority(int irq, int priority) {
+    interruptPriority[irq] = priority;
+    stateChange = true;
+  }
   
 }
