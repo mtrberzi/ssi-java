@@ -18,6 +18,14 @@ public class TestInterruptController {
   }
   
   @Test
+  public void testAssertInterruptWhileMasterDisabled() {
+    pic.setMasterEnable(false);
+    pic.setInterruptEnabled(0, true);
+    pic.assertInterrupt(0);
+    assertEquals(-1, pic.nextInterrupt());
+  }
+  
+  @Test
   public void testOneInterrupt() {
     pic.setMasterEnable(true);
     pic.setInterruptEnabled(0, true);
