@@ -64,6 +64,10 @@ public class InterruptController implements SystemBusPeripheral {
     case 2: // Interrupt Pending Register
       return this.interruptPendingRegister;
     default:
+      if (registerNumber >= 4 && registerNumber < 4+32) {
+        // Interrupt # Priority
+        return getInterruptPriority(registerNumber - 4);
+      }
       throw new AddressTrapException(5, pAddr);
     }
   }
@@ -91,6 +95,11 @@ public class InterruptController implements SystemBusPeripheral {
       }
       break;
     default:
+      if (registerNumber >= 4 && registerNumber < 4+32) {
+        // Interrupt # Priority
+        setInterruptPriority(registerNumber - 4, value & 0x0000001F);
+        break;
+      }
       throw new AddressTrapException(7, pAddr);
     }
   }
