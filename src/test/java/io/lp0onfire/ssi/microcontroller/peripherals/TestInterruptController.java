@@ -129,6 +129,13 @@ public class TestInterruptController {
   }
   
   @Test
+  public void testReadWord_InterruptPriority() throws AddressTrapException {
+    pic.setInterruptPriority(2, 30);
+    int result = pic.readWord(0xEA001018);
+    assertEquals(30, result);
+  }
+  
+  @Test
   public void testWriteWord_MIS_Enable() throws AddressTrapException {
     pic.setMasterEnable(false);
     pic.writeWord(0xEA001000, 0x80000000);
