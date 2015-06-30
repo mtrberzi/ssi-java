@@ -58,7 +58,8 @@ public class InterruptController implements SystemBusPeripheral {
     int registerNumber = (address & 0x00000FFF) >>> 2;
     switch (registerNumber) {
     case 0: // Master Interrupt Status
-      return (getMasterEnable() ? 0x80000000 : 0x00000000) | getCurrentInterrupt();
+      return (getMasterEnable() ? 0x80000000 : 0x00000000) 
+          | (getCurrentInterrupt() & 0x0000001F);
     case 1: // Interrupt Enable Register
       return this.interruptEnableRegister;
     case 2: // Interrupt Pending Register
@@ -168,6 +169,7 @@ public class InterruptController implements SystemBusPeripheral {
             if (cpu.interruptsEnabled()) {
               stateChange = false;
               // interrupt the CPU
+              currentInterrupt = nextInterrupt;
               cpu.externalInterrupt();
             }
           }
