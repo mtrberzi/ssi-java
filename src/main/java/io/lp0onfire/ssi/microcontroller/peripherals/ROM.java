@@ -76,4 +76,8 @@ public class ROM implements SystemBusPeripheral {
   public void writeWord(int address, int value) throws AddressTrapException {
   }
 
+  @Override
+  public void cycle() {
+  }
+
 }

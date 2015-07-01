@@ -55,6 +55,10 @@ public class TestRV32SystemBus {
       assertEquals(0x120, localAddr);
     }
     
+    @Override
+    public void cycle() {
+    }
+    
   }
   
   private RV32SystemBus bus;

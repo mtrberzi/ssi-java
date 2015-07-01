@@ -171,6 +171,14 @@ public class RV32Core {
     }
   }
   
+  public boolean interruptsEnabled() {
+    return mstatus_ie;
+  }
+  
+  public void externalInterrupt() {
+    processorTrap(new InterruptException(15));
+  }
+  
   private void processorTrap(ProcessorTrapException e) {
     if (e instanceof AddressTrapException) {
       mbadaddr = ((AddressTrapException)e).getBadAddr();
@@ -730,4 +738,5 @@ public class RV32Core {
     int rs1 = getXRegister(rv32_XORI.getRs1());
     setXRegister(rv32_XORI.getRd(), rs1 ^ rv32_XORI.getImm());
   }
+  
 }

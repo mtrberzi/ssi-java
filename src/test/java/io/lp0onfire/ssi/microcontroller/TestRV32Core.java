@@ -41,6 +41,10 @@ public class TestRV32Core {
     public void writeWord(int address, int value) throws AddressTrapException {
     }
     
+    @Override
+    public void cycle() {
+    }
+    
   }
   
   @Test

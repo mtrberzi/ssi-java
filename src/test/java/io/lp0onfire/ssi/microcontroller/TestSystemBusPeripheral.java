@@ -45,6 +45,10 @@ public class TestSystemBusPeripheral {
     public void writeWord(int address, int value) throws AddressTrapException {
     }
     
+    @Override
+    public void cycle() {
+    }
+    
   }
   
   @Test
