@@ -66,8 +66,16 @@ public class Timer implements SystemBusPeripheral, InterruptSource {
   }
   
   private int prescalerCounter = 0;
-  
   private int counter = 0;
+  
+  public int getPrescalerCounter() {
+    return this.prescalerCounter;
+  }
+  
+  public int getCounter() {
+    return this.counter;
+  }
+  
   private int reload = 0;
   private int match = 0;
   
@@ -104,6 +112,8 @@ public class Timer implements SystemBusPeripheral, InterruptSource {
     int address = translateAddress(pAddr);
     int registerNumber = (address & 0x00000FFF) >>> 2;
     switch (registerNumber) {
+    case 1: // TIMER_COUNT
+      return counter;
     default:
       throw new AddressTrapException(5, pAddr);
     }
