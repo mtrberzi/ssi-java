@@ -6,7 +6,8 @@ import io.lp0onfire.ssi.microcontroller.SystemBusPeripheral;
 
 public class Timer implements SystemBusPeripheral, InterruptSource {
 
-  private int prescalerPeriod = 0;
+  private int rawPrescalerPeriod = 0;
+  private int prescalerPeriod = 2;
   public int getPrescalerPeriod() {
     return this.prescalerPeriod;
   }
@@ -31,6 +32,7 @@ public class Timer implements SystemBusPeripheral, InterruptSource {
     default:
       throw new IllegalArgumentException("invalid prescaler value " + p);
     }
+    rawPrescalerPeriod = p;
   }
   
   private boolean autoReload = false;
@@ -76,11 +78,37 @@ public class Timer implements SystemBusPeripheral, InterruptSource {
     return this.counter;
   }
   
+  public void setCounter(int c) {
+    this.counter = c;
+  }
+  
   private int reload = 0;
+  public void setReload(int r) {
+    this.reload = r;
+  }
+  
   private int match = 0;
+  public void setMatch(int m) {
+    this.match = m;
+  }
   
   private boolean matchInterruptEnabled = false;
+  public void setMatchInterruptEnable(boolean e) {
+    this.matchInterruptEnabled = e;
+  }
   private boolean overflowInterruptEnabled = false;
+  public void setOverflowInterruptEnable(boolean e) {
+    this.overflowInterruptEnabled = e;
+  }
+  
+  private boolean matchInterruptAsserted = false;
+  public boolean getMatchInterruptAsserted() {
+    return this.matchInterruptAsserted;
+  }
+  private boolean overflowInterruptAsserted = false;
+  public boolean getOverflowInterruptAsserted() {
+    return this.overflowInterruptAsserted;
+  }
   
   @Override
   public int getNumberOfPages() {
@@ -112,8 +140,45 @@ public class Timer implements SystemBusPeripheral, InterruptSource {
     int address = translateAddress(pAddr);
     int registerNumber = (address & 0x00000FFF) >>> 2;
     switch (registerNumber) {
+    case 0: // TIMER_CTRL
+    {
+      int retval = 0;
+      // bits 6-4: prescaler period
+      retval |= (rawPrescalerPeriod << 4);
+      // bit 3: autoreload enable
+      retval |= (getAutoReloadEnable() ? (1<<3) : 0);
+      // bit 2: prescaler enable
+      retval |= (getPrescalerEnable() ? (1<<2) : 0);
+      // bit 1: master interrupt enable
+      retval |= (getMasterInterruptEnable() ? (1<<1) : 0);
+      // bit 0: timer start/stop
+      retval |= (getTimerStart() ? (1<<0) : 0);
+      return retval;
+    }
     case 1: // TIMER_COUNT
       return counter;
+    case 2: // TIMER_RELOAD
+      return reload;
+    case 3: // TIMER_MATCH
+      return match;
+    case 4: // TIMER_IE
+    {
+      int retval = 0;
+      // bit 1: match interrupt enable
+      retval |= (matchInterruptEnabled ? (1<<1) : 0);
+      // bit 0: overflow interrupt enable
+      retval |= (overflowInterruptEnabled ? (1<<0) : 0);
+      return retval;
+    }
+    case 5: // TIMER_IP
+    {
+      int retval = 0;
+      // bit 1: match interrupt pending
+      retval |= (matchInterruptAsserted ? (1<<1) : 0);
+      // bit 0: overflow interrupt pending
+      retval |= (overflowInterruptAsserted ? (1<<0) : 0);
+      return retval;
+    }
     default:
       throw new AddressTrapException(5, pAddr);
     }
@@ -171,7 +236,7 @@ public class Timer implements SystemBusPeripheral, InterruptSource {
       }
       
       if (incrementCounter && counter == 0xFFFFFFFF) {
-        // TODO overflow interrupt
+        overflowInterruptAsserted = true;
         if (autoReload) {
           counter = reload;
         } else {
@@ -182,7 +247,7 @@ public class Timer implements SystemBusPeripheral, InterruptSource {
       }
       
       if (incrementCounter && counter == match) {
-        // TODO match interrupt
+        matchInterruptAsserted = true;
       }
     }
     
@@ -190,14 +255,20 @@ public class Timer implements SystemBusPeripheral, InterruptSource {
 
   @Override
   public boolean interruptAsserted() {
-    // TODO Auto-generated method stub
-    return false;
+    if (!interruptsEnabled) return false;
+    if (matchInterruptEnabled && matchInterruptAsserted) {
+      return true;
+    } else if (overflowInterruptEnabled && overflowInterruptAsserted) {
+      return true;
+    } else {
+      return false;
+    }
   }
   
   @Override
   public void acknowledgeInterrupt() {
-    // TODO Auto-generated method stub
-    
+    // we don't need to do anything special here as we
+    // have our own interrupt acknowledge register
   }
 
 }
