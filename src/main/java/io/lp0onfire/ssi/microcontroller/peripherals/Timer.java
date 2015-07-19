@@ -214,7 +214,12 @@ public class Timer implements SystemBusPeripheral, InterruptSource {
       overflowInterruptEnabled = ((value & 0x00000001) != 0);
       break;
     case 6: // TIMER_IA
-      // TODO
+      if ((value & 0x00000002) != 0) {
+        matchInterruptAsserted = false;
+      }
+      if ((value & 0x00000001) != 0) {
+        overflowInterruptAsserted = false;
+      }
       break;
     default:
       throw new AddressTrapException(7, pAddr);

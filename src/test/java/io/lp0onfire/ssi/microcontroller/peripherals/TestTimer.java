@@ -80,6 +80,93 @@ public class TestTimer {
   }
   
   @Test
+  public void testWrite_CTRL_Prescaler() throws AddressTrapException {
+    Timer timer = new Timer();
+    timer.writeWord(0x0, 0x00000020);
+    assertEquals(8, timer.getPrescalerPeriod());
+  }
+  
+  @Test
+  public void testWrite_CTRL_AutoReload() throws AddressTrapException {
+    Timer timer = new Timer();
+    timer.writeWord(0x0, 0x00000008);
+    assertTrue(timer.getAutoReloadEnable());
+  }
+  
+  @Test
+  public void testWrite_CTRL_PrescalerEnable() throws AddressTrapException {
+    Timer timer = new Timer();
+    timer.writeWord(0x0, 0x00000004);
+    assertTrue(timer.getPrescalerEnable());
+  }
+  
+  @Test
+  public void testWrite_CTRL_MasterInterrupt() throws AddressTrapException {
+    Timer timer = new Timer();
+    timer.writeWord(0x0, 0x00000002);
+    assertTrue(timer.getMasterInterruptEnable());
+  }
+  
+  @Test
+  public void testWrite_CTRL_Start() throws AddressTrapException {
+    Timer timer = new Timer();
+    timer.writeWord(0x0, 0x00000001);
+    assertTrue(timer.getTimerStart());
+  }
+  
+  @Test
+  public void testWrite_COUNT() throws AddressTrapException {
+    Timer timer = new Timer();
+    int expected = 0x5a5aa5a5;
+    timer.writeWord(0x4, expected);
+    assertEquals(expected, timer.getCounter());
+  }
+  
+  @Test
+  public void testWrite_RELOAD() throws AddressTrapException {
+    Timer timer = new Timer();
+    int expected = 0x5a5aa5a5;
+    timer.writeWord(0x8, expected);
+    assertEquals(expected, timer.readWord(0x8));
+  }
+  
+  @Test
+  public void testWrite_MATCH() throws AddressTrapException {
+    Timer timer = new Timer();
+    int expected = 0x5a5aa5a5;
+    timer.writeWord(0xc, expected);
+    assertEquals(expected, timer.readWord(0xc));
+  }
+  
+  @Test
+  public void testWrite_IE() throws AddressTrapException {
+    Timer timer = new Timer();
+    int expected = 0x00000003;
+    timer.writeWord(0x10, expected);
+    assertEquals(expected, timer.readWord(0x10));
+  }
+  
+  @Test
+  public void testWrite_IA() throws AddressTrapException {
+    Timer timer = new Timer();
+    assertEquals(0x00000000, timer.readWord(0x14));
+    // arrange for an overflow interrupt to be pending
+    timer.setCounter(0xFFFFFFFF);
+    timer.setMatch(0xEEEEEEEE);
+    timer.setTimerStart(true);
+    timer.cycle();
+    assertEquals(0x00000001, timer.readWord(0x14));
+    timer.writeWord(0x18, 0x00000001);
+    assertEquals(0x00000000, timer.readWord(0x14));
+    // now arrange for a match interrupt to be pending
+    timer.setMatch(0x00000001);
+    timer.cycle();
+    assertEquals(0x00000002, timer.readWord(0x14));
+    timer.writeWord(0x18, 0x00000002);
+    assertEquals(0x00000000, timer.readWord(0x14));
+  }
+  
+  @Test
   public void testCounter_AfterReset_DoesNotCount() {
     Timer timer = new Timer();
     int counter_init = timer.getCounter();
