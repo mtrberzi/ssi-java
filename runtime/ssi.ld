@@ -15,6 +15,7 @@ SECTIONS
 	. = 0x10000000;
 	.data : { *(.data) }
 	. = ALIGN(4);
+	bss_start = .;
 	.bss : { *(.bss) }
 	bss_end = .;
 	. = ALIGN(4);
