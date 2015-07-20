@@ -84,6 +84,13 @@ public class ELFImage {
         byte[] phdrBytes = new byte[(int)e_phentsize];
         elf.get(phdrBytes);
         ByteBuffer phdr = ByteBuffer.wrap(phdrBytes);
+        if (ei_data == 1) {
+          // use little-endian
+          phdr.order(ByteOrder.LITTLE_ENDIAN);
+        } else if (ei_data == 2) {
+          // use big-endian
+          phdr.order(ByteOrder.BIG_ENDIAN);
+        }
         ELFProgramHeader headerData = new ELFProgramHeader(phdr, elfBytes);
         programHeaders.add(headerData);
       }
