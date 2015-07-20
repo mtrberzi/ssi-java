@@ -14,6 +14,10 @@ SECTIONS
 /* data segment */
 	. = 0x10000000;
 	.data : { *(.data) }
+	. = ALIGN(4);
 	.bss : { *(.bss) }
-	_end = .;
+	bss_end = .;
+	. = ALIGN(4);
+	. = . + 0x1000; /* allocate 4kb of stack */
+	stack_top = .;
 }
