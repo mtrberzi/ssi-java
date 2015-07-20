@@ -1,3 +1,4 @@
+#include "system.h"
 #include "interrupt_controller.h"
 
 static irq_handler irq_handler_table[32];

@@ -11,6 +11,10 @@ void write_word(int address, int value) {
   *reg = value;
 }
 
+int handle_syscall(int regs[32]) {
+  return 0;
+}
+
 int handle_trap(int cause, int epc, int regs[32]) {
   if (cause < 0) {
     // interrupt
@@ -36,8 +40,4 @@ int handle_trap(int cause, int epc, int regs[32]) {
     }
   }
   return epc+4;
-}
-
-int handle_syscall(int regs[32]) {
-  return 0;
 }

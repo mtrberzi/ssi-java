@@ -6,7 +6,7 @@ IDIR = include
 ODIR = obj
 SRCDIR = src
 
-CFLAGS=-m32 -Os -I$(IDIR) -nostdlib -nostartfiles -static
+CFLAGS=-std=c99 -m32 -Os -I$(IDIR) -nostdlib -nostartfiles -static -Wall
 ASFLAGS=-m32
 
 _DEPS = system.h interrupt_controller.h
