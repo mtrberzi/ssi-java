@@ -9,10 +9,10 @@ SRCDIR = src
 CFLAGS=-std=c99 -m32 -Os -I$(IDIR) -nostdlib -nostartfiles -static -Wall
 ASFLAGS=-m32
 
-_DEPS = system.h interrupt_controller.h
+_DEPS = system.h interrupt_controller.h timer.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ = system.o interrupt_controller.o
+_OBJ = system.o interrupt_controller.o timer.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 all: runtime.a

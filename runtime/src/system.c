@@ -1,13 +1,13 @@
 #include "system.h"
 #include "interrupt_controller.h"
 
-int read_word(int address) {
-  volatile int *reg = (int*)address;
+unsigned read_word(unsigned int address) {
+  volatile unsigned int *reg = (unsigned int*)address;
   return *reg;
 }
 
-void write_word(int address, int value) {
-  volatile int *reg = (int*)address;
+void write_word(unsigned int address, unsigned int value) {
+  volatile unsigned int *reg = (unsigned int*)address;
   *reg = value;
 }
 
