@@ -41,7 +41,7 @@ public class Microcontroller {
     cpu.getSystemBus().attachPeripheral(dataMemory, dataMemoryBase);
     // stack pointer initially goes to top of RAM, 16-byte aligned
     int dataMemoryTop = dataMemoryBase + (dataMemoryPages * 1024) - 1;
-    cpu.setXRegister(2, dataMemoryTop & 0xFFFFFFF0);
+    cpu.setXRegister(2, dataMemoryTop & 0xFFFFFFF8);
     
     // interrupt controller at 0xEA001000
     interruptController = new InterruptController(cpu);

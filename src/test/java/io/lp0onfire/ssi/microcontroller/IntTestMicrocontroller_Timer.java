@@ -55,6 +55,14 @@ public class IntTestMicrocontroller_Timer {
         statusLine.append("mcause=" + Integer.toHexString(mcu.getCPU().mcause));
       }
       statusLine.append("] ");
+      // debug stack pointer
+      statusLine.append("regs=[");
+      statusLine.append("sp=").append(Integer.toHexString(mcu.getCPU().getXRegister(2)));
+      statusLine.append("] ");
+      // debug irq_handler_table
+      statusLine.append("irqtable=[");
+      statusLine.append("0=").append(Integer.toHexString(mcu.getDataMemory().readWord(0x10000000)));
+      statusLine.append("] ");
       statusLine.append("timer=[");
       statusLine.append("ctr=" + Integer.toHexString(timer.getCounter()));
       statusLine.append(" ");

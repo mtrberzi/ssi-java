@@ -15,6 +15,8 @@ void pic_init();
 void pic_register_handler(unsigned int irqno, irq_handler handler);
 void pic_master_enable();
 void pic_master_disable();
+void pic_enable_interrupt(unsigned int irqno);
+void pic_disable_interrupt(unsigned int irqno);
 void pic_set_priority(unsigned int irqno, unsigned int priority);
 
 void handle_external_interrupt();

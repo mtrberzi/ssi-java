@@ -40,6 +40,7 @@ int main(void) {
 
   pic_register_handler(timer0_irq, irq_timer0);
   pic_set_priority(timer0_irq, 0);
+  pic_enable_interrupt(timer0_irq);
   pic_master_enable();
   enable_interrupts();
 

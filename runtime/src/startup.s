@@ -89,7 +89,7 @@ trap_entry:
 	lw x31, 31*4(sp)
 	
 	addi sp, sp, 128
-	sret
+	eret
 
 	.globl enable_interrupts
 enable_interrupts:
