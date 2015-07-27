@@ -13,6 +13,10 @@ typedef void (*irq_handler)(void);
 
 void pic_init();
 void pic_register_handler(unsigned int irqno, irq_handler handler);
+void pic_master_enable();
+void pic_master_disable();
+void pic_set_priority(unsigned int irqno, unsigned int priority);
+
 void handle_external_interrupt();
 
 #endif // _INTERRUPT_CONTROLLER_H_
