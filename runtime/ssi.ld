@@ -8,7 +8,7 @@ SECTIONS
 	. = 0x100;
 	.text :
 	{
-		startup.o(.text)
+		runtime.a:startup.o(.text)
 		*(.text)
 	}
 /* data segment */
