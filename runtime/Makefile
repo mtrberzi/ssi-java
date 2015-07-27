@@ -13,7 +13,7 @@ ASFLAGS=-m32
 _DEPS = system.h interrupt_controller.h timer.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ = system.o interrupt_controller.o timer.o
+_OBJ = system.o interrupt_controller.o timer.o save-restore.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 all: runtime.a tests
@@ -22,6 +22,9 @@ runtime.a: $(OBJ) $(ODIR)/startup.o
 	$(AR) rcs runtime.a $(OBJ) $(ODIR)/startup.o
 
 $(ODIR)/startup.o: $(SRCDIR)/startup.s
+	$(AS) $(ASFLAGS) -o $@ $<
+
+$(ODIR)/save-restore.o: $(SRCDIR)/save-restore.s
 	$(AS) $(ASFLAGS) -o $@ $<
 
 $(ODIR)/%.o: src/%.c $(DEPS)
