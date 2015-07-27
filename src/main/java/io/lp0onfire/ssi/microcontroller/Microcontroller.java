@@ -18,8 +18,17 @@ public class Microcontroller {
   private static final int dataMemoryTop  = 0x20000000;
   
   private RV32Core cpu;
+  protected RV32Core getCPU() {
+    return this.cpu;
+  }
   private ROM textMemory;
+  protected ROM getTextMemory() {
+    return this.textMemory;
+  }
   private RAM dataMemory;
+  protected RAM getDataMemory() {
+    return this.dataMemory;
+  }
   private InterruptController interruptController;
   
   private List<SystemBusPeripheral> peripherals = new LinkedList<>();
@@ -59,14 +68,22 @@ public class Microcontroller {
       int topAddress = baseAddress + phdr.segmentData.length;
       if (baseAddress >= 0 && baseAddress < dataMemoryBase && topAddress >= 0 && topAddress < dataMemoryBase) {
         // segment fits completely within ROM
-        romData.ensureCapacity(topAddress - textMemoryBase);
+        int requiredSize = topAddress - textMemoryBase;
+        romData.ensureCapacity(requiredSize);
+        while (romData.size() < requiredSize) {
+          romData.add((byte)0);
+        }
         for (byte b : phdr.segmentData) {
           romData.set(baseAddress, b);
           baseAddress++;
         }
       } else if (baseAddress >= dataMemoryBase && baseAddress < dataMemoryTop && topAddress >= dataMemoryBase && topAddress < dataMemoryTop) {
         // segment fits completely within RAM
-        ramData.ensureCapacity(topAddress - dataMemoryBase);
+        int requiredSize = topAddress - dataMemoryBase;
+        ramData.ensureCapacity(requiredSize);
+        while (ramData.size() < requiredSize) {
+          ramData.add((byte)0);
+        }
         baseAddress -= dataMemoryBase;
         for (byte b : phdr.segmentData) {
           ramData.set(baseAddress, b);

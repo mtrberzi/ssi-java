@@ -19,8 +19,9 @@ public class RAM implements SystemBusPeripheral {
   }
 
   public void setContents(byte[] contents) {
-    if (contents.length < 0 || contents.length > memory.length) {
-      throw new IllegalArgumentException();
+    if (contents.length > memory.length) {
+      throw new IllegalArgumentException("out of memory:" + 
+          "attempted to fill with " + contents.length + " bytes, but only " + memory.length + " bytes available");
     }
     System.arraycopy(contents, 0, memory, 0, contents.length);
   }
