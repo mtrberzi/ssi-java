@@ -9,7 +9,7 @@ public class InterruptException extends ProcessorTrapException {
   @Override
   public int getMCause() {
     // interrupts have bit 31 set in mcause
-    return 0x80000000 & super.getMCause();
+    return 0x80000000 | super.getMCause();
   }
   
 }

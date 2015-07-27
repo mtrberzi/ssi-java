@@ -29,11 +29,12 @@ public class IntTestMicrocontroller_Timer {
   private static final int timer0_IRQ = 0;
   
   private Microcontroller mcu;
+  private Timer timer;
   
   @Before
   public void setup() {
     this.mcu = new Microcontroller(textMemoryPages, dataMemoryPages);
-    Timer timer = new Timer();
+    timer = new Timer();
     mcu.attachPeripheral(timer, 0xE9000000);
     mcu.registerInterrupt(timer, timer0_IRQ);
   }
@@ -46,7 +47,34 @@ public class IntTestMicrocontroller_Timer {
     int cycleCount = 1000;
     for (int c = 0; c < cycleCount; ++c) {
       int pc = mcu.getCPU().getPC();
-      System.out.println("cycle 0: pc=" + Integer.toHexString(pc));
+      StringBuilder statusLine = new StringBuilder();
+      statusLine.append("cycle " + c + ": ");
+      statusLine.append("pc=" + Integer.toHexString(pc) + " ");
+      statusLine.append("msr=[");
+      if (mcu.getCPU().mcause != 0) {
+        statusLine.append("mcause=" + Integer.toHexString(mcu.getCPU().mcause));
+      }
+      statusLine.append("] ");
+      statusLine.append("timer=[");
+      statusLine.append("ctr=" + Integer.toHexString(timer.getCounter()));
+      statusLine.append(" ");
+      if (timer.getMasterInterruptEnable()) {
+        statusLine.append("I");
+      } else {
+        statusLine.append("i");
+      }
+      if (timer.getMatchInterruptAsserted()) {
+        statusLine.append("M");
+      } else {
+        statusLine.append("m");
+      }
+      if (timer.getOverflowInterruptAsserted()) {
+        statusLine.append("O");
+      } else {
+        statusLine.append("o");
+      }
+      statusLine.append("] ");
+      System.out.println(statusLine.toString());
       mcu.cycle();
     }
     // TODO get this information by reading the symbol table
