@@ -39,6 +39,38 @@ public class IntTestMicrocontroller_Timer {
     mcu.registerInterrupt(timer, timer0_IRQ);
   }
   
+  private void trace(int cycle) throws AddressTrapException {
+    int pc = mcu.getCPU().getPC();
+    StringBuilder statusLine = new StringBuilder();
+    statusLine.append("cycle " + cycle + ": ");
+    statusLine.append("pc=" + Integer.toHexString(pc) + " ");
+    statusLine.append("msr=[ ");
+    if (mcu.getCPU().mcause != 0) {
+      statusLine.append("mcause=" + Integer.toHexString(mcu.getCPU().mcause)).append(" ");
+    }
+    if (mcu.getCPU().mepc != 0) {
+      statusLine.append("mepc=" + Integer.toHexString(mcu.getCPU().mepc)).append(" ");
+    }
+    statusLine.append("] ");
+    if (timer.getMasterInterruptEnable()) {
+      statusLine.append("I");
+    } else {
+      statusLine.append("i");
+    }
+    if (timer.getMatchInterruptAsserted()) {
+      statusLine.append("M");
+    } else {
+      statusLine.append("m");
+    }
+    if (timer.getOverflowInterruptAsserted()) {
+      statusLine.append("O");
+    } else {
+      statusLine.append("o");
+    }
+    statusLine.append("] ");
+    System.out.println(statusLine.toString());
+  }
+  
   @Test
   public void testTimer1() throws IOException, AddressTrapException {
     ELFImage elf = loadELFResource("programs/test_timer_1.rv32");
@@ -46,43 +78,7 @@ public class IntTestMicrocontroller_Timer {
     mcu.reset();
     int cycleCount = 1000;
     for (int c = 0; c < cycleCount; ++c) {
-      int pc = mcu.getCPU().getPC();
-      StringBuilder statusLine = new StringBuilder();
-      statusLine.append("cycle " + c + ": ");
-      statusLine.append("pc=" + Integer.toHexString(pc) + " ");
-      statusLine.append("msr=[");
-      if (mcu.getCPU().mcause != 0) {
-        statusLine.append("mcause=" + Integer.toHexString(mcu.getCPU().mcause));
-      }
-      statusLine.append("] ");
-      // debug stack pointer
-      statusLine.append("regs=[");
-      statusLine.append("sp=").append(Integer.toHexString(mcu.getCPU().getXRegister(2)));
-      statusLine.append("] ");
-      // debug irq_handler_table
-      statusLine.append("irqtable=[");
-      statusLine.append("0=").append(Integer.toHexString(mcu.getDataMemory().readWord(0x10000000)));
-      statusLine.append("] ");
-      statusLine.append("timer=[");
-      statusLine.append("ctr=" + Integer.toHexString(timer.getCounter()));
-      statusLine.append(" ");
-      if (timer.getMasterInterruptEnable()) {
-        statusLine.append("I");
-      } else {
-        statusLine.append("i");
-      }
-      if (timer.getMatchInterruptAsserted()) {
-        statusLine.append("M");
-      } else {
-        statusLine.append("m");
-      }
-      if (timer.getOverflowInterruptAsserted()) {
-        statusLine.append("O");
-      } else {
-        statusLine.append("o");
-      }
-      statusLine.append("] ");
-      System.out.println(statusLine.toString());
+      trace(c);
       mcu.cycle();
     }
     // TODO get this information by reading the symbol table
