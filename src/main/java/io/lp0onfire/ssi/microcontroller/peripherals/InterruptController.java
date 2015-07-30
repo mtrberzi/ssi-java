@@ -1,12 +1,15 @@
 package io.lp0onfire.ssi.microcontroller.peripherals;
 
 import io.lp0onfire.ssi.microcontroller.AddressTrapException;
+import io.lp0onfire.ssi.microcontroller.InterruptSource;
 import io.lp0onfire.ssi.microcontroller.RV32Core;
 import io.lp0onfire.ssi.microcontroller.SystemBusPeripheral;
 
 public class InterruptController implements SystemBusPeripheral {
 
   private final RV32Core cpu;
+  
+  private InterruptSource[] devices;
   
   public InterruptController(RV32Core cpu) {
     this.cpu = cpu;
@@ -25,6 +28,18 @@ public class InterruptController implements SystemBusPeripheral {
       this.interruptPriority[i] = 0;
     }
     
+    this.devices = new InterruptSource[32];
+    for (int i = 0; i < 32; ++i) {
+      this.devices[i] = null;
+    }
+    
+  }
+  
+  public void registerInterrupt(InterruptSource src, int irq) {
+    if (devices[irq] != null) {
+      throw new IllegalStateException("device already registered for interrupt #" + irq);
+    }
+    devices[irq] = src;
   }
   
   @Override
@@ -160,6 +175,15 @@ public class InterruptController implements SystemBusPeripheral {
   
   @Override
   public void cycle() {
+    for (int i = 0; i < 32; ++i) {
+      if (devices[i] != null) {
+        boolean irqStatus = devices[i].interruptAsserted();
+        if (irqStatus && !interruptPending[i]) {
+          assertInterrupt(i);
+        }
+      }
+    }
+    
     if (stateChange) {
       if (masterEnable) {
         int nextInterrupt = nextInterrupt();
@@ -194,6 +218,9 @@ public class InterruptController implements SystemBusPeripheral {
       interruptPending[irq] = false;
       interruptPendingRegister &= ~(1 << irq);
       stateChange = true;
+      if (devices[irq] != null) {
+        devices[irq].acknowledgeInterrupt();
+      }
       if (currentInterrupt == irq) {
         currentInterrupt = -1;
       }

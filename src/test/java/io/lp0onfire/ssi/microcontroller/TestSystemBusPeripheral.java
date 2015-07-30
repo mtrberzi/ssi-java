@@ -60,4 +60,14 @@ public class TestSystemBusPeripheral {
     assertEquals(expected, actual);
   }
   
+  @Test
+  public void testTranslateAddress_FivePages() {
+    // regression test for a real address-translation bug
+    TestPeripheral p = new TestPeripheral(5);
+    int pAddress = 0x10001000;
+    int expected = 0x00001000;
+    int actual = p.translateAddress(pAddress);
+    assertEquals(expected, actual);
+  }
+  
 }

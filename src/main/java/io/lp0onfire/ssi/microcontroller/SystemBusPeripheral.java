@@ -5,9 +5,13 @@ public interface SystemBusPeripheral {
   int getNumberOfPages(); // number of 1024-byte pages mapped by this peripheral
 
   default int translateAddress(int pAddr) {
-    int numberOfBytes = getNumberOfPages() << 10;
-    int nZeros = Integer.numberOfLeadingZeros(numberOfBytes);
-    int mask = ~(0x80000000 >> nZeros);
+    int v = getNumberOfPages() * 1024;
+    // this is very slow
+    int mask = 1;
+    while (mask < v) {
+      mask = mask << 1;
+    }
+    mask -= 1;
     return pAddr & mask;
   }
   
