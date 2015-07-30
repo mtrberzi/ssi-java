@@ -34,10 +34,12 @@ int handle_trap(int cause, int epc, int regs[32]) {
       // environment call from machine mode
       int sys_ret = handle_syscall(regs);
       regs[10] = sys_ret;
+      // skip over the ECALL instruction
+      return epc+4;
     } else {
       // illegal operation
       while(1);
     }
   }
-  return epc+4;
+  return epc;
 }
