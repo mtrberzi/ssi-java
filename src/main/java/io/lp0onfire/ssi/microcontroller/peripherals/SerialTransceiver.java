@@ -9,9 +9,6 @@ import io.lp0onfire.ssi.microcontroller.InterruptSource;
 import io.lp0onfire.ssi.microcontroller.SystemBusPeripheral;
 
 public class SerialTransceiver implements SystemBusPeripheral, InterruptSource {
-
-  // tracks the position within the timestep
-  private int cycleCount = 0;
   
   // tracks how often we attempt to send and receive packets
   private long transceiverPeriod = 0x00000000FFFFFFFFL;
@@ -42,6 +39,7 @@ public class SerialTransceiver implements SystemBusPeripheral, InterruptSource {
   }
   
   private void send(int data) {
+    if (getCable() == null) return;
     if (!getCable().hasCarrier()) return;
     if (getTransmitBufferCapacity() >= BUFFER_CAPACITY) {
       return;
@@ -53,6 +51,7 @@ public class SerialTransceiver implements SystemBusPeripheral, InterruptSource {
   }
   
   private Packet recv() {
+    if (getCable() == null) return null;
     if (!getCable().hasCarrier()) return null;
     Packet p = receiveBuffer.poll();
     if (p != null) {
@@ -147,7 +146,7 @@ public class SerialTransceiver implements SystemBusPeripheral, InterruptSource {
     if (transceiverPollingCount == transceiverPeriod) {
       transceiverPollingCount = 0L;
       // attempt to send and receive
-      if (getCable().hasCarrier()) {
+      if (getCable() != null && getCable().hasCarrier()) {
         Packet pTransmit = transmitBuffer.poll();
         if (pTransmit != null) {
           transmitBufferCapacity--;
@@ -163,11 +162,6 @@ public class SerialTransceiver implements SystemBusPeripheral, InterruptSource {
     } else {
       transceiverPollingCount++;
     }
-    ++cycleCount;
-    if (cycleCount == TimeConstants.CLOCK_CYCLES_PER_TIMESTEP) {
-      // TODO swap buffers
-      cycleCount = 0;
-    }
   }
   
   @Override
@@ -180,6 +174,12 @@ public class SerialTransceiver implements SystemBusPeripheral, InterruptSource {
   public void acknowledgeInterrupt() {
     // TODO Auto-generated method stub
     
+  }
+
+  @Override
+  public void timestep() {
+    if (getCable() == null) return;
+    getCable().sync(this);
   }
 
 }

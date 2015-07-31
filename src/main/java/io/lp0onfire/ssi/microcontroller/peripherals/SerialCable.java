@@ -1,7 +1,5 @@
 package io.lp0onfire.ssi.microcontroller.peripherals;
 
-import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import io.lp0onfire.ssi.microcontroller.peripherals.SerialTransceiver;
@@ -21,12 +19,6 @@ public class SerialCable {
   private LinkedBlockingQueue<Packet> sendQueueB = new LinkedBlockingQueue<>();
   // packets received by A
   private LinkedBlockingQueue<Packet> recvQueueA = new LinkedBlockingQueue<>();
-  
-  private CyclicBarrier syncBarrier;
-  
-  public SerialCable() {
-    this.syncBarrier = new CyclicBarrier(2, new SyncAction());
-  }
   
   public void connect(SerialTransceiver xcvr) {
     if (endA == null) {
@@ -67,24 +59,15 @@ public class SerialCable {
     }
   }
  
-  
-  public void sync() {
-    if (!hasCarrier()) return;
-    try {
-      syncBarrier.await();
-    } catch (InterruptedException | BrokenBarrierException e) {
-      e.printStackTrace();
-    }
-  }
-  
-  class SyncAction implements Runnable {
-
-    @Override
-    public void run() {
+  // called exactly once per timestep by each connected transceiver
+  public void sync(SerialTransceiver xcvr) {
+    if (xcvr == endA) {
       sendQueueA.drainTo(recvQueueB);
+    } else if (xcvr == endB) {
       sendQueueB.drainTo(recvQueueA);
+    } else {
+      throw new IllegalArgumentException("attempt to sync by a serial transceiver not connected to this cable");
     }
-    
   }
   
 }

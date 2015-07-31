@@ -23,5 +23,7 @@ public interface SystemBusPeripheral {
   void writeWord(int pAddr, int value) throws AddressTrapException;
   
   void cycle();
+  // called exactly once per timestep, and after all global cycles have completed
+  void timestep();
   
 }

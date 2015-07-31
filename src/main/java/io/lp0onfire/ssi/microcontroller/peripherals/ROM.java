@@ -79,5 +79,8 @@ public class ROM implements SystemBusPeripheral {
   @Override
   public void cycle() {
   }
+  @Override
+  public void timestep() { 
+  }
 
 }
