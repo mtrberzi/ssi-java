@@ -16,7 +16,10 @@ DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 _OBJ = system.o interrupt_controller.o timer.o save-restore.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
-all: runtime.a tests
+all: $(ODIR)/ runtime.a tests
+
+$(ODIR)/:
+	mkdir -p $(ODIR)/
 
 runtime.a: $(OBJ) $(ODIR)/startup.o
 	$(AR) rcs runtime.a $(OBJ) $(ODIR)/startup.o
