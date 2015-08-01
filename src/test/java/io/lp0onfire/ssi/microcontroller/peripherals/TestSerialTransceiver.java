@@ -36,6 +36,22 @@ public class TestSerialTransceiver {
     com1.writeWord(0x0, (int)'a');
     assertEquals(1, com1.getTransmitBufferCapacity());
   }
+
+  @Test
+  public void testTransmitBufferThreshold_ReadAfterWrite() throws AddressTrapException {
+    int expected = 0x0FFF0000;
+    com1.writeWord(0xC, 0x1FFF0000);
+    int actual = com1.readWord(0xC);
+    assertEquals(expected, actual);
+  }
+  
+  @Test
+  public void testReceiveBufferThreshold_ReadAfterWrite() throws AddressTrapException {
+    int expected = 0x00000FFF;
+    com1.writeWord(0xC, 0x00001FFF);
+    int actual = com1.readWord(0xC);
+    assertEquals(expected, actual);
+  }
   
   @Test
   public void testFlushTransmitBuffer() throws AddressTrapException {

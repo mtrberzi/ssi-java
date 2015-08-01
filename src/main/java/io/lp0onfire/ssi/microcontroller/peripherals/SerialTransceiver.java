@@ -117,8 +117,17 @@ public class SerialTransceiver implements SystemBusPeripheral, InterruptSource {
     case 0x4: // Line Control
     case 0x8: // Line Status
     case 0xC: // Buffer Control
+    {
+      // recv buffer threshold: bits 11-0
+      int result = receiveBufferThreshold-1;
+      // xmit buffer threshold: bits 27-16
+      result |= transmitBufferThreshold << 16;
+      return result;
+    }
     case 0x10: // Transmit Buffer Status
+      return transmitBufferCapacity;
     case 0x14: // Receive Buffer Status
+      return receiveBufferCapacity;
     case 0x18: // Interrupt Enable
     case 0x1C: // Interrupt Status
     case 0x20: // Transceiver Period
@@ -151,7 +160,7 @@ public class SerialTransceiver implements SystemBusPeripheral, InterruptSource {
         receiveBufferCapacity = 0;
       }
       // recv buffer threshold: bits 11-0
-      this.receiveBufferThreshold = (value & 0x00000FFF);
+      this.receiveBufferThreshold = (value & 0x00000FFF) + 1;
     }
       break;
     case 0x18: // Interrupt Enable
