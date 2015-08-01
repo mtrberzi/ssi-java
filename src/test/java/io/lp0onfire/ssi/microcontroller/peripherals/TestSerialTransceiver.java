@@ -4,6 +4,8 @@ import org.junit.Test;
 import org.junit.Before;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import io.lp0onfire.ssi.microcontroller.AddressTrapException;
 
 public class TestSerialTransceiver {
@@ -104,14 +106,18 @@ public class TestSerialTransceiver {
   public void testTransmitThresholdInterrupt() throws AddressTrapException {
     // set transmit threshold = 4
     com1.writeWord(0x0c, 0x00040000);
+    // enable interrupts
+    com1.writeWord(0x18, 0x00000002);
     // transmit threshold interrupt should be asserted
     assertEquals(0x2, com1.readWord(0x1C));
+    assertTrue(com1.interruptAsserted());
     // write 5 characters to the buffer
     for (int i = 0; i < 5; ++i) {
       com1.writeWord(0x0, (int)'a');
     }
     // this should clear the interrupt
     assertEquals(0x0, com1.readWord(0x1C));
+    assertFalse(com1.interruptAsserted());
   }
 
   @Test(timeout=5000)
@@ -146,8 +152,11 @@ public class TestSerialTransceiver {
     setTransceiverPeriod(0); // send and receive every cycle
     // set receive threshold = 3 + 1
     com2.writeWord(0x0c, 0x0000003);
+    // enable interrupts
+    com2.writeWord(0x18, 0x00000001);
     // receive threshold interrupt should not be asserted
     assertEquals(0x00, com2.readWord(0x1C) & 0x01);
+    assertFalse(com2.interruptAsserted());
     
     // send twice
     com1.writeWord(0x0, (int)'a');
@@ -161,6 +170,7 @@ public class TestSerialTransceiver {
     
     // receive threshold interrupt should not be asserted
     assertEquals(0x00, com2.readWord(0x1C) & 0x01);
+    assertFalse(com2.interruptAsserted());
     
     // send twice more
     com1.writeWord(0x0, (int)'a');
@@ -174,6 +184,7 @@ public class TestSerialTransceiver {
     
     // receive threshold interrupt should be asserted now
     assertEquals(0x01, com2.readWord(0x1C) & 0x01);
+    assertTrue(com2.interruptAsserted());
     
   }
 
