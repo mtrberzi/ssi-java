@@ -46,6 +46,10 @@ public class SerialTransceiver implements SystemBusPeripheral, InterruptSource {
     return this.receiveBufferThreshold;
   }
   
+  private boolean transmitThresholdInterruptEnabled = false;
+  private boolean receiveThresholdInterruptEnabled = false;
+  private boolean modemStatusInterruptEnabled = false;
+  
   private void send(int data) {
     if (getCable() == null) return;
     if (!getCable().hasCarrier()) return;
@@ -129,7 +133,21 @@ public class SerialTransceiver implements SystemBusPeripheral, InterruptSource {
     case 0x14: // Receive Buffer Status
       return receiveBufferCapacity;
     case 0x18: // Interrupt Enable
+    {
+      int result = 0;
+      if (receiveThresholdInterruptEnabled) result |= 1;
+      if (transmitThresholdInterruptEnabled) result |= 2;
+      if (modemStatusInterruptEnabled) result |= 4;
+      return result;
+    }
     case 0x1C: // Interrupt Status
+    {
+      int result = 0;
+      if (receiveThresholdInterruptAsserted()) result |= 1;
+      if (transmitThresholdInterruptAsserted()) result |= 2;
+      // TODO modem status
+      return result;
+    }
     case 0x20: // Transceiver Period
     default:
       throw new AddressTrapException(5, pAddr);
@@ -164,6 +182,11 @@ public class SerialTransceiver implements SystemBusPeripheral, InterruptSource {
     }
       break;
     case 0x18: // Interrupt Enable
+    {
+      receiveThresholdInterruptEnabled = (value & 0x00000001) != 0;
+      transmitThresholdInterruptEnabled = (value & 0x00000002) != 0;
+      modemStatusInterruptEnabled = (value & 0x00000004) != 0;
+    }
       break;
     case 0x20: // Transceiver Period
       transceiverPeriod = (long)(value) & 0x00000000FFFFFFFFL;
@@ -197,16 +220,27 @@ public class SerialTransceiver implements SystemBusPeripheral, InterruptSource {
     }
   }
   
+  public boolean transmitThresholdInterruptAsserted() {
+    return transmitBufferCapacity <= transmitBufferThreshold;
+  }
+  
+  public boolean receiveThresholdInterruptAsserted() {
+    return receiveBufferCapacity >= receiveBufferThreshold;
+  }
+  
   @Override
   public boolean interruptAsserted() {
-    // TODO Auto-generated method stub
-    return false;
+    return (transmitThresholdInterruptEnabled && transmitThresholdInterruptAsserted())
+        || (receiveThresholdInterruptEnabled && receiveThresholdInterruptAsserted())
+        // TODO modem status interrupt
+        ;
   }
 
   @Override
   public void acknowledgeInterrupt() {
-    // TODO Auto-generated method stub
-    
+    // we don't need to do anything special here as
+    // interrupts are acknowledged by clearing the condition
+    // that caused the interrupt
   }
 
   @Override
