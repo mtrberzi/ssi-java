@@ -3,7 +3,6 @@ package io.lp0onfire.ssi.microcontroller.peripherals;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import io.lp0onfire.ssi.TimeConstants;
 import io.lp0onfire.ssi.microcontroller.AddressTrapException;
 import io.lp0onfire.ssi.microcontroller.InterruptSource;
 import io.lp0onfire.ssi.microcontroller.SystemBusPeripheral;
@@ -32,10 +31,19 @@ public class SerialTransceiver implements SystemBusPeripheral, InterruptSource {
   public int getTransmitBufferCapacity() {
     return this.transmitBufferCapacity;
   }
+  private int transmitBufferThreshold = 0;
+  public int getTransmitBufferThreshold() {
+    return this.transmitBufferThreshold;
+  }
+  
   private Queue<Packet> receiveBuffer = new LinkedList<>();
   private int receiveBufferCapacity = 0;
   public int getReceiveBufferCapacity() {
     return this.receiveBufferCapacity;
+  }
+  private int receiveBufferThreshold = 0;
+  public int getReceiveBufferThreshold() {
+    return this.receiveBufferThreshold;
   }
   
   private void send(int data) {
@@ -128,7 +136,23 @@ public class SerialTransceiver implements SystemBusPeripheral, InterruptSource {
       break;
     case 0x4: // Line Control
       break;
-    case 0xC: // Buffer Cotnrol
+    case 0xC: // Buffer Control
+    {
+      boolean flushTransmitBuffer = (value & (1<<31)) != 0;
+      if (flushTransmitBuffer) {
+        transmitBuffer.clear();
+        transmitBufferCapacity = 0;
+      }
+      // xmit buffer threshold: bits 27-16
+      this.transmitBufferThreshold = (value & 0x0FFF0000) >>> 16;
+      boolean flushReceiveBuffer = (value & (1<<15)) != 0;
+      if (flushReceiveBuffer) {
+        receiveBuffer.clear();
+        receiveBufferCapacity = 0;
+      }
+      // recv buffer threshold: bits 11-0
+      this.receiveBufferThreshold = (value & 0x00000FFF);
+    }
       break;
     case 0x18: // Interrupt Enable
       break;

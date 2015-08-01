@@ -36,6 +36,13 @@ public class TestSerialTransceiver {
     com1.writeWord(0x0, (int)'a');
     assertEquals(1, com1.getTransmitBufferCapacity());
   }
+  
+  @Test
+  public void testFlushTransmitBuffer() throws AddressTrapException {
+    com1.writeWord(0x0, (int)'a');
+    com1.writeWord(0xC, 0x80000000);
+    assertEquals(0, com1.getTransmitBufferCapacity());
+  }
 
   @Test(timeout=5000)
   public void testTransmitAndReceive() throws AddressTrapException {
