@@ -14,6 +14,8 @@ import org.junit.Test;
 
 public class IntTestMicrocontroller_Timer {
 
+  private static final boolean tracing = false;
+  
   private ELFImage loadELFResource(String res) throws IOException {
     ClassLoader classLoader = getClass().getClassLoader();
     URL resUrl = classLoader.getResource(res);
@@ -40,6 +42,7 @@ public class IntTestMicrocontroller_Timer {
   }
   
   private void trace(int cycle) throws AddressTrapException {
+    if (!tracing) return;
     int pc = mcu.getCPU().getPC();
     StringBuilder statusLine = new StringBuilder();
     statusLine.append("cycle " + cycle + ": ");
@@ -52,6 +55,7 @@ public class IntTestMicrocontroller_Timer {
       statusLine.append("mepc=" + Integer.toHexString(mcu.getCPU().mepc)).append(" ");
     }
     statusLine.append("] ");
+    statusLine.append("timer=[");
     if (timer.getMasterInterruptEnable()) {
       statusLine.append("I");
     } else {
@@ -85,8 +89,6 @@ public class IntTestMicrocontroller_Timer {
     int timer_count = mcu.getDataMemory().readWord(0x10001080);
     if (timer_count == 0) {
       fail("timer_count did not increase");
-    } else {
-      System.out.println("timer_count = " + timer_count);
     }
   }
   
