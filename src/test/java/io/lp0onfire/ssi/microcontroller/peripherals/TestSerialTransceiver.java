@@ -185,7 +185,24 @@ public class TestSerialTransceiver {
     // receive threshold interrupt should be asserted now
     assertEquals(0x01, com2.readWord(0x1C) & 0x01);
     assertTrue(com2.interruptAsserted());
+  }
+  
+  @Test(timeout=5000)
+  public void testReadUnderflow() throws AddressTrapException {
+    com1.readWord(0x00);
+    assertEquals(0, com1.getReceiveBufferCapacity());
+  }
+  
+  @Test(timeout=5000)
+  public void testTransmitOverflow() throws AddressTrapException {
+    for (int i = 0; i < SerialTransceiver.BUFFER_CAPACITY; ++i) {
+      com1.writeWord(0x0, (int)'a');
+    }
+    assertEquals(4096, com1.getTransmitBufferCapacity());
     
+    // overflow
+    com1.writeWord(0x0, (int)'a');
+    assertEquals(4096, com1.getTransmitBufferCapacity());
   }
 
 }

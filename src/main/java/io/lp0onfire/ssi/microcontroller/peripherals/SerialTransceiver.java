@@ -24,7 +24,7 @@ public class SerialTransceiver implements SystemBusPeripheral, InterruptSource {
     }
   }
   
-  private static final Integer BUFFER_CAPACITY = 4096;
+  public static final Integer BUFFER_CAPACITY = 4096;
   
   private Queue<Packet> transmitBuffer = new LinkedList<>();
   private int transmitBufferCapacity = 0;
@@ -149,6 +149,7 @@ public class SerialTransceiver implements SystemBusPeripheral, InterruptSource {
       return result;
     }
     case 0x20: // Transceiver Period
+      return (int)(transceiverPeriod & 0x00000000FFFFFFFFL);
     default:
       throw new AddressTrapException(5, pAddr);
     }
