@@ -202,6 +202,10 @@ public class InterruptController implements SystemBusPeripheral {
     }
   }
   
+  @Override
+  public void timestep() {
+  }
+  
   private int interruptPendingRegister;
   private boolean[] interruptPending;
   

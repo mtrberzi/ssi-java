@@ -48,7 +48,10 @@ public class TestSystemBusPeripheral {
     @Override
     public void cycle() {
     }
-    
+    @Override
+    public void timestep() {
+      
+    }
   }
   
   @Test

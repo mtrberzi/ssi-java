@@ -16,7 +16,10 @@ DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 _OBJ = system.o interrupt_controller.o timer.o save-restore.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
-all: runtime.a tests
+all: $(ODIR)/ runtime.a deploy_tests
+
+$(ODIR)/:
+	mkdir -p $(ODIR)/
 
 runtime.a: $(OBJ) $(ODIR)/startup.o
 	$(AR) rcs runtime.a $(OBJ) $(ODIR)/startup.o
@@ -29,6 +32,9 @@ $(ODIR)/save-restore.o: $(SRCDIR)/save-restore.s
 
 $(ODIR)/%.o: src/%.c $(DEPS)
 	$(CC) $(CFLAGS) -c -o $@ $<
+
+deploy_tests: tests
+	cp test_timer_1.rv32 ../src/test/resources/programs/
 
 tests: test_timer_1.rv32
 

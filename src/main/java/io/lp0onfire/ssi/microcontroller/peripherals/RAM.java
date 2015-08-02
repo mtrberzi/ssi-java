@@ -96,5 +96,8 @@ public class RAM implements SystemBusPeripheral {
   @Override
   public void cycle() {
   }
+  @Override
+  public void timestep() { 
+  }
 
 }

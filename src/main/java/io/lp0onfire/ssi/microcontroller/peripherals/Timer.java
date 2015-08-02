@@ -257,6 +257,10 @@ public class Timer implements SystemBusPeripheral, InterruptSource {
     }
     
   }
+  
+  @Override
+  public void timestep() { 
+  }
 
   @Override
   public boolean interruptAsserted() {

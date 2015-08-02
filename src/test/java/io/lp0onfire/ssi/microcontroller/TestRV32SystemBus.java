@@ -58,6 +58,10 @@ public class TestRV32SystemBus {
     @Override
     public void cycle() {
     }
+    @Override
+    public void timestep() {
+      
+    }
     
   }
   

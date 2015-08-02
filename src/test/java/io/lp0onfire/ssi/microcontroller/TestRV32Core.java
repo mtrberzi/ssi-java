@@ -44,6 +44,10 @@ public class TestRV32Core {
     @Override
     public void cycle() {
     }
+    @Override
+    public void timestep() {
+      
+    }
     
   }
   
