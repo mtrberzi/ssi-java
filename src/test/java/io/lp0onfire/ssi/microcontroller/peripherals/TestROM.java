@@ -8,7 +8,7 @@ import org.junit.Test;
 
 public class TestROM {
 
-  private static byte[] testContents;
+  private byte[] testContents;
   private ROM rom;
   
   @Before

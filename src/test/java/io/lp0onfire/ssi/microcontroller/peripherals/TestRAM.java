@@ -8,7 +8,7 @@ import org.junit.Test;
 
 public class TestRAM {
 
-  private static byte[] testContents;
+  private byte[] testContents;
   private RAM ram;
   
   @Before
