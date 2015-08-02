@@ -19,7 +19,7 @@ public class ROM implements SystemBusPeripheral {
   }
 
   public void setContents(byte[] contents) {
-    if (contents.length < 0 || contents.length > memory.length) {
+    if (contents.length > memory.length) {
       throw new IllegalArgumentException();
     }
     System.arraycopy(contents, 0, memory, 0, contents.length);
