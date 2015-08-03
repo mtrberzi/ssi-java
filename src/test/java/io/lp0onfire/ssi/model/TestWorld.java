@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 import io.lp0onfire.ssi.model.structures.Bedrock;
 
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Test;
 
@@ -21,10 +22,11 @@ public class TestWorld {
     for (int y = 0; y < y; ++y) {
       for (int x = 0; x < 10; ++x) {
         Vector pos = new Vector(x, y, 0);
-        List<VoxelOccupant> occupants = w.getOccupants(pos);
+        Set<VoxelOccupant> occupants = w.getOccupants(pos);
         assertEquals(1, occupants.size());
-        VoxelOccupant occ = occupants.get(0);
-        assertTrue(occ instanceof Bedrock);
+        for (VoxelOccupant occ : occupants) {
+          assertTrue(occ instanceof Bedrock);  
+        }
       }
     }
   }

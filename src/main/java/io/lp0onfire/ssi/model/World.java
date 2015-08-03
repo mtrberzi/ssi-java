@@ -6,10 +6,12 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 
 public class World {
   
-  private Map<Vector, List<VoxelOccupant>> voxels = new HashMap<>();
+  private Map<Vector, Set<VoxelOccupant>> voxels = new HashMap<>();
   private final int xDim;
   public int getXDim() {
     return this.xDim;
@@ -31,9 +33,9 @@ public class World {
     return true;
   }
   
-  public List<VoxelOccupant> getOccupants(Vector position) {
-    if (!inBounds(position)) return new LinkedList<>();
-    if (!voxels.containsKey(position)) return new LinkedList<>();
+  public Set<VoxelOccupant> getOccupants(Vector position) {
+    if (!inBounds(position)) return new HashSet<>();
+    if (!voxels.containsKey(position)) return new HashSet<>();
     return voxels.get(position);
   }
   
@@ -44,7 +46,7 @@ public class World {
    */
   public boolean addOccupant(Vector position, VoxelOccupant obj) {
     if (!inBounds(position)) return false;
-    List<VoxelOccupant> occupants = getOccupants(position);
+    Set<VoxelOccupant> occupants = getOccupants(position);
     
     boolean canMoveThere = true;
     for (VoxelOccupant occ : occupants) {
@@ -57,7 +59,7 @@ public class World {
     
     // all checks passed, place the object
     if (!voxels.containsKey(position)) {
-      voxels.put(position, new LinkedList<>());
+      voxels.put(position, new HashSet<>());
     }
     // re-fetch occupants in case the key was newly created
     occupants = getOccupants(position);
@@ -75,6 +77,46 @@ public class World {
         }
       }
     }
+  }
+  
+  public void timestep() {
+    // build up a list of all objects that require pre-timestep processing
+    // TODO maybe cache this?
+    List<VoxelOccupant> preprocessList = new LinkedList<>();
+    for (Set<VoxelOccupant> occupants : voxels.values()) {
+      for (VoxelOccupant occupant : occupants) {
+        if (occupant.requiresPreprocessing()) {
+          preprocessList.add(occupant);
+        }
+      }
+    }
+    // run processing for each occupant
+    // TODO these can be run in parallel
+    for (VoxelOccupant proc : preprocessList) {
+      proc.preprocess();
+    }
+    
+    // perform timestep update
+    // TODO maybe cache these too
+    for (Set<VoxelOccupant> occupants : voxels.values()) {
+      for (VoxelOccupant occupant : occupants) {
+        if (occupant.requiresTimestep()) {
+          occupant.timestep();
+        }
+      }
+    }
+    
+    // TODO how to deal with sub-voxel movement?
+    Vector zeroVector = new Vector(0, 0, 0);
+    List<VoxelOccupant> movingObjects = new LinkedList<>();
+    for (Set<VoxelOccupant> occupants : voxels.values()) {
+      for (VoxelOccupant occupant : occupants) {
+        if (!(occupant.getVelocity().equals(zeroVector))) {
+          movingObjects.add(occupant);
+        }
+      }
+    }
+    // TODO complete movement code, collision detection and resolution
   }
   
 }
