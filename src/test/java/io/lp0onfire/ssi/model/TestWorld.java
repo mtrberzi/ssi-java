@@ -122,5 +122,58 @@ public class TestWorld {
     assertArrayEquals(expected.toArray(), actual.toArray());
   }
   
+  @Test(timeout=5000)
+  public void testMovement_Simple() {
+    World w = new World(10, 5);
+    // create a test object that moves at velocity (1, 0, 0)
+    VoxelOccupant obj = new Machine() {
+
+      @Override
+      public boolean impedesMovement() {
+        return false;
+      }
+
+      @Override
+      public boolean impedesXYFluidFlow() {
+        return false;
+      }
+
+      @Override
+      public boolean impedesZFluidFlow() {
+        return false;
+      }
+
+      @Override
+      public boolean supportsOthers() {
+        return false;
+      }
+
+      @Override
+      public boolean needsSupport() {
+        return false;
+      }
+
+      @Override
+      public boolean canMove() {
+        return true;
+      }
+
+      @Override
+      public Vector getExtents() {
+        return new Vector(1, 1, 1);
+      }
+      
+    };
+    obj.setVelocity(new Vector(1, 0, 0));
+    // place it at (0, 0, 1)
+    assertTrue(w.addOccupant(new Vector(0, 0, 1), new Vector(0, 0, 0), obj));
+    // run one timestep
+    w.timestep();
+    // the object should now be at (1, 0, 1)
+    assertEquals(new Vector(1, 0, 1), obj.getPosition());
+    assertFalse(w.getOccupants(new Vector(0, 0, 1)).contains(obj));
+    assertTrue(w.getOccupants(new Vector(1, 0, 1)).contains(obj));
+  }
+  
 }
 

@@ -300,6 +300,7 @@ public class World {
       }
       // now newPos and newSVPos are correct;
       // we remove the object from its old position and add it to its new one
+      // TODO check whether the object is supported
       removeOccupant(obj);
       addOccupant(newPos, newSVPos, obj);
     }
