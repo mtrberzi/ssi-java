@@ -1,7 +1,9 @@
 package io.lp0onfire.ssi.model;
 
+import io.lp0onfire.ssi.TimeConstants;
 import io.lp0onfire.ssi.model.structures.Bedrock;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -39,12 +41,7 @@ public class World {
     return voxels.get(position);
   }
   
-  /**
-   * @param position
-   * @param obj
-   * @return true if the object could be placed there, and false otherwise
-   */
-  public boolean addOccupant(Vector position, VoxelOccupant obj) {
+  public boolean canOccupy(Vector position, VoxelOccupant obj) {
     if (!inBounds(position)) return false;
     Set<VoxelOccupant> occupants = getOccupants(position);
     
@@ -56,23 +53,36 @@ public class World {
       }
     }
     if (!canMoveThere) return false;
+    return true;
+  }
+  
+  /**
+   * @param position
+   * @param obj
+   * @return true if the object could be placed there, and false otherwise
+   */
+  public boolean addOccupant(Vector position, Vector subvoxelPosition, VoxelOccupant obj) {
+    if (!canOccupy(position, obj)) return false;
     
     // all checks passed, place the object
     if (!voxels.containsKey(position)) {
       voxels.put(position, new HashSet<>());
     }
     // re-fetch occupants in case the key was newly created
-    occupants = getOccupants(position);
+    Set<VoxelOccupant> occupants = getOccupants(position);
     occupants.add(obj);
+    obj.setPosition(position);
+    obj.setSubvoxelPosition(subvoxelPosition);
     return true;
   }
   
   private void createBedrockLayer() {
+    Vector subvoxelPos = new Vector(0, 0, 0);
     for (int y = 0; y < yDim; ++y) {
       for (int x = 0; x < xDim; ++x) {
         Vector pos = new Vector(x, y, 0);
         Bedrock bedrock = new Bedrock();
-        if (!addOccupant(pos, bedrock)) {
+        if (!addOccupant(pos, subvoxelPos, bedrock)) {
           throw new IllegalStateException("error placing bedrock layer at " + pos.toString());
         }
       }
@@ -106,17 +116,65 @@ public class World {
       }
     }
     
-    // TODO how to deal with sub-voxel movement?
     Vector zeroVector = new Vector(0, 0, 0);
-    List<VoxelOccupant> movingObjects = new LinkedList<>();
+    Set<VoxelOccupant> movingObjects = new HashSet<>();
     for (Set<VoxelOccupant> occupants : voxels.values()) {
       for (VoxelOccupant occupant : occupants) {
-        if (!(occupant.getVelocity().equals(zeroVector))) {
+        // if velocity component is non-zero, the object is moving
+        if (!occupant.getSubvoxelVelocity().equals(zeroVector)) {
           movingObjects.add(occupant);
         }
       }
     }
-    // TODO complete movement code, collision detection and resolution
+    Map<VoxelOccupant, Vector> newPositions = new HashMap<>();
+    Map<VoxelOccupant, Vector> newSubvoxelPositions = new HashMap<>();
+    Set<VoxelOccupant> changedPositionOccupants = new HashSet<>();
+    for (VoxelOccupant obj : movingObjects) {
+      // calculate new position
+      int newX = obj.getPosition().getX();
+      int newY = obj.getPosition().getY();
+      int newZ = obj.getPosition().getZ();
+      Vector newSVPos = obj.getSubvoxelPosition().add(obj.getSubvoxelVelocity());
+      int newX_sv = newSVPos.getX();
+      int newY_sv = newSVPos.getY();
+      int newZ_sv = newSVPos.getZ();
+      
+      // determine whether we've ended up in a new voxel
+      
+      if (newX_sv <= -TimeConstants.SUBVOXELS_PER_VOXEL) {
+        newX_sv += TimeConstants.SUBVOXELS_PER_VOXEL;
+        --newX;
+      } else if (newX_sv >= TimeConstants.SUBVOXELS_PER_VOXEL) {
+        newX_sv -= TimeConstants.SUBVOXELS_PER_VOXEL;
+        ++newX;
+      }
+      
+      if (newY_sv <= -TimeConstants.SUBVOXELS_PER_VOXEL) {
+        newY_sv += TimeConstants.SUBVOXELS_PER_VOXEL;
+        --newY;
+      } else if (newY_sv >= TimeConstants.SUBVOXELS_PER_VOXEL) {
+        newY_sv -= TimeConstants.SUBVOXELS_PER_VOXEL;
+        ++newY;
+      }
+      
+      if (newZ_sv <= -TimeConstants.SUBVOXELS_PER_VOXEL) {
+        newZ_sv += TimeConstants.SUBVOXELS_PER_VOXEL;
+        --newZ;
+      } else if (newZ_sv >= TimeConstants.SUBVOXELS_PER_VOXEL) {
+        newZ_sv -= TimeConstants.SUBVOXELS_PER_VOXEL;
+        ++newZ;
+      }
+      
+      Vector newPos = new Vector(newX, newY, newZ);
+      newSVPos = new Vector(newX_sv, newY_sv, newZ_sv);
+      // if the new position is out of bounds, we stay put and stop moving
+      if (!inBounds(newPos)) {
+        obj.setSubvoxelVelocity(new Vector(0,0,0));
+        continue;
+      }
+      // TODO determine final location of object
+    }
+    // TODO update positions and check collisions
   }
   
 }

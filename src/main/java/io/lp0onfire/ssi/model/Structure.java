@@ -8,7 +8,7 @@ package io.lp0onfire.ssi.model;
  * indirectly (e.g. mining out a block or placing a floor tile).
  * Structures always occupy exactly one voxel.
  */
-public abstract class Structure implements VoxelOccupant {
+public abstract class Structure extends VoxelOccupant {
 
   private final Material material;
   public Material getMaterial() {
@@ -19,12 +19,19 @@ public abstract class Structure implements VoxelOccupant {
     this.material = material;
   }
   
-  private Vector position;
-  public Vector getPosition() {
-    return this.position;
+  public Vector getExtents() {
+    return new Vector(1, 1, 1);
   }
-  public void setPosition(Vector p) {
-    this.position = p;
+  
+  public boolean canMove() {
+    return false;
   }
+  
+  @Override
+  public boolean requiresTimestep() {
+    return false;
+  }
+  @Override
+  public void timestep(){}
   
 }

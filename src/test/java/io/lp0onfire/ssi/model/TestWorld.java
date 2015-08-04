@@ -3,7 +3,6 @@ package io.lp0onfire.ssi.model;
 import static org.junit.Assert.*;
 import io.lp0onfire.ssi.model.structures.Bedrock;
 
-import java.util.List;
 import java.util.Set;
 
 import org.junit.Test;
