@@ -3,6 +3,8 @@ package io.lp0onfire.ssi.model;
 import static org.junit.Assert.*;
 import io.lp0onfire.ssi.model.structures.Bedrock;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 import org.junit.Test;
@@ -86,4 +88,39 @@ public class TestWorld {
     assertFalse(w.inBounds(new Vector(2, 5, 1)));
   }
   
+  @Test(timeout=5000)
+  public void testRaycast_PositiveX() {
+    // tracing from (1, 1, 0) by (4, 0, 0) should give us
+    // (2, 1, 0), (3, 1, 0), (4, 1, 0), (5, 1, 0)
+    World w = new World(10, 5);
+    Vector origin = new Vector(1, 1, 0);
+    Vector direction = new Vector(4, 0, 0);
+    List<Vector> expected = Arrays.asList(
+        new Vector(2, 1, 0),
+        new Vector(3, 1, 0),
+        new Vector(4, 1, 0),
+        new Vector(5, 1, 0)
+        );
+    List<Vector> actual = w.raycast(origin, direction);
+    assertArrayEquals(expected.toArray(), actual.toArray());
+  }
+  
+  @Test(timeout=5000)
+  public void testRaycast_NegativeX() {
+    // tracing from (5, 1, 0) by (-4, 0, 0) should give us
+    // (4, 1, 0), (3, 1, 0), (2, 1, 0), (1, 1, 0)
+    World w = new World(10, 5);
+    Vector origin = new Vector(5, 1, 0);
+    Vector direction = new Vector(-4, 0, 0);
+    List<Vector> expected = Arrays.asList(
+        new Vector(4, 1, 0),
+        new Vector(3, 1, 0),
+        new Vector(2, 1, 0),
+        new Vector(1, 1, 0)
+        );
+    List<Vector> actual = w.raycast(origin, direction);
+    assertArrayEquals(expected.toArray(), actual.toArray());
+  }
+  
 }
+

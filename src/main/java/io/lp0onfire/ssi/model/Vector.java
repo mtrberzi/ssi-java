@@ -49,4 +49,12 @@ public class Vector {
     return new Vector(this.getX() + that.getX(), this.getY() + that.getY(), this.getZ() + that.getZ());
   }
   
+  public Vector subtract(Vector that) {
+    return this.add(that.negate());
+  }
+  
+  public Vector negate() {
+    return new Vector(-this.getX(), -this.getY(), -this.getZ());
+  }
+  
 }

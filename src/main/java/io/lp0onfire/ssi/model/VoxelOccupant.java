@@ -31,6 +31,15 @@ public abstract class VoxelOccupant {
   
   // invariant: the absolute value of each component if
   // subvoxelVelocity is no larger than TimeConstants.SUBVOXELS_PER_VOXEL
+  private Vector velocity = new Vector(0, 0, 0);
+  public Vector getVelocity() {
+    return this.velocity;
+  }
+  public void setVelocity(Vector v) {
+    this.velocity = v;
+  }
+  // invariant: the absolute value of each component if
+  // subvoxelVelocity is no larger than TimeConstants.SUBVOXELS_PER_VOXEL
   private Vector subvoxelVelocity = new Vector(0, 0, 0);
   public Vector getSubvoxelVelocity() {
     return this.subvoxelVelocity;

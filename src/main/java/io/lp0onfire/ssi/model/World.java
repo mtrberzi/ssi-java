@@ -41,6 +41,7 @@ public class World {
     return voxels.get(position);
   }
   
+  // TODO this should take extents into account
   public boolean canOccupy(Vector position, VoxelOccupant obj) {
     if (!inBounds(position)) return false;
     Set<VoxelOccupant> occupants = getOccupants(position);
@@ -89,6 +90,91 @@ public class World {
     }
   }
   
+  // Find the smallest positive t such that s + t*ds is an integer
+  private double intbound(double s, double ds) {
+    if (ds < 0.0) {
+      return intbound(-s, -ds);
+    } else {
+      s = s % 1;
+      // now we have s + t*ds = 1
+      return (1 - s) / ds;
+    }
+  }
+  
+  /**
+   * Traces a ray from the center of an origin voxel in a given direction
+   * (with distances measured in voxels),
+   * stopping when the voxel at (origin + direction) is reached
+   * or when the resulting position would be outside of the world.
+   * 
+   * This algorithm is based on an algorithm presented in the paper
+   * "A Fast Voxel Traversal Algorithm for Ray Tracing",
+   * by J. Amanatides and A. Woo, 1987
+   * (http://www.cse.yorku.ca/~amana/research/grid.pdf) 
+   * 
+   * @param origin The position from which to start the trace
+   * @param direction The translation vector along which to trace
+   * @return A list of all voxels passed through by the ray,
+   * in the order in which they are visited starting at origin,
+   * not including the origin itself but including the endpoint
+   * (unless it coincides with the origin)
+   */
+  public List<Vector> raycast(Vector origin, Vector direction) {
+    List<Vector> visitedVoxels = new LinkedList<>();
+    
+    int x = origin.getX();
+    int y = origin.getY();
+    int z = origin.getZ();
+    
+    int dx = direction.getX();
+    int dy = direction.getY();
+    int dz = direction.getZ();
+    
+    int stepX = Integer.signum(dx);
+    int stepY = Integer.signum(dy);
+    int stepZ = Integer.signum(dz);
+    
+    double tMaxX = intbound(x + 0.5, dx);
+    double tMaxY = intbound(y + 0.5, dy);
+    double tMaxZ = intbound(z + 0.5, dz);
+    
+    double tDeltaX = (double)(stepX) / (double)(dx);
+    double tDeltaY = (double)(stepY) / (double)(dy);
+    double tDeltaZ = (double)(stepZ) / (double)(dz);
+    
+    if (dx == 0 && dy == 0 && dz == 0) {
+      return visitedVoxels;
+    }
+    
+    Vector destination = origin.add(direction);
+    while (true) {
+      // find the next voxel we enter
+      if (tMaxX < tMaxY) {
+        if (tMaxX < tMaxZ) {
+          x += stepX;
+          tMaxX += tDeltaX;
+        } else {
+          z += stepZ;
+          tMaxZ += tDeltaZ;
+        }
+      } else {
+        if (tMaxY < tMaxZ) {
+          y += stepY;
+          tMaxY += tDeltaY;
+        } else {
+          z += stepZ;
+          tMaxZ += tDeltaZ;
+        }
+      }
+      Vector nextVoxel = new Vector(x, y, z);
+      if (!inBounds(nextVoxel)) break;
+      visitedVoxels.add(nextVoxel);
+      if (nextVoxel.equals(destination)) break;
+    } // while()
+    
+    return visitedVoxels;
+  }
+  
   public void timestep() {
     // build up a list of all objects that require pre-timestep processing
     // TODO maybe cache this?
@@ -121,19 +207,21 @@ public class World {
     for (Set<VoxelOccupant> occupants : voxels.values()) {
       for (VoxelOccupant occupant : occupants) {
         // if velocity component is non-zero, the object is moving
-        if (!occupant.getSubvoxelVelocity().equals(zeroVector)) {
+        if (!occupant.getSubvoxelVelocity().equals(zeroVector)
+            || !occupant.getVelocity().equals(zeroVector)) {
           movingObjects.add(occupant);
         }
       }
     }
-    Map<VoxelOccupant, Vector> newPositions = new HashMap<>();
-    Map<VoxelOccupant, Vector> newSubvoxelPositions = new HashMap<>();
-    Set<VoxelOccupant> changedPositionOccupants = new HashSet<>();
+
+    // perform movement updates
+    // TODO this could potentially be parallelized, but updating the map would require locking/concurrent data structures
     for (VoxelOccupant obj : movingObjects) {
       // calculate new position
-      int newX = obj.getPosition().getX();
-      int newY = obj.getPosition().getY();
-      int newZ = obj.getPosition().getZ();
+      Vector newPos = obj.getPosition().add(obj.getVelocity());
+      int newX = newPos.getX();
+      int newY = newPos.getY();
+      int newZ = newPos.getZ();
       Vector newSVPos = obj.getSubvoxelPosition().add(obj.getSubvoxelVelocity());
       int newX_sv = newSVPos.getX();
       int newY_sv = newSVPos.getY();
@@ -165,16 +253,21 @@ public class World {
         ++newZ;
       }
       
-      Vector newPos = new Vector(newX, newY, newZ);
+      newPos = new Vector(newX, newY, newZ);
       newSVPos = new Vector(newX_sv, newY_sv, newZ_sv);
-      // if the new position is out of bounds, we stay put and stop moving
-      if (!inBounds(newPos)) {
-        obj.setSubvoxelVelocity(new Vector(0,0,0));
-        continue;
+
+      // if the new voxel position is different from the old one,
+      // we do a second check to make sure we don't clip through any solid objects
+      if (!newPos.equals(obj.getPosition())) {
+        List<Vector> visitedPositions = raycast(obj.getPosition(), newPos.subtract(obj.getPosition()));
+        for (Vector candidatePosition : visitedPositions) {
+          // TODO collision test against potentially putting this object here
+        }
       }
-      // TODO determine final location of object
+      // now newPos and newSVPos are correct;
+      // we remove the object from its old position and add it to its new one
+      // TODO perform this update...
     }
-    // TODO update positions and check collisions
   }
   
 }
