@@ -41,18 +41,26 @@ public class World {
     return voxels.get(position);
   }
   
-  // TODO this should take extents into account
   public boolean canOccupy(Vector position, VoxelOccupant obj) {
     if (!inBounds(position)) return false;
-    Set<VoxelOccupant> occupants = getOccupants(position);
     
     boolean canMoveThere = true;
-    for (VoxelOccupant occ : occupants) {
-      if (occ.impedesMovement()) {
-        canMoveThere = false;
-        break;
-      }
+    for (int x = position.getX(); x < position.getX() + obj.getExtents().getX(); ++x) {
+      for (int y = position.getY(); y < position.getY() + obj.getExtents().getY(); ++y) {
+        for (int z = position.getZ(); z < position.getZ() + obj.getExtents().getZ(); ++z) {
+          Vector v = new Vector(x, y, z);
+          if (!inBounds(v)) return false;
+          Set<VoxelOccupant> occupants = getOccupants(v);
+          for (VoxelOccupant occ : occupants) {
+            if (occ.impedesMovement()) {
+              canMoveThere = false;
+              break;
+            }
+          }
+        } 
+      } 
     }
+
     if (!canMoveThere) return false;
     return true;
   }
@@ -66,15 +74,35 @@ public class World {
     if (!canOccupy(position, obj)) return false;
     
     // all checks passed, place the object
-    if (!voxels.containsKey(position)) {
-      voxels.put(position, new HashSet<>());
+    // add the object to every voxel that it occupies
+    for (int x = position.getX(); x < position.getX() + obj.getExtents().getX(); ++x) {
+      for (int y = position.getY(); y < position.getY() + obj.getExtents().getY(); ++y) {
+        for (int z = position.getZ(); z < position.getZ() + obj.getExtents().getZ(); ++z) {
+          if (!voxels.containsKey(position)) {
+            voxels.put(position, new HashSet<>());
+          }
+          Set<VoxelOccupant> occupants = getOccupants(new Vector(x, y, z));
+          occupants.add(obj);
+        } 
+      } 
     }
-    // re-fetch occupants in case the key was newly created
-    Set<VoxelOccupant> occupants = getOccupants(position);
-    occupants.add(obj);
+
     obj.setPosition(position);
     obj.setSubvoxelPosition(subvoxelPosition);
     return true;
+  }
+  
+  public void removeOccupant(VoxelOccupant obj) {
+    for (int x = obj.getPosition().getX(); x < obj.getPosition().getX() + obj.getExtents().getX(); ++x) {
+      for (int y = obj.getPosition().getY(); y < obj.getPosition().getY() + obj.getExtents().getY(); ++y) {
+        for (int z = obj.getPosition().getZ(); z < obj.getPosition().getZ() + obj.getExtents().getZ(); ++z) {
+          Set<VoxelOccupant> occupants = getOccupants(new Vector(x, y, z));
+          if (occupants.contains(obj)) {
+            occupants.remove(obj);
+          }
+        } 
+      } 
+    }
   }
   
   private void createBedrockLayer() {
@@ -261,12 +289,19 @@ public class World {
       if (!newPos.equals(obj.getPosition())) {
         List<Vector> visitedPositions = raycast(obj.getPosition(), newPos.subtract(obj.getPosition()));
         for (Vector candidatePosition : visitedPositions) {
-          // TODO collision test against potentially putting this object here
+          if (canOccupy(candidatePosition, obj)) {
+            newPos = candidatePosition;
+          } else {
+            // TODO collision logic
+            // stop before we enter this voxel
+            break;
+          }
         }
       }
       // now newPos and newSVPos are correct;
       // we remove the object from its old position and add it to its new one
-      // TODO perform this update...
+      removeOccupant(obj);
+      addOccupant(newPos, newSVPos, obj);
     }
   }
   
