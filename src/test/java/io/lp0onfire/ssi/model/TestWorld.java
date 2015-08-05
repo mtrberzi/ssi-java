@@ -14,7 +14,12 @@ public class TestWorld {
   class TestObject extends Machine {
 
     @Override
-    public boolean impedesMovement() {
+    public boolean impedesXYMovement() {
+      return false;
+    }
+    
+    @Override
+    public boolean impedesZMovement() {
       return false;
     }
 

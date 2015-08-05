@@ -10,8 +10,13 @@ public class Floor extends Structure {
   }
 
   @Override
-  public boolean impedesMovement() {
+  public boolean impedesXYMovement() {
     return false;
+  }
+  
+  @Override
+  public boolean impedesZMovement() {
+    return true;
   }
 
   @Override

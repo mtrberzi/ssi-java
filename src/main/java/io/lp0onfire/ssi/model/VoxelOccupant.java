@@ -2,7 +2,8 @@ package io.lp0onfire.ssi.model;
 
 public abstract class VoxelOccupant {
 
-  public abstract boolean impedesMovement();
+  public abstract boolean impedesXYMovement();
+  public abstract boolean impedesZMovement();
   public abstract boolean impedesXYFluidFlow();
   public abstract boolean impedesZFluidFlow();
   public abstract boolean supportsOthers();

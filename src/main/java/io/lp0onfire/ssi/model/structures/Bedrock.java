@@ -10,7 +10,12 @@ public class Bedrock extends Structure {
   }
 
   @Override
-  public boolean impedesMovement() {
+  public boolean impedesXYMovement() {
+    return true;
+  }
+  
+  @Override
+  public boolean impedesZMovement() {
     return true;
   }
 

@@ -3,7 +3,6 @@ package io.lp0onfire.ssi.model;
 import io.lp0onfire.ssi.TimeConstants;
 import io.lp0onfire.ssi.model.structures.Bedrock;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -52,7 +51,8 @@ public class World {
           if (!inBounds(v)) return false;
           Set<VoxelOccupant> occupants = getOccupants(v);
           for (VoxelOccupant occ : occupants) {
-            if (occ.impedesMovement()) {
+            // TODO the direction in which we may be moving has an impact
+            if (occ.impedesXYMovement() && occ.impedesZMovement()) {
               canMoveThere = false;
               break;
             }
