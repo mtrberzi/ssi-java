@@ -227,7 +227,10 @@ public class World {
    * @return the final voxel position of obj
    */
   private Vector calculateTrajectory(VoxelOccupant obj, List<Vector> traj) {
-    Queue<Vector> trajectory = new LinkedList<Vector>(traj);
+    Queue<Vector> trajectory = new LinkedList<Vector>();
+    // the first one is so that staying still will resolve gravity and other things
+    trajectory.add(obj.getPosition());
+    trajectory.addAll(traj);
     Vector currentPosition = obj.getPosition();
     Vector nextPosition = currentPosition;
     while (!trajectory.isEmpty()) {
@@ -316,6 +319,7 @@ public class World {
                 }
               }
             }
+            // TODO gravity and whatever else
           }
         }
       }
@@ -367,6 +371,7 @@ public class World {
 
     // perform movement updates
     // TODO this could potentially be parallelized, but updating the map would require locking/concurrent data structures
+    // at least as much as calculating new positions could be done in parallel
     for (VoxelOccupant obj : movingObjects) {
       // calculate new position
       Vector newPos = obj.getPosition().add(obj.getVelocity());
