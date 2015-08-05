@@ -193,5 +193,29 @@ public class TestWorld {
     assertTrue(w.getOccupants(new Vector(2, 0, 1)).contains(obj));
   }
   
+  @Test(timeout=5000)
+  public void testCollision_Simple() {
+    World w = new World(10, 5);
+    // create a test object that moves at velocity (2, 0, 0)
+    VoxelOccupant obj = new TestObject();
+    obj.setVelocity(new Vector(2, 0, 0));
+    // place it at (0, 0, 1)
+    assertTrue(w.addOccupant(new Vector(0, 0, 1), new Vector(0, 0, 0), obj));
+    // we try to move to (2, 0, 1) but oops, there is a wall in the way!
+    Bedrock wall = new Bedrock();
+    assertTrue(w.addOccupant(new Vector(2, 0, 1), new Vector(0, 0, 0), wall));
+    
+    // run one timestep
+    w.timestep();
+    // the bedrock does not move
+    assertEquals(new Vector(2, 0, 1), wall.getPosition());
+    assertTrue(w.getOccupants(new Vector(2, 0, 1)).contains(wall));
+    // the object should now be at (1, 0, 1)
+    assertEquals(new Vector(1, 0, 1), obj.getPosition());
+    assertFalse(w.getOccupants(new Vector(0, 0, 1)).contains(obj));
+    assertTrue(w.getOccupants(new Vector(1, 0, 1)).contains(obj));
+    assertFalse(w.getOccupants(new Vector(2, 0, 1)).contains(obj));
+  }
+  
 }
 
