@@ -2,13 +2,17 @@ package io.lp0onfire.ssi.model;
 
 import io.lp0onfire.ssi.TimeConstants;
 import io.lp0onfire.ssi.model.structures.Bedrock;
+import io.lp0onfire.ssi.model.structures.Ramp;
 
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class World {
   
@@ -40,6 +44,20 @@ public class World {
     return voxels.get(position);
   }
   
+  public Set<VoxelOccupant> getOccupants(Vector position, Vector extents) {
+    Set<VoxelOccupant> allOccupants = new HashSet<>();
+    for (int x = position.getX(); x < position.getX() + extents.getX(); ++x) {
+      for (int y = position.getY(); y < position.getY() + extents.getY(); ++y) {
+        for (int z = position.getZ(); z < position.getZ() + extents.getZ(); ++z) {
+          Vector v = new Vector(x, y, z);
+          Set<VoxelOccupant> occupants = getOccupants(v);
+          allOccupants.addAll(occupants);
+        } 
+      } 
+    }
+    return allOccupants;
+  }
+  
   public boolean canOccupy(Vector position, VoxelOccupant obj) {
     if (!inBounds(position)) return false;
     
@@ -51,7 +69,6 @@ public class World {
           if (!inBounds(v)) return false;
           Set<VoxelOccupant> occupants = getOccupants(v);
           for (VoxelOccupant occ : occupants) {
-            // TODO the direction in which we may be moving has an impact
             if (occ.impedesXYMovement() && occ.impedesZMovement()) {
               canMoveThere = false;
               break;
@@ -145,7 +162,7 @@ public class World {
    * @return A list of all voxels passed through by the ray,
    * in the order in which they are visited starting at origin,
    * not including the origin itself but including the endpoint
-   * (unless it coincides with the origin)
+   * (unless the endpoint coincides with the origin)
    */
   public List<Vector> raycast(Vector origin, Vector direction) {
     List<Vector> visitedVoxels = new LinkedList<>();
@@ -201,6 +218,63 @@ public class World {
     } // while()
     
     return visitedVoxels;
+  }
+  
+  /**
+   * 
+   * @param obj the object to be moved
+   * @param traj a list of voxel positions, in order, that the object will enter
+   * @return the final voxel position of obj
+   */
+  private Vector calculateTrajectory(VoxelOccupant obj, List<Vector> traj) {
+    Queue<Vector> trajectory = new LinkedList<Vector>(traj);
+    Vector currentPosition = obj.getPosition();
+    Vector nextPosition = currentPosition;
+    while (!trajectory.isEmpty()) {
+      nextPosition = trajectory.remove();
+      // based on what we so far believe to be the next position,
+      // if at this point we can't actually move into that voxel coming from
+      // that direction, we don't make any further moves
+      // (checking each voxel that could be entered this way due to extents)
+      Vector deltaP = nextPosition.subtract(currentPosition);
+      boolean moveXY = deltaP.getX() != 0 || deltaP.getY() != 0;
+      boolean moveZ = deltaP.getZ() != 0;
+      boolean canMove = true;
+      
+      for (VoxelOccupant occ : getOccupants(currentPosition, obj.getExtents())) {
+        // check for special stuff in our current position that might let us move differently
+        if (occ instanceof Ramp) {
+          Ramp ramp = (Ramp)occ;
+          Vector preferredDirection = ramp.getPreferredDirection();
+          if (deltaP.equals(preferredDirection)) {
+            // increase nextPosition.z by 1, we attempt to move up the ramp
+            nextPosition = nextPosition.add(new Vector(0, 0, 1));
+            // correct the rest of the trajectory to have z+1
+            Supplier<Queue<Vector>> supplier = () -> new LinkedList<Vector>();
+            Queue<Vector> newTrajectory = trajectory.stream()
+                .map((v) -> v.add(new Vector(0, 0, 1)))
+                .collect(Collectors.toCollection(supplier));
+            trajectory = newTrajectory;
+            break;
+          }
+        }
+      }
+      // TODO check for moving down a ramp
+      
+      for (VoxelOccupant occ : getOccupants(nextPosition, obj.getExtents())) {
+        if ((moveXY && occ.impedesXYMovement()) || (moveZ && occ.impedesZMovement())) {
+          canMove = false;
+          break;
+        }
+      }
+      if (!canMove) {
+        // do not change currentPosition, we cannot make this move
+        break;
+      }
+      // now the move was successful, so in the next iteration we start here
+      currentPosition = nextPosition;
+    }
+    return currentPosition;
   }
   
   public void timestep() {
@@ -284,23 +358,10 @@ public class World {
       newPos = new Vector(newX, newY, newZ);
       newSVPos = new Vector(newX_sv, newY_sv, newZ_sv);
 
-      // if the new voxel position is different from the old one,
-      // we do a second check to make sure we don't clip through any solid objects
-      if (!newPos.equals(obj.getPosition())) {
-        List<Vector> visitedPositions = raycast(obj.getPosition(), newPos.subtract(obj.getPosition()));
-        for (Vector candidatePosition : visitedPositions) {
-          if (canOccupy(candidatePosition, obj)) {
-            newPos = candidatePosition;
-          } else {
-            // TODO collision logic
-            // stop before we enter this voxel
-            break;
-          }
-        }
-      }
+      List<Vector> visitedPositions = raycast(obj.getPosition(), newPos.subtract(obj.getPosition()));
+      newPos = calculateTrajectory(obj, visitedPositions);
       // now newPos and newSVPos are correct;
       // we remove the object from its old position and add it to its new one
-      // TODO check whether the object is supported
       removeOccupant(obj);
       addOccupant(newPos, newSVPos, obj);
     }
