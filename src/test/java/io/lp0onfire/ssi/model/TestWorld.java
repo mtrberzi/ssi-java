@@ -59,7 +59,7 @@ public class TestWorld {
   public void testBedrockLayerCreation() {
     // z=0 should always be filled with bedrock
     World w = new World(10, 5);
-    for (int y = 0; y < y; ++y) {
+    for (int y = 0; y < 5; ++y) {
       for (int x = 0; x < 10; ++x) {
         Vector pos = new Vector(x, y, 0);
         Set<VoxelOccupant> occupants = w.getOccupants(pos);
