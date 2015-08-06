@@ -34,4 +34,9 @@ public abstract class Structure extends VoxelOccupant {
   @Override
   public void timestep(){}
   
+  @Override
+  public boolean hasWorldUpdates() {
+    return false;
+  }
+  
 }

@@ -357,6 +357,26 @@ public class World {
       }
     }
     
+    // perform world updates
+    Map<VoxelOccupant, List<WorldUpdate>> worldUpdates = new HashMap<>();
+    for (Set<VoxelOccupant> occupants : voxels.values()) {
+      for (VoxelOccupant occupant : occupants) {
+        if (occupant.hasWorldUpdates()) {
+          worldUpdates.put(occupant, occupant.getWorldUpdates());
+        }
+      }
+    }
+    for (Map.Entry<VoxelOccupant, List<WorldUpdate>> entry : worldUpdates.entrySet()) {
+      VoxelOccupant obj = entry.getKey();
+      List<WorldUpdate> updates = entry.getValue();
+      Map<WorldUpdate, WorldUpdateResult> results = new HashMap<>();
+      for (WorldUpdate update : updates) {
+        WorldUpdateResult result = update.apply(this);
+        results.put(update, result);
+      }
+      obj.collectUpdateResults(results);
+    }
+    
     Vector zeroVector = new Vector(0, 0, 0);
     Set<VoxelOccupant> movingObjects = new HashSet<>();
     for (Set<VoxelOccupant> occupants : voxels.values()) {
