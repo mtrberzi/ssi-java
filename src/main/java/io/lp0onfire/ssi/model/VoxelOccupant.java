@@ -30,8 +30,6 @@ public abstract class VoxelOccupant {
     this.subvoxelPosition = p;
   }
   
-  // invariant: the absolute value of each component of
-  // subvoxelVelocity is no larger than TimeConstants.SUBVOXELS_PER_VOXEL
   private Vector velocity = new Vector(0, 0, 0);
   public Vector getVelocity() {
     return this.velocity;
