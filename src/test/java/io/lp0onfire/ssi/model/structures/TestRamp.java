@@ -52,6 +52,11 @@ public class TestRamp {
       return new Vector(1, 1, 1);
     }
     
+    @Override
+    public boolean hasWorldUpdates() {
+      return false;
+    }
+    
   };
   
   @Test

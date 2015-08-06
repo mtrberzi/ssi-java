@@ -1,5 +1,9 @@
 package io.lp0onfire.ssi.model;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 public abstract class VoxelOccupant {
 
   public abstract boolean impedesXYMovement();
@@ -30,8 +34,6 @@ public abstract class VoxelOccupant {
     this.subvoxelPosition = p;
   }
   
-  // invariant: the absolute value of each component if
-  // subvoxelVelocity is no larger than TimeConstants.SUBVOXELS_PER_VOXEL
   private Vector velocity = new Vector(0, 0, 0);
   public Vector getVelocity() {
     return this.velocity;
@@ -39,7 +41,7 @@ public abstract class VoxelOccupant {
   public void setVelocity(Vector v) {
     this.velocity = v;
   }
-  // invariant: the absolute value of each component if
+  // invariant: the absolute value of each component of
   // subvoxelVelocity is no larger than TimeConstants.SUBVOXELS_PER_VOXEL
   private Vector subvoxelVelocity = new Vector(0, 0, 0);
   public Vector getSubvoxelVelocity() {
@@ -58,5 +60,13 @@ public abstract class VoxelOccupant {
   
   public abstract boolean requiresTimestep();
   public void timestep() {}
+  
+  public abstract boolean hasWorldUpdates();
+  // this method is always called after the call to timestep(),
+  // but only if hasWorldUpdates() is true
+  public List<WorldUpdate> getWorldUpdates() {
+    return new ArrayList<>();
+  }
+  public void collectUpdateResults(Map<WorldUpdate, WorldUpdateResult> results) {}
   
 }
