@@ -95,8 +95,13 @@ public abstract class TransportEndpoint extends Machine implements TransportDevi
   
   public boolean receive(TransportDevice neighbour, Item item) {
     if (neighbour instanceof TransportTube) {
-      String endpoint = getEndpoint((TransportTube)neighbour);
-      return receiveToEndpoint(endpoint, item);
+      // if the item is null (empty slot), absorb it
+      if (item == null) {
+        return true;
+      } else {
+        String endpoint = getEndpoint((TransportTube)neighbour);
+        return receiveToEndpoint(endpoint, item);
+      }
     } else {
       throw new IllegalArgumentException("cannot receive from non-tube transport");
     }
