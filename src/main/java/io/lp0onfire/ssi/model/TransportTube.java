@@ -1,5 +1,8 @@
 package io.lp0onfire.ssi.model;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class TransportTube extends VoxelOccupant implements TransportDevice {
   
   private String transportID = "";
@@ -52,7 +55,25 @@ public class TransportTube extends VoxelOccupant implements TransportDevice {
   }
   
   private Item outgoingToB = null;
+  public Item getOutgoingToB() {
+    return this.outgoingToB;
+  }
+  
   private Item outgoingToA = null;
+  public Item getOutgoingToA() {
+    return this.outgoingToA;
+  }
+  
+  public Set<Item> getContents() {
+    Set<Item> contents = new HashSet<>();
+    if (outgoingToA != null) {
+      contents.add(outgoingToA);
+    }
+    if (outgoingToB != null) {
+      contents.add(outgoingToB);
+    }
+    return contents;
+  }
   
   @Override
   public boolean receive(TransportDevice neighbour, Item item) {

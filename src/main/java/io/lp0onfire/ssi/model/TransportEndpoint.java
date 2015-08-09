@@ -130,6 +130,9 @@ public abstract class TransportEndpoint extends Machine implements TransportDevi
   protected Map<String, Item> getEndpointOutputs() {
     return this.endpointOutputs;
   }
+  protected void setEndpointOutput(String endpoint, Item item) {
+    endpointOutputs.put(endpoint, item);
+  }
   
   // returns a list of the names of all transport endpoints supported
   public abstract Set<String> getTransportEndpoints();
