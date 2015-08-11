@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<reactions>
+<reaction name="Form metal plates" time="80">
+	<categories>
+		<category name="fabricator-1" />
+	</categories>
+	<reactants>
+		<reactant quantity="1">
+			<component name="bar" />
+			<constraints>
+				<materialCategoryConstraint category="metal" />
+			</constraints>
+		</reactant>
+	</reactants>
+	<products>
+		<product quantity="8">
+			<component name="plate" />
+			<copyMaterial index="0" />
+		</product>
+	</products>
+</reaction>
+</reactions>
