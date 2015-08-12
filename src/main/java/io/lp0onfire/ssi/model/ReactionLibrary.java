@@ -65,15 +65,39 @@ public class ReactionLibrary {
     return categories;
   }
   
-  private Reactant parseReactant(Node reactantNode) {
+  private Reactant parseReactant(Node reactantNode) throws ParseException {
     ReactantBuilder builder = new ReactantBuilder();
     
-    // TODO
+    NamedNodeMap attrs = reactantNode.getAttributes();
+    for (int i = 0; i < attrs.getLength(); ++i) {
+      Node attr = attrs.item(i);
+      if (attr.getNodeName().equals("quantity")) {
+        try {
+          builder.setQuantity(Integer.parseInt(attr.getNodeValue()));
+        } catch (NumberFormatException e) {
+          throw new ParseException("reactant quantity must be an integer");
+        }
+      } else {
+        throw new ParseException("unexpected attribute in reactant definition: " + attr.toString());
+      }
+    }
+    
+    NodeList subnodes = reactantNode.getChildNodes();
+    for (int i = 0; i < subnodes.getLength(); ++i) {
+      Node subnode = subnodes.item(i);
+      if (subnode.getNodeName().equals("component")) {
+        // TODO reactant is a component
+      } else if (subnode.getNodeName().equals("constraints")) {
+        // TODO parse constraints
+      } else {
+        throw new ParseException("unexpected subnode in reactant definition: " + subnode.toString());
+      }
+    }
     
     return builder.build();
   }
   
-  private Product parseProduct(Node productNode) {
+  private Product parseProduct(Node productNode) throws ParseException {
     ProductBuilder builder = new ProductBuilder();
     
     // TODO
