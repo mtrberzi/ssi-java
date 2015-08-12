@@ -2,6 +2,7 @@ package io.lp0onfire.ssi.model;
 
 import io.lp0onfire.ssi.ParseException;
 import io.lp0onfire.ssi.model.reactions.Product;
+import io.lp0onfire.ssi.model.reactions.ProductBuilder;
 import io.lp0onfire.ssi.model.reactions.Reactant;
 import io.lp0onfire.ssi.model.reactions.ReactantBuilder;
 
@@ -67,12 +68,20 @@ public class ReactionLibrary {
   private Reactant parseReactant(Node reactantNode) {
     ReactantBuilder builder = new ReactantBuilder();
     
-    
+    // TODO
     
     return builder.build();
   }
   
-  private List<Reactant> parseReactants(Node reactantsNode) {
+  private Product parseProduct(Node productNode) {
+    ProductBuilder builder = new ProductBuilder();
+    
+    // TODO
+    
+    return builder.build();
+  }
+  
+  private List<Reactant> parseReactants(Node reactantsNode) throws ParseException {
     List<Reactant> reactants = new LinkedList<>();
     NodeList subnodes = reactantsNode.getChildNodes();
     for (int i = 0; i < subnodes.getLength(); ++i) {
@@ -86,6 +95,22 @@ public class ReactionLibrary {
       }
     }
     return reactants;
+  }
+  
+  private List<Product> parseProducts(Node productsNode) throws ParseException {
+    List<Product> products = new LinkedList<>();
+    NodeList subnodes = productsNode.getChildNodes();
+    for (int i = 0; i < subnodes.getLength(); ++i) {
+      Node subnode = subnodes.item(i);
+      if (subnode.getNodeType() == Node.ELEMENT_NODE) {
+        if (subnode.getNodeName().equals("product")) {
+          products.add(parseProduct(subnode));
+        } else {
+          throw new ParseException("unexpected node, expecting product definition: " + subnode.toString());
+        }
+      }
+    }
+    return products;
   }
   
   private void parseReaction(Node reactionNode) throws ParseException {
