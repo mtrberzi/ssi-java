@@ -62,8 +62,6 @@ public class ComponentLibrary {
         } else {
           throw new ParseException("unexpected attribute in component definition: " + subnode.toString());
         }
-      } else {
-        throw new ParseException("unexpected node in component definition: " + subnode.toString());
       }
     }
     

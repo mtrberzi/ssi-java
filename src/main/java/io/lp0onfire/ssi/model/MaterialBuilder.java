@@ -1,5 +1,8 @@
 package io.lp0onfire.ssi.model;
 
+import java.util.LinkedList;
+import java.util.List;
+
 public class MaterialBuilder {
 
   private boolean canBeSmelted = false;
@@ -17,6 +20,11 @@ public class MaterialBuilder {
     this.numberOfSmeltedBars = i;
   }
   
+  private List<String> categories = new LinkedList<>();
+  public void setCategories(List<String> categories) {
+    this.categories = new LinkedList<String>(categories);
+  }
+  
   public Material build() {
     if (canBeSmelted) {
       if (smeltingTimesteps < 0) {
@@ -26,7 +34,7 @@ public class MaterialBuilder {
         throw new IllegalArgumentException("must specify number of smelted bars");
       }
     }
-    return new Material(canBeSmelted, smeltingTimesteps, numberOfSmeltedBars);
+    return new Material(canBeSmelted, smeltingTimesteps, numberOfSmeltedBars, categories);
   }
   
 }

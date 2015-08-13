@@ -1,7 +1,4 @@
-package io.lp0onfire.ssi.model;
-
-import io.lp0onfire.ssi.model.reactions.Product;
-import io.lp0onfire.ssi.model.reactions.Reactant;
+package io.lp0onfire.ssi.model.reactions;
 
 import java.util.ArrayList;
 import java.util.List;

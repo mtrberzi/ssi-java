@@ -1,10 +1,6 @@
-package io.lp0onfire.ssi.model;
+package io.lp0onfire.ssi.model.reactions;
 
 import io.lp0onfire.ssi.ParseException;
-import io.lp0onfire.ssi.model.reactions.Product;
-import io.lp0onfire.ssi.model.reactions.ProductBuilder;
-import io.lp0onfire.ssi.model.reactions.Reactant;
-import io.lp0onfire.ssi.model.reactions.ReactantBuilder;
 
 import java.io.File;
 import java.io.IOException;
@@ -65,6 +61,28 @@ public class ReactionLibrary {
     return categories;
   }
   
+  private List<ReactantConstraint> parseReactantConstraints(Node constraints) throws ParseException {
+    List<ReactantConstraint> results = new LinkedList<>();
+    NodeList subnodes = constraints.getChildNodes();
+    for (int i = 0; i < subnodes.getLength(); ++i) {
+      Node constraint = subnodes.item(i);
+      if (constraint.getNodeType() == Node.ELEMENT_NODE) {
+        if (constraint.getNodeName().equals("materialCategoryConstraint")) {
+          Node category = constraint.getAttributes().getNamedItem("category");
+          if (category != null) {
+            MaterialCategoryConstraint c = new MaterialCategoryConstraint(category.getNodeValue());
+            results.add(c);
+          } else {
+            throw new ParseException("materialCategoryConstraint must contain category attribute");
+          }
+        } else {
+          throw new ParseException("unknown reactant constraint: " + constraint.toString());
+        }
+      }
+    }
+    return results;
+  }
+  
   private Reactant parseReactant(Node reactantNode) throws ParseException {
     ReactantBuilder builder = new ReactantBuilder();
     
@@ -86,11 +104,16 @@ public class ReactionLibrary {
     for (int i = 0; i < subnodes.getLength(); ++i) {
       Node subnode = subnodes.item(i);
       if (subnode.getNodeName().equals("component")) {
-        // TODO reactant is a component
+        NamedNodeMap componentAttrs = subnode.getAttributes();
+        Node componentName = componentAttrs.getNamedItem("name");
+        if (componentName != null) {
+          builder.setComponentName(componentName.getNodeValue());
+        } else {
+          throw new ParseException("component specifier must contain name attribute");
+        }
       } else if (subnode.getNodeName().equals("constraints")) {
-        // TODO parse constraints
-      } else {
-        throw new ParseException("unexpected subnode in reactant definition: " + subnode.toString());
+        List<ReactantConstraint> constraints = parseReactantConstraints(subnode);
+        builder.setConstraints(constraints);
       }
     }
     
@@ -100,7 +123,46 @@ public class ReactionLibrary {
   private Product parseProduct(Node productNode) throws ParseException {
     ProductBuilder builder = new ProductBuilder();
     
-    // TODO
+    NamedNodeMap attrs = productNode.getAttributes();
+    for (int i = 0; i < attrs.getLength(); ++i) {
+      Node attr = attrs.item(i);
+      if (attr.getNodeName().equals("quantity")) {
+        try {
+          builder.setQuantity(Integer.parseInt(attr.getNodeValue()));
+        } catch (NumberFormatException e) {
+          throw new ParseException("product quantity must be an integer");
+        }
+      } else {
+        throw new ParseException("unexpected attribute in product definition: " + attr.toString());
+      }
+    }
+    
+    NodeList subnodes = productNode.getChildNodes();
+    for (int i = 0; i < subnodes.getLength(); ++i) {
+      Node subnode = subnodes.item(i);
+      if (subnode.getNodeName().equals("component")) {
+        NamedNodeMap componentAttrs = subnode.getAttributes();
+        Node componentName = componentAttrs.getNamedItem("name");
+        if (componentName != null) {
+          builder.setComponentName(componentName.getNodeValue());
+        } else {
+          throw new ParseException("component specifier must contain name attribute");
+        }
+      } else if (subnode.getNodeName().equals("copyMaterial")) {
+        NamedNodeMap matAttrs = subnode.getAttributes();
+        Node indexNode = matAttrs.getNamedItem("index");
+        if (indexNode != null) {
+          try {
+            int idx = Integer.parseInt(indexNode.getNodeValue());
+            builder.setCopiedMaterial(idx);
+          } catch (NumberFormatException e) {
+            throw new ParseException("copyMaterial index must be an integer");
+          }
+        } else {
+          throw new ParseException("copyMaterial specifier must contain index attribute");
+        }
+      }
+    }
     
     return builder.build();
   }
@@ -150,7 +212,7 @@ public class ReactionLibrary {
           builder.setReactionName(subnode.getNodeValue());
         } else if (subnode.getNodeName().equals("time")) {
           try {
-            int time = Integer.parseInt(subnode.toString());
+            int time = Integer.parseInt(subnode.getNodeValue());
             builder.setReactionTime(time);
           } catch (NumberFormatException e) {
             throw new ParseException("value of attribute 'time' must be a positive integer");
@@ -158,8 +220,6 @@ public class ReactionLibrary {
         } else {
           throw new ParseException("unexpected attribute in reaction definition: " + subnode.toString());
         }
-      } else {
-        throw new ParseException("unexpected node in reaction definition: " + subnode.toString());
       }
     }
     NodeList children = reactionNode.getChildNodes();
@@ -178,8 +238,6 @@ public class ReactionLibrary {
         } else {
           throw new ParseException("unexpected node in reaction definition: " + subnode.toString());
         }
-      } else {
-        throw new ParseException("unexpected node in reaction definition: " + subnode.toString());
       }
     }
     
