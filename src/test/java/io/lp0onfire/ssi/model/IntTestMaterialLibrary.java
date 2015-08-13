@@ -1,4 +1,4 @@
-package io.lp0onfire.ssi.model.reactions;
+package io.lp0onfire.ssi.model;
 
 import static org.junit.Assert.*;
 
@@ -10,30 +10,30 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class IntTestReactionLibrary {
+public class IntTestMaterialLibrary {
 
   @Before
   public void before() {
-    ReactionLibrary.getInstance().clear();
+    MaterialLibrary.getInstance().clear();
   }
   
   @After
   public void after() {
-    ReactionLibrary.getInstance().clear();
+    MaterialLibrary.getInstance().clear();
   }
   
   @Test
-  public void inttestLoadReactions() throws URISyntaxException {
+  public void inttestLoadMaterials() throws URISyntaxException {
     // TODO there may be a dependency on components and materials,
     // so it might make more sense to integration test whatever
     // "load game resources" method we end up with
     // attempt to load reactions.xml out of resources
-    URL rxURL = ClassLoader.getSystemResource("reactions.xml");
+    URL rxURL = ClassLoader.getSystemResource("materials.xml");
     if (rxURL == null) {
-      fail("could not find resource 'reactions.xml'");
+      fail("could not find resource 'materials.xml'");
     }
     File rxXML = new File(rxURL.toURI());
-    assertTrue(ReactionLibrary.getInstance().loadReactions(rxXML));
+    assertTrue(MaterialLibrary.getInstance().loadMaterials(rxXML));
   }
   
 }

@@ -4,7 +4,12 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class MaterialBuilder {
-
+  
+  private String name = null;
+  public void setMaterialName(String name) {
+    this.name = name;
+  }
+  
   private boolean canBeSmelted = false;
   public void setCanBeSmelted(boolean b) {
     this.canBeSmelted = b;
@@ -26,6 +31,9 @@ public class MaterialBuilder {
   }
   
   public Material build() {
+    if (name == null) {
+      throw new IllegalArgumentException("must specify material name");
+    }
     if (canBeSmelted) {
       if (smeltingTimesteps < 0) {
         throw new IllegalArgumentException("must specify number of smelting timesteps");
@@ -34,7 +42,8 @@ public class MaterialBuilder {
         throw new IllegalArgumentException("must specify number of smelted bars");
       }
     }
-    return new Material(canBeSmelted, smeltingTimesteps, numberOfSmeltedBars, categories);
+    return new Material(name,
+        canBeSmelted, smeltingTimesteps, numberOfSmeltedBars, categories);
   }
   
 }

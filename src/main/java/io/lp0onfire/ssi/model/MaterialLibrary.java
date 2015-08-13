@@ -1,7 +1,23 @@
 package io.lp0onfire.ssi.model;
 
+import io.lp0onfire.ssi.ParseException;
+
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 public class MaterialLibrary {
 
@@ -17,6 +33,7 @@ public class MaterialLibrary {
     materials = new HashMap<>();
     // the material library always contains a material named "bedrock"
     MaterialBuilder bedrockBuilder = new MaterialBuilder();
+    bedrockBuilder.setMaterialName("bedrock");
     addMaterial("bedrock", bedrockBuilder.build());
   }
   
@@ -32,6 +49,113 @@ public class MaterialLibrary {
       return materials.get(mKey);
     } else {
       throw new IllegalArgumentException("materials library does not contain material '" + mKey + "'");
+    }
+  }
+  public void clear() {
+    materials.clear();
+  }
+  
+  private List<String> parseCategories(Node categoriesNode) throws ParseException {
+    // each element should be <category name="ABC"/>
+    List<String> categories = new LinkedList<>();
+    NodeList children = categoriesNode.getChildNodes();
+    for (int i = 0; i < children.getLength(); ++i) {
+      Node subnode = children.item(i);
+      if (subnode.getNodeType() == Node.ELEMENT_NODE) {
+        if (subnode.getNodeName().equals("category")) {
+          NamedNodeMap categoryAttrs = subnode.getAttributes();
+          Node nameNode = categoryAttrs.getNamedItem("name");
+          if (nameNode != null) {
+            categories.add(nameNode.getNodeValue());
+          } else {
+            throw new ParseException("category missing 'name' attribute");
+          }
+        }
+      }
+    }
+    return categories;
+  }
+  
+  private void parseMaterial(Node materialNode) throws ParseException {
+    if (!materialNode.getNodeName().equals("material")) {
+      throw new ParseException("not a material definition: " + materialNode.toString());
+    }
+    MaterialBuilder builder = new MaterialBuilder();
+    
+    NamedNodeMap attrs = materialNode.getAttributes();
+    
+    for (int i = 0; i < attrs.getLength(); ++i) {
+      Node subnode = attrs.item(i);
+      if (subnode.getNodeType() == Node.ATTRIBUTE_NODE) {
+        if (subnode.getNodeName().equals("name")) {
+          builder.setMaterialName(subnode.getNodeValue());
+        } else {
+          throw new ParseException("unexpected attribute in material definition: " + subnode.toString());
+        }
+      }
+    }
+    
+    NodeList subnodes = materialNode.getChildNodes();
+    for (int i = 0; i < subnodes.getLength(); ++i) {
+      Node subnode = subnodes.item(i);
+      if (subnode.getNodeType() == Node.ELEMENT_NODE) {
+        if (subnode.getNodeName().equals("categories")) {
+          List<String> categories = parseCategories(subnode);
+          builder.setCategories(categories);
+        } else {
+          throw new ParseException("unexpected subnode in material definition: " + subnode.toString());
+        }
+      }
+    }
+    
+    try {
+      Material m = builder.build();
+      if (materials.containsKey(m.getName())) {
+        throw new ParseException("duplicate definition of material '" + m.getName() + "'");
+      }
+      materials.put(m.getName(), m);
+    } catch (IllegalArgumentException e) {
+      throw new ParseException("invalid component definition: " + e.getMessage());
+    }
+  }
+  
+  // returns true iff successful
+  public boolean loadMaterials(File componentsXML) {
+    try {
+      DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+      // ignore all lexical information
+      dbf.setCoalescing(true);
+      dbf.setExpandEntityReferences(true);
+      dbf.setIgnoringComments(true);
+      dbf.setIgnoringElementContentWhitespace(true);
+      
+      DocumentBuilder db = dbf.newDocumentBuilder();
+      Document doc = db.parse(componentsXML);
+      
+      if (!doc.hasChildNodes()) {
+        throw new ParseException("material definition file contains no content");
+      }
+      
+      Node comps = doc.getFirstChild();
+      
+      if (!comps.getNodeName().equals("materials")) {
+        throw new ParseException("not a materials definition file: top-level node is '" + doc.getNodeName() + "' but expected 'materials'");
+      }
+      
+      // each subnode is a component definition
+      NodeList list = comps.getChildNodes();
+      for (int i = 0; i < list.getLength(); ++i) {
+        Node subnode = list.item(i);
+        if (subnode.getNodeType() == Node.ELEMENT_NODE) {
+          parseMaterial(subnode);
+        }
+      }
+      
+      return true;
+    } catch (ParserConfigurationException | SAXException | IOException | ParseException e) {
+      System.err.println("internal error: failed to load materials definition file " + componentsXML.getAbsolutePath());
+      e.printStackTrace();
+      return false;
     }
   }
   

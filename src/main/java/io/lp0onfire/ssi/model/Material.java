@@ -4,6 +4,11 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class Material {
+  private final String name;
+  public String getName() {
+    return this.name;
+  }
+  
   private final boolean canBeSmelted;
   public boolean getCanBeSmelted() {
     return this.canBeSmelted;
@@ -24,8 +29,10 @@ public class Material {
     return this.categories;
   }
   
-  public Material(boolean canBeSmelted, int smeltingTimesteps, int numberOfSmeltedBars,
+  public Material(String name,
+      boolean canBeSmelted, int smeltingTimesteps, int numberOfSmeltedBars,
       List<String> categories) {
+    this.name = name;
     this.canBeSmelted = canBeSmelted;
     this.smeltingTimesteps = smeltingTimesteps;
     this.numberOfSmeltedBars = numberOfSmeltedBars;
