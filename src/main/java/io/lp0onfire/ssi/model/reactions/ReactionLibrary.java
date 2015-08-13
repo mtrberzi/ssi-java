@@ -40,6 +40,14 @@ public class ReactionLibrary {
     reactions.clear();
   }
   
+  public void addReaction(String category, Reaction reaction) {
+    if (!reactions.containsKey(category)) {
+      reactions.put(category, new LinkedList<Reaction>());
+    }
+    List<Reaction> rxs = reactions.get(category);
+    rxs.add(reaction);
+  }
+  
   private List<String> parseCategories(Node categoriesNode) throws ParseException {
     // each element should be <category name="ABC"/>
     List<String> categories = new LinkedList<>();
@@ -242,7 +250,9 @@ public class ReactionLibrary {
     }
     
     Reaction rx = builder.build();
-    // TODO add rx to each category
+    for (String category : rx.getCategories()) {
+      addReaction(category, rx);
+    }
   }
   
   //returns true iff successful

@@ -31,8 +31,23 @@ public class ReactionBuilder {
   }
   
   public Reaction build() {
-    // TODO
-    return null;
+    if (reactionName == null) {
+      throw new IllegalArgumentException("reaction name not set");
+    }
+    if (reactionTime < 0) {
+      throw new IllegalArgumentException("reaction time must be a non-negative integer");
+    }
+    if (reactionCategories.isEmpty()) {
+      throw new IllegalArgumentException("reaction not in any categories");
+    }
+    if (reactants.isEmpty()) {
+      throw new IllegalArgumentException("reaction has no reactants");
+    }
+    if (products.isEmpty()) {
+      throw new IllegalArgumentException("reaction has no products");
+    }
+    return new Reaction(reactionName, reactionTime, reactionCategories,
+        reactants, products);
   }
   
 }
