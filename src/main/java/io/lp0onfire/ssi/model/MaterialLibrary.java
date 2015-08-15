@@ -31,6 +31,10 @@ public class MaterialLibrary {
   
   private MaterialLibrary() {
     materials = new HashMap<>();
+    init();
+  }
+  
+  private void init() {
     // the material library always contains a material named "bedrock"
     MaterialBuilder bedrockBuilder = new MaterialBuilder();
     bedrockBuilder.setMaterialName("bedrock");
@@ -53,6 +57,7 @@ public class MaterialLibrary {
   }
   public void clear() {
     materials.clear();
+    init();
   }
   
   private List<String> parseCategories(Node categoriesNode) throws ParseException {
