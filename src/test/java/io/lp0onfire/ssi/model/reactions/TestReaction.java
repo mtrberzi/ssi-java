@@ -10,8 +10,10 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import io.lp0onfire.ssi.ParseException;
+import io.lp0onfire.ssi.model.Item;
 import io.lp0onfire.ssi.model.Material;
 import io.lp0onfire.ssi.model.MaterialBuilder;
+import io.lp0onfire.ssi.model.items.Component;
 import io.lp0onfire.ssi.model.items.ComponentBuilder;
 import io.lp0onfire.ssi.model.items.ComponentLibrary;
 
@@ -73,6 +75,78 @@ public class TestReaction {
   public void testBuildReaction() {
     Reaction rx = buildTestReaction();
     assertNotNull(rx);
+  }
+  
+  @Test
+  public void testMatchReactants() {
+    Reaction rx = buildTestReaction();
+    List<Item> reactants = new LinkedList<>();
+    for (int i = 0; i < 2; ++i) {
+      reactants.add(ComponentLibrary.getInstance().createComponent("bogus1", metal));
+    }
+    assertTrue(rx.reactantsOK(reactants));
+  }
+  
+  @Test
+  public void testMatchReactants_OverQuantity() {
+    Reaction rx = buildTestReaction();
+    List<Item> reactants = new LinkedList<>();
+    for (int i = 0; i < 3; ++i) {
+      reactants.add(ComponentLibrary.getInstance().createComponent("bogus1", metal));
+    }
+    assertTrue(rx.reactantsOK(reactants));
+  }
+  
+  @Test
+  public void testMatchReactants_IncorrectMaterial() {
+    Reaction rx = buildTestReaction();
+    List<Item> reactants = new LinkedList<>();
+    for (int i = 0; i < 2; ++i) {
+      reactants.add(ComponentLibrary.getInstance().createComponent("bogus1", nonmetal));
+    }
+    assertFalse(rx.reactantsOK(reactants));
+  }
+  
+  @Test
+  public void testMatchReactants_IncorrectQuantity() {
+    Reaction rx = buildTestReaction();
+    List<Item> reactants = new LinkedList<>();
+    for (int i = 0; i < 1; ++i) {
+      reactants.add(ComponentLibrary.getInstance().createComponent("bogus1", metal));
+    }
+    assertFalse(rx.reactantsOK(reactants));
+  }
+  
+  @Test
+  public void testMatchReactants_IncorrectQuantityAfterConstraints() {
+    Reaction rx = buildTestReaction();
+    List<Item> reactants = new LinkedList<>();
+    for (int i = 0; i < 1; ++i) {
+      reactants.add(ComponentLibrary.getInstance().createComponent("bogus1", metal));
+    }
+    for (int i = 0; i < 1; ++i) {
+      reactants.add(ComponentLibrary.getInstance().createComponent("bogus1", nonmetal));
+    }
+    assertFalse(rx.reactantsOK(reactants));
+  }
+  
+  @Test
+  public void testReact() {
+    Reaction rx = buildTestReaction();
+    List<Item> reactants = new LinkedList<>();
+    for (int i = 0; i < 2; ++i) {
+      reactants.add(ComponentLibrary.getInstance().createComponent("bogus1", metal));
+    }
+    
+    Reaction.Result rxResult = rx.react(reactants);
+    assertTrue(rxResult.successful());
+    List<Item> products = rxResult.getOutputProducts();
+    for (Item i : products) {
+      assertTrue(i instanceof Component);
+      Component c = (Component)i;
+      assertEquals(metal, c.getMaterial());
+      assertEquals("bogus2", c.getComponentName());
+    }
   }
   
 }
