@@ -2,6 +2,7 @@ package io.lp0onfire.ssi.model.machines;
 
 import static org.junit.Assert.*;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -51,13 +52,15 @@ public class TestSmelter {
   @BeforeClass
   public static void setupClass() {
     MaterialBuilder builder = new MaterialBuilder();
+    builder.setMaterialName("bogusite");
+    builder.setCategories(Arrays.asList("metal"));
     builder.setCanBeSmelted(true);
     builder.setNumberOfSmeltedBars(NUMBER_OF_BARS_TO_PRODUCE);
     builder.setSmeltingTimesteps(NUMBER_OF_TIMESTEPS_TO_SMELT);
     testMaterial = builder.build();
   }
   
-  @Test
+  @Test(timeout=5000)
   public void testInitialConditions() {
     World w = new World(5, 10);
     Smelter s = new Smelter();
@@ -67,7 +70,7 @@ public class TestSmelter {
     assertEquals(Smelter.SmelterState.STATE_LOAD, s.getState());
   }
   
-  @Test
+  @Test(timeout=5000)
   public void testConnectInput() {
     World w = new World(5, 10);
     
@@ -85,7 +88,7 @@ public class TestSmelter {
     connectEndpoint(w, "ore", new Vector(1, 0, 1), smelter, "input");
   }
   
-  @Test
+  @Test(timeout=5000)
   public void testInput_InvalidItem_Rejected() {
     World w = new World(5, 10);
     
@@ -120,7 +123,7 @@ public class TestSmelter {
     assertEquals(Smelter.SmelterState.STATE_LOAD, smelter.getState());
   }
   
-  @Test
+  @Test(timeout=5000)
   public void testInput_ValidItem_Accepted() {
     World w = new World(5, 10);
     
@@ -156,7 +159,7 @@ public class TestSmelter {
     assertEquals(i, smelter.getCurrentOre());
   }
   
-  @Test
+  @Test(timeout=5000)
   public void testInput_ValidItem_Smelted() {
     World w = new World(5, 10);
     
@@ -186,7 +189,7 @@ public class TestSmelter {
     assertEquals(Smelter.SmelterState.STATE_OUTPUT, smelter.getState());
   }
   
-  @Test
+  @Test(timeout=5000)
   public void testOutput_Correct() {
     World w = new World(5, 10);
     
