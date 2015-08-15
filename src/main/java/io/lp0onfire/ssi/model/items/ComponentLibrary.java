@@ -38,6 +38,22 @@ public class ComponentLibrary {
     components.clear();
   }
   
+  public void addComponent(ComponentBuilder builder) throws ParseException {
+    try {
+      builder.validate();
+      if (components.containsKey(builder.getComponentName())) {
+        throw new ParseException("duplicate definition of component " + builder.getComponentName());
+      }
+      components.put(builder.getComponentName(), builder);
+    } catch (IllegalArgumentException e) {
+      throw new ParseException("invalid component definition: " + e.getMessage());
+    }
+  }
+  
+  public boolean containsComponent(String cKey) {
+    return components.containsKey(cKey);
+  }
+  
   public Component createComponent(String cKey, Material material) {
     if (components.containsKey(cKey)) {
       return components.get(cKey).build(material);
@@ -65,15 +81,7 @@ public class ComponentLibrary {
       }
     }
     
-    try {
-      builder.validate();
-      if (components.containsKey(builder.getComponentName())) {
-        throw new ParseException("duplicate definition of component " + builder.getComponentName());
-      }
-      components.put(builder.getComponentName(), builder);
-    } catch (IllegalArgumentException e) {
-      throw new ParseException("invalid component definition: " + e.getMessage());
-    }
+    addComponent(builder);
   }
   
   // returns true iff successful

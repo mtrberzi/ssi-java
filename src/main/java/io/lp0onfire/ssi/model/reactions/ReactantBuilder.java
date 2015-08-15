@@ -1,5 +1,7 @@
 package io.lp0onfire.ssi.model.reactions;
 
+import io.lp0onfire.ssi.model.items.ComponentLibrary;
+
 import java.util.LinkedList;
 import java.util.List;
 
@@ -27,6 +29,12 @@ public class ReactantBuilder {
     if (componentName == null) {
       throw new IllegalArgumentException("reactant type must be specified");
     }
+    
+    // check that this component exists
+    if (!ComponentLibrary.getInstance().containsComponent(componentName)) {
+      throw new IllegalArgumentException("component '" + componentName + "' does not exist");
+    }
+    
     return new Reactant(quantity, componentName, constraints);
   }
   
