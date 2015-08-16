@@ -3,4 +3,6 @@
 	<component name="bar"></component>
 	<component name="plate"></component>
 	<component name="transport tube segment"></component>
+	<component name="actuator"></component>
+	<component name="rapid fabricator frame"></component>
 </components>

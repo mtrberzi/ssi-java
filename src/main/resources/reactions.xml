@@ -39,4 +39,44 @@
 			</product>
 		</products>
 	</reaction>
+	
+	<reaction name="Fabricate actuator" time="30">
+		<categories>
+			<category name="fabricator-1"/>
+		</categories>
+		<reactants>
+			<reactant quantity="1">
+				<component name="plate" />
+				<constraints>
+					<materialCategoryConstraint category="metal" />
+				</constraints>
+			</reactant>
+		</reactants>
+		<products>
+			<product quantity="1">
+				<component name="actuator" />
+				<copyMaterial index="0" />
+			</product>
+		</products>
+	</reaction>
+	
+	<reaction name="Fabricate rapid fabricator frame" time="100">
+	<categories>
+			<category name="fabricator-1"/>
+		</categories>
+		<reactants>
+			<reactant quantity="6">
+				<component name="plate" />
+				<constraints>
+					<materialCategoryConstraint category="metal" />
+				</constraints>
+			</reactant>
+		</reactants>
+		<products>
+			<product quantity="1">
+				<component name="rapid fabricator frame" />
+				<copyMaterial index="0" />
+			</product>
+		</products>
+	</reaction>
 </reactions>
