@@ -3,7 +3,7 @@ package io.lp0onfire.ssi.model.machines;
 import io.lp0onfire.ssi.model.Item;
 import io.lp0onfire.ssi.model.TransportEndpoint;
 import io.lp0onfire.ssi.model.Vector;
-import io.lp0onfire.ssi.model.items.Bar;
+import io.lp0onfire.ssi.model.items.ComponentLibrary;
 import io.lp0onfire.ssi.model.items.Ore;
 
 import java.util.Arrays;
@@ -57,7 +57,7 @@ public class Smelter extends TransportEndpoint {
     return this.smeltingTimeRemaining;
   }
   
-  private Queue<Bar> outputQueue = new LinkedList<>();
+  private Queue<Item> outputQueue = new LinkedList<>();
   
   public Smelter() {
     this.state = SmelterState.STATE_LOAD;
@@ -102,7 +102,7 @@ public class Smelter extends TransportEndpoint {
       if (this.smeltingTimeRemaining <= 0) {
         // produce bars and queue them for output
         for (int i = 0; i < this.currentOre.getMaterial().getNumberOfSmeltedBars(); ++i) {
-          outputQueue.add(new Bar(this.currentOre.getMaterial()));
+          outputQueue.add(ComponentLibrary.getInstance().createComponent("bar", this.currentOre.getMaterial()));
         }
         this.currentOre = null;
         this.state = SmelterState.STATE_OUTPUT;

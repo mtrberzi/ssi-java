@@ -6,6 +6,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -20,13 +22,40 @@ import io.lp0onfire.ssi.model.TransportTube;
 import io.lp0onfire.ssi.model.Vector;
 import io.lp0onfire.ssi.model.World;
 import io.lp0onfire.ssi.model.WorldUpdateResult;
-import io.lp0onfire.ssi.model.items.Bar;
+import io.lp0onfire.ssi.model.items.Component;
+import io.lp0onfire.ssi.model.items.ComponentBuilder;
+import io.lp0onfire.ssi.model.items.ComponentLibrary;
 import io.lp0onfire.ssi.model.items.Ore;
 import io.lp0onfire.ssi.testutils.TestUtilSinkEndpoint;
 import io.lp0onfire.ssi.testutils.TestUtilSourceEndpoint;
 
 public class TestSmelter {
 
+  @Before
+  public void setup() {
+    ComponentLibrary.getInstance().clear();
+    try {
+      ComponentBuilder builder = new ComponentBuilder();
+      builder.setComponentName("bar");
+      ComponentLibrary.getInstance().addComponent(builder);
+    } catch (Exception e) {
+      fail("failed to add 'bar' component to library");
+    }
+    
+    try {
+      ComponentBuilder builder = new ComponentBuilder();
+      builder.setComponentName("foo");
+      ComponentLibrary.getInstance().addComponent(builder);
+    } catch (Exception e) {
+      fail("failed to add 'bar' component to library");
+    }
+  }
+  
+  @After
+  public void finish() {
+    ComponentLibrary.getInstance().clear();
+  }
+  
   private void createTransportTube(World w, Vector position, String transportID) {
     CreateTransportTubeUpdate u = new CreateTransportTubeUpdate(position, transportID);
     WorldUpdateResult result = u.apply(w);
@@ -105,7 +134,7 @@ public class TestSmelter {
     connectEndpoint(w, "ore", new Vector(0, 0, 1), source, "output");
     connectEndpoint(w, "ore", new Vector(1, 0, 1), smelter, "input");
     
-    Item i = new Bar(testMaterial);
+    Item i = ComponentLibrary.getInstance().createComponent("foo", testMaterial);
     source.queueSend(i);
     w.timestep();
     w.timestep();
@@ -234,8 +263,9 @@ public class TestSmelter {
     // check that each item is a bar made of our test material
     assertEquals(NUMBER_OF_BARS_TO_PRODUCE, sink.getReceivedItems().size());
     for (Item x : sink.getReceivedItems()) {
-      assertTrue(x instanceof Bar);
-      Bar b = (Bar)x;
+      assertTrue(x instanceof Component);
+      Component b = (Component)x;
+      assertTrue(b.getComponentName().equals("bar"));
       assertEquals(testMaterial, b.getMaterial());
     }
   }
