@@ -146,7 +146,7 @@ public class SensorSystem implements SystemBusPeripheral, InterruptSource {
   
   private ArrayList<VoxelOccupant> queryResultSet = new ArrayList<>();
   
-  private ByteBuffer resultBuffer;
+  private ByteBuffer responseBuffer;
   
   @Override
   public void cycle() {
@@ -157,6 +157,7 @@ public class SensorSystem implements SystemBusPeripheral, InterruptSource {
       case STATE_DMA_READ:
       {
         int tmp = bus.loadWord(queryBufferAddress);
+        queryBufferAddress += 4;
         if (dmaCycle == 0) {
           // grab query type
           int qtype = tmp & 0x0000FFFF;
@@ -209,29 +210,29 @@ public class SensorSystem implements SystemBusPeripheral, InterruptSource {
               // header is 8 bytes
               // each object record is 16 + 2 + 2 + 4 = 24 bytes
               int objectsToReturn = Math.min(maxObjectsPerResponse, queryResultSet.size());
-              resultBuffer = ByteBuffer.allocate(8 + 24*objectsToReturn);
+              responseBuffer = ByteBuffer.allocate(8 + 24*objectsToReturn);
               
               // write header
-              resultBuffer.putShort((short)0); // error code: no error
-              resultBuffer.putShort((short)Integer.min(Short.MAX_VALUE, queryResultSet.size())); // total # objects
-              resultBuffer.putShort((short)objectsToReturn); // # objects in this response
-              resultBuffer.putShort((short)24); // size of each object record
+              responseBuffer.putShort((short)0); // error code: no error
+              responseBuffer.putShort((short)Integer.min(Short.MAX_VALUE, queryResultSet.size())); // total # objects
+              responseBuffer.putShort((short)objectsToReturn); // # objects in this response
+              responseBuffer.putShort((short)24); // size of each object record
               
               // write object records
               for (int i = 0; i < objectsToReturn; ++i) {
                 VoxelOccupant obj = queryResultSet.get(i);
                 // object ID
-                resultBuffer.putLong(obj.getUUID().getLeastSignificantBits());
-                resultBuffer.putLong(obj.getUUID().getMostSignificantBits());
+                responseBuffer.putLong(obj.getUUID().getLeastSignificantBits());
+                responseBuffer.putLong(obj.getUUID().getMostSignificantBits());
                 // object kind
-                resultBuffer.putShort(obj.getKind());
+                responseBuffer.putShort(obj.getKind());
                 // object flags
                 // TODO
-                resultBuffer.putShort((short)0);
+                responseBuffer.putShort((short)0);
                 // object type
-                resultBuffer.putInt(obj.getType());
+                responseBuffer.putInt(obj.getType());
               }
-              
+              responseBuffer.position(0);
               this.state = SensorState.STATE_DMA_WRITE;
             }
           }
@@ -242,6 +243,21 @@ public class SensorSystem implements SystemBusPeripheral, InterruptSource {
         }
         break;
       case STATE_DMA_WRITE:
+        // if we're about to overflow the result buffer, abort
+        if (responseBufferSize < 4) {
+          this.state = SensorState.STATE_IDLE;
+          this.queryError = true;
+        }
+        // copy the next 4 bytes to the target buffer
+        if (responseBuffer.position() == responseBuffer.capacity()) {
+          // all done
+          this.state = SensorState.STATE_IDLE;
+          this.queryError = false;
+        } else {
+          int tmp = responseBuffer.getInt();
+          bus.storeWord(responseBufferAddress, tmp);
+          responseBufferAddress += 4;
+        }
         break;
       default:
         throw new IllegalStateException("sensor system state " + state.toString() + " not yet implemented");
