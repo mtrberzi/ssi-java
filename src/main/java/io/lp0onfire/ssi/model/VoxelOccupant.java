@@ -3,9 +3,26 @@ package io.lp0onfire.ssi.model;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public abstract class VoxelOccupant {
 
+  private UUID uuid;
+  public UUID getUUID() {
+    return this.uuid;
+  }
+  public void setUUID(UUID id) {
+    this.uuid = id;
+  }
+  
+  public VoxelOccupant() {
+    this.uuid = UUID.randomUUID();
+  }
+  
+  public VoxelOccupant(UUID uuid) {
+    this.uuid = uuid;
+  }
+  
   public abstract boolean impedesXYMovement();
   public abstract boolean impedesZMovement();
   public abstract boolean impedesXYFluidFlow();
