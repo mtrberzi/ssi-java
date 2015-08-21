@@ -27,19 +27,23 @@ public class TestReaction {
     // create a fake metal and non-metal material
     MaterialBuilder metalBuilder = new MaterialBuilder();
     metalBuilder.setMaterialName("bogusite");
+    metalBuilder.setType(0);
     metalBuilder.setCategories(Arrays.asList("metal"));
     metal = metalBuilder.build();
     
     MaterialBuilder nonMetalBuilder = new MaterialBuilder();
     nonMetalBuilder.setMaterialName("fakelite");
+    nonMetalBuilder.setType(0);
     nonmetal = nonMetalBuilder.build();
     
     ComponentBuilder cBuilder1 = new ComponentBuilder();
     cBuilder1.setComponentName("bogus1");
+    cBuilder1.setType(0);
     ComponentLibrary.getInstance().addComponent(cBuilder1);
     
     ComponentBuilder cBuilder2 = new ComponentBuilder();
     cBuilder2.setComponentName("bogus2");
+    cBuilder2.setType(0);
     ComponentLibrary.getInstance().addComponent(cBuilder2);
   }
   

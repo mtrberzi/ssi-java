@@ -37,6 +37,7 @@ public class TestSmelter {
     try {
       ComponentBuilder builder = new ComponentBuilder();
       builder.setComponentName("bar");
+      builder.setType(0);
       ComponentLibrary.getInstance().addComponent(builder);
     } catch (Exception e) {
       fail("failed to add 'bar' component to library");
@@ -45,6 +46,7 @@ public class TestSmelter {
     try {
       ComponentBuilder builder = new ComponentBuilder();
       builder.setComponentName("foo");
+      builder.setType(0);
       ComponentLibrary.getInstance().addComponent(builder);
     } catch (Exception e) {
       fail("failed to add 'bar' component to library");
@@ -82,6 +84,7 @@ public class TestSmelter {
   public static void setupClass() {
     MaterialBuilder builder = new MaterialBuilder();
     builder.setMaterialName("bogusite");
+    builder.setType(0);
     builder.setCategories(Arrays.asList("metal"));
     builder.setCanBeSmelted(true);
     builder.setNumberOfSmeltedBars(NUMBER_OF_BARS_TO_PRODUCE);

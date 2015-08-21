@@ -26,6 +26,7 @@ public class TestReactantBuilder {
   private void createTestComponents() {
     ComponentBuilder cBuilder = new ComponentBuilder();
     cBuilder.setComponentName("bogus1");
+    cBuilder.setType(0);
     try {
       ComponentLibrary.getInstance().addComponent(cBuilder);
     } catch (ParseException e) {
