@@ -4,6 +4,7 @@ import io.lp0onfire.ssi.ParseException;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -38,6 +39,7 @@ public class MaterialLibrary {
     // the material library always contains a material named "bedrock"
     MaterialBuilder bedrockBuilder = new MaterialBuilder();
     bedrockBuilder.setMaterialName("bedrock");
+    bedrockBuilder.setType(0);
     addMaterial("bedrock", bedrockBuilder.build());
   }
   
@@ -58,6 +60,10 @@ public class MaterialLibrary {
   public void clear() {
     materials.clear();
     init();
+  }
+  
+  public Collection<Material> getAllMaterials() {
+    return materials.values();
   }
   
   private List<String> parseCategories(Node categoriesNode) throws ParseException {
@@ -94,6 +100,12 @@ public class MaterialLibrary {
       if (subnode.getNodeType() == Node.ATTRIBUTE_NODE) {
         if (subnode.getNodeName().equals("name")) {
           builder.setMaterialName(subnode.getNodeValue());
+        } else if (subnode.getNodeName().equals("type")) {
+          try {
+            builder.setType(Integer.parseInt(subnode.getNodeValue()));
+          } catch (NumberFormatException e) {
+            throw new ParseException("type ID must be an integer");
+          }
         } else {
           throw new ParseException("unexpected attribute in material definition: " + subnode.toString());
         }

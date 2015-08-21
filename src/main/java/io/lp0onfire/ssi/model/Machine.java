@@ -25,4 +25,8 @@ public abstract class Machine extends VoxelOccupant {
     return true;
   }
   
+  public short getKind() {
+    return (short)3;
+  }
+  
 }

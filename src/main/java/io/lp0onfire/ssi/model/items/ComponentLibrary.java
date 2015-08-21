@@ -5,6 +5,7 @@ import io.lp0onfire.ssi.model.Material;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -62,6 +63,10 @@ public class ComponentLibrary {
     }
   }
   
+  public Collection<ComponentBuilder> getAllComponents() {
+    return components.values();
+  }
+  
   private void parseComponent(Node componentNode) throws ParseException {
     if (!componentNode.getNodeName().equals("component")) {
       throw new ParseException("not a component definition: " + componentNode.toString());
@@ -75,6 +80,12 @@ public class ComponentLibrary {
       if (subnode.getNodeType() == Node.ATTRIBUTE_NODE) {
         if (subnode.getNodeName().equals("name")) {
           builder.setComponentName(subnode.getNodeValue());
+        } else if (subnode.getNodeName().equals("type")) {
+          try {
+            builder.setType(Integer.parseInt(subnode.getNodeValue()));
+          } catch (NumberFormatException e) {
+            throw new ParseException("type ID must be an integer");
+          }
         } else {
           throw new ParseException("unexpected attribute in component definition: " + subnode.toString());
         }

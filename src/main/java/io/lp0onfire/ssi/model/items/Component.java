@@ -10,9 +10,19 @@ public class Component extends Item {
     return this.componentName;
   }
   
-  public Component(Material material, String componentName) {
+  private final int type;
+  public int getType() {
+    return this.type;
+  }
+  
+  public Component(Material material, String componentName, int type) {
     super(material);
     this.componentName = componentName;
+    this.type = type;
+  }
+  
+  public short getKind() {
+    return (short)2;
   }
   
 }

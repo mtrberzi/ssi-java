@@ -138,4 +138,9 @@ public class Smelter extends TransportEndpoint {
     }
   }
 
+  @Override
+  public int getType() {
+    return 1;
+  }
+  
 }

@@ -51,4 +51,9 @@ public class TestUtilSinkEndpoint extends TransportEndpoint {
   @Override
   protected void postSendTimestep(Map<String, Boolean> sendResults) {}
 
+  @Override
+  public int getType() {
+    return 0;
+  }
+
 }

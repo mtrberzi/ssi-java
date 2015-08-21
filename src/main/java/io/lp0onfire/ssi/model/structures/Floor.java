@@ -38,5 +38,10 @@ public class Floor extends Structure {
   public boolean needsSupport() {
     return true;
   }
+  
+  @Override
+  public int getType() {
+    return 2;
+  }
 
 }

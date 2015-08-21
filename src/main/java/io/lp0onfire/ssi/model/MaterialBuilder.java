@@ -10,6 +10,11 @@ public class MaterialBuilder {
     this.name = name;
   }
   
+  private int type = -1;
+  public void setType(int type) {
+    this.type = type;
+  }
+  
   private boolean canBeSmelted = false;
   public void setCanBeSmelted(boolean b) {
     this.canBeSmelted = b;
@@ -34,6 +39,9 @@ public class MaterialBuilder {
     if (name == null) {
       throw new IllegalArgumentException("must specify material name");
     }
+    if (type == -1) {
+      throw new IllegalArgumentException("must specify material type ID");
+    }
     if (canBeSmelted) {
       if (smeltingTimesteps < 0) {
         throw new IllegalArgumentException("must specify number of smelting timesteps");
@@ -42,7 +50,7 @@ public class MaterialBuilder {
         throw new IllegalArgumentException("must specify number of smelted bars");
       }
     }
-    return new Material(name,
+    return new Material(name, type,
         canBeSmelted, smeltingTimesteps, numberOfSmeltedBars, categories);
   }
   

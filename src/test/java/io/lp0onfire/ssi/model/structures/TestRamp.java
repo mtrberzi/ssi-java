@@ -57,6 +57,11 @@ public class TestRamp {
       return false;
     }
     
+    @Override
+    public int getType() {
+      return 0;
+    }
+    
   };
   
   @Test

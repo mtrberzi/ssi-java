@@ -7,6 +7,8 @@ import java.util.UUID;
 
 public abstract class VoxelOccupant {
 
+  // when UUIDs are transferred to and from the microcontroller,
+  // the least significant long always appears at the lower address in memory
   private UUID uuid;
   public UUID getUUID() {
     return this.uuid;
@@ -30,6 +32,9 @@ public abstract class VoxelOccupant {
   public abstract boolean supportsOthers();
   public abstract boolean needsSupport();
   public abstract boolean canMove();
+  
+  public abstract short getKind();
+  public abstract int getType(); // more specific than kind
   
   private Vector position;
   public Vector getPosition() {

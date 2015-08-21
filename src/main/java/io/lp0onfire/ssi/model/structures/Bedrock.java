@@ -39,4 +39,9 @@ public class Bedrock extends Structure {
     return false;
   }
 
+  @Override
+  public int getType() {
+    return 0;
+  }
+  
 }

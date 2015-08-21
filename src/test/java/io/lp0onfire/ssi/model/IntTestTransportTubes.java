@@ -77,11 +77,26 @@ public class IntTestTransportTubes {
       return false;
     }
     
+    @Override
+    public int getType() {
+      return 0;
+    }
+    
   }
   
   class TestItem extends Item {
     public TestItem() {
       super(MaterialLibrary.getInstance().getMaterial("bedrock"));
+    }
+    
+    @Override
+    public short getKind() {
+      return (short)0;
+    }
+    
+    @Override
+    public int getType() {
+      return 0;
     }
   }
   

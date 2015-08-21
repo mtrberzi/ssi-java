@@ -17,6 +17,15 @@ public class TransportTube extends VoxelOccupant implements TransportDevice {
     this.transportID = transportID;
   }
   
+  public short getKind() {
+    return (short)6;
+  }
+  
+  public int getType() {
+    // TODO what do we even put in this field?
+    return 0;
+  }
+  
   private TransportDevice connectionA = null;
   public TransportDevice getConnectionA() {
     return this.connectionA;

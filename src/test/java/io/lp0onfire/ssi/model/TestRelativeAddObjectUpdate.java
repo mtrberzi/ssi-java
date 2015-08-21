@@ -83,6 +83,11 @@ public class TestRelativeAddObjectUpdate {
       }
     }
     
+    @Override
+    public int getType() {
+      return 0;
+    }
+    
   };
   
   @Test(timeout=5000)

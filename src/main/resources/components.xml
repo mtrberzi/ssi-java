@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <components>
-	<component name="bar"></component>
-	<component name="plate"></component>
-	<component name="transport tube segment"></component>
-	<component name="actuator"></component>
-	<component name="rapid fabricator frame"></component>
+	<component name="bar" type="1"></component>
+	<component name="plate" type="2"></component>
+	<component name="transport tube segment" type="3"></component>
+	<component name="actuator" type="4"></component>
+	<component name="rapid fabricator frame" type="5"></component>
 </components>

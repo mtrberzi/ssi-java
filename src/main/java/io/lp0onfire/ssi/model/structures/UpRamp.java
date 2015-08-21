@@ -8,5 +8,10 @@ public class UpRamp extends Ramp {
   public UpRamp(Material material) {
     super(material, new Vector(0, 1, 0));
   }
+  
+  @Override
+  public int getType() {
+    return 3;
+  }
 
 }

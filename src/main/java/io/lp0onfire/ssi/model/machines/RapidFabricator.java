@@ -184,5 +184,10 @@ public class RapidFabricator extends TransportEndpoint {
       }
     }
   }
+
+  @Override
+  public int getType() {
+    return 2;
+  }
   
 }

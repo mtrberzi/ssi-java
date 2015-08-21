@@ -12,5 +12,13 @@ public class Ore extends Item {
   public Ore(Material material) {
     super(material);
   }
+  
+  public short getKind() {
+    return (short)1;
+  }
+  
+  public int getType() {
+    return getMaterial().getType();
+  }
 
 }

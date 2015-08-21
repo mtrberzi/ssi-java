@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <materials>
-	<material name="iron">
+	<material name="iron" type="1">
 		<categories>
 			<category name="metal"/>
 		</categories>

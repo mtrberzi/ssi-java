@@ -9,6 +9,11 @@ public class Material {
     return this.name;
   }
   
+  private final int type;
+  public int getType() {
+    return this.type;
+  }
+  
   private final boolean canBeSmelted;
   public boolean getCanBeSmelted() {
     return this.canBeSmelted;
@@ -29,10 +34,11 @@ public class Material {
     return this.categories;
   }
   
-  public Material(String name,
+  public Material(String name, int type,
       boolean canBeSmelted, int smeltingTimesteps, int numberOfSmeltedBars,
       List<String> categories) {
     this.name = name;
+    this.type = type;
     this.canBeSmelted = canBeSmelted;
     this.smeltingTimesteps = smeltingTimesteps;
     this.numberOfSmeltedBars = numberOfSmeltedBars;
