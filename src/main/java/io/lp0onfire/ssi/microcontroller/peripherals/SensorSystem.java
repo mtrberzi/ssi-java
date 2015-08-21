@@ -65,7 +65,6 @@ public class SensorSystem implements SystemBusPeripheral, InterruptSource {
         this.dmaCycle = 0;
         this.queryError = false;
         // make a new query buffer
-        this.queryBuffer = ByteBuffer.allocate(2 + 2 + 4 + 4);
         this.queryBuffer.order(ByteOrder.LITTLE_ENDIAN);
       } else {
         // ignore, we aren't ready to receive a query
@@ -97,19 +96,19 @@ public class SensorSystem implements SystemBusPeripheral, InterruptSource {
         break;
       case STATE_DMA_READ:
       {
-        // read 3 words:
-        // query type | max # objects per response
-        // address of response buffer
-        // size of response buffer in bytes
-        
         int tmp = bus.loadWord(queryBufferAddress);
-        queryBuffer.putInt(tmp);
         if (dmaCycle == 0) {
           // grab query type
-          queryType = queryBuffer.getShort(0);
+          int qtype = tmp & 0x0000FFFF;
+          queryType = (short)qtype;
+          // and allocate buffer now
+          queryBuffer = ByteBuffer.allocate(queryNWords() * 4);
+          queryBuffer.putInt(tmp);
+        } else {
+          queryBuffer.putInt(tmp);
         }
         ++dmaCycle;
-        if (dmaCycle == queryReadCycles()) {
+        if (dmaCycle == queryNWords()) {
             this.state = SensorState.STATE_EXECUTE_QUERY;
         }
       }
@@ -128,7 +127,7 @@ public class SensorSystem implements SystemBusPeripheral, InterruptSource {
     }
   }
   
-  protected int queryReadCycles() {
+  protected int queryNWords() {
     // queries require 3 + the number of extra words of query-specific data
     // dma cycles to complete
     switch (queryType) {
