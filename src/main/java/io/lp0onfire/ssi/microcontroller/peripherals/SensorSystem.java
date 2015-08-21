@@ -3,6 +3,7 @@ package io.lp0onfire.ssi.microcontroller.peripherals;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.Set;
 
 import io.lp0onfire.ssi.microcontroller.AddressTrapException;
 import io.lp0onfire.ssi.microcontroller.InterruptSource;
@@ -99,6 +100,17 @@ public class SensorSystem implements SystemBusPeripheral, InterruptSource {
   public int readWord(int pAddr) throws AddressTrapException {
     int addr = translateAddress(pAddr);
     switch (addr) {
+    case 0: // Query Status Register
+    {
+      int result = 0;
+      if (state == SensorState.STATE_IDLE) {
+        result |= 1<<0;
+      }
+      if (queryError) {
+        result |= 1<<1;
+      }
+      return result;
+    }
     default:
       throw new AddressTrapException(5, pAddr);
     }
@@ -115,8 +127,6 @@ public class SensorSystem implements SystemBusPeripheral, InterruptSource {
         this.state = SensorState.STATE_DMA_READ;
         this.dmaCycle = 0;
         this.queryError = false;
-        // make a new query buffer
-        this.queryBuffer.order(ByteOrder.LITTLE_ENDIAN);
       } else {
         // ignore, we aren't ready to receive a query
       }
@@ -134,6 +144,10 @@ public class SensorSystem implements SystemBusPeripheral, InterruptSource {
   }
   
   private boolean queryError = false;
+  public boolean getQueryError() {
+    return this.queryError;
+  }
+  
   private int queryBufferAddress = 0;
   private int dmaCycle = 0;
   private ByteBuffer queryBuffer;
@@ -170,6 +184,7 @@ public class SensorSystem implements SystemBusPeripheral, InterruptSource {
           }
           // and allocate buffer now
           queryBuffer = ByteBuffer.allocate(queryType.getNumberOfReadCycles() * 4);
+          queryBuffer.order(ByteOrder.LITTLE_ENDIAN);
           queryBuffer.putInt(tmp);
         } else {
           queryBuffer.putInt(tmp);
@@ -202,7 +217,9 @@ public class SensorSystem implements SystemBusPeripheral, InterruptSource {
           if (queryCycle == 1) {
             // grab list of all items in our voxel
             queryResultSet.clear();
-            queryResultSet.addAll(world.getOccupants(robot.getPosition(), robot.getExtents()));
+            Set<VoxelOccupant> occupants = world.getOccupants(robot.getPosition(), robot.getExtents());
+            occupants.remove(robot);
+            queryResultSet.addAll(occupants);
           } else {
             if (queryCycle == queryType.getNumberOfQueryCycles()) {
               // prepare result buffer
@@ -211,6 +228,7 @@ public class SensorSystem implements SystemBusPeripheral, InterruptSource {
               // each object record is 16 + 2 + 2 + 4 = 24 bytes
               int objectsToReturn = Math.min(maxObjectsPerResponse, queryResultSet.size());
               responseBuffer = ByteBuffer.allocate(8 + 24*objectsToReturn);
+              responseBuffer.order(ByteOrder.LITTLE_ENDIAN);
               
               // write header
               responseBuffer.putShort((short)0); // error code: no error
@@ -257,6 +275,7 @@ public class SensorSystem implements SystemBusPeripheral, InterruptSource {
           int tmp = responseBuffer.getInt();
           bus.storeWord(responseBufferAddress, tmp);
           responseBufferAddress += 4;
+          responseBufferSize -= 4;
         }
         break;
       default:
