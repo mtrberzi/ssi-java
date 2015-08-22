@@ -265,6 +265,7 @@ public class SensorSystem implements SystemBusPeripheral, InterruptSource {
         if (responseBufferSize < 4) {
           this.state = SensorState.STATE_IDLE;
           this.queryError = true;
+          return;
         }
         // copy the next 4 bytes to the target buffer
         if (responseBuffer.position() == responseBuffer.capacity()) {

@@ -49,7 +49,7 @@ public class TestSmelter {
       builder.setType(0);
       ComponentLibrary.getInstance().addComponent(builder);
     } catch (Exception e) {
-      fail("failed to add 'bar' component to library");
+      fail("failed to add 'foo' component to library");
     }
   }
   
