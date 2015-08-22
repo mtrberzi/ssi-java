@@ -214,6 +214,17 @@ public class TestSensorSystem {
     return record;
   }
   
+  private UUID getObjectUUID(ByteBuffer record) {
+    record.position(0);
+    long uuidLow = record.getLong();
+    long uuidHigh = record.getLong();
+    return new UUID(uuidHigh, uuidLow);
+  }
+  
+  private short getObjectKind(ByteBuffer record) {
+    return record.getShort(16);
+  }
+  
   @Test
   public void testQuery_LocalScan_EmptyVoxel_NoResults() {
     ByteBuffer query = ByteBuffer.allocate(12);
@@ -249,12 +260,10 @@ public class TestSensorSystem {
     assertEquals(1, getResponseNumberOfRecords(response));
     ByteBuffer record = getResponseRecord(response, 0);
     // check that the UUID matches
-    long uuidLow = record.getLong();
-    long uuidHigh = record.getLong();
-    UUID uuid = new UUID(uuidHigh, uuidLow);
-    assertEquals(obj.getUUID(), uuid);
-    // kind = 2, type = 42
-    fail("not yet complete");
+    assertEquals("incorrect UUID", obj.getUUID(), getObjectUUID(record));
+    // check kind and type
+    assertEquals("incorrect kind", obj.getKind(), getObjectKind(record));
+    assertEquals("incorrect type", obj.getType(), record.getInt(20));
   }
   
 }
