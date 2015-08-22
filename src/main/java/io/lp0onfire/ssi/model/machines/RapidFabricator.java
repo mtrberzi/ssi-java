@@ -99,7 +99,7 @@ public class RapidFabricator extends TransportEndpoint {
   
   @Override
   public boolean receiveToEndpoint(String endpoint, Item item) {
-    if (endpoint != "input") {
+    if (!(endpoint.equals("input"))) {
       return false;
     }
     // we can only receive if we're ready to load
