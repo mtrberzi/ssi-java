@@ -19,6 +19,10 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
   private Map<Integer, LinkedList<Item>> objectBuffers = new HashMap<>();
   private static final int MAXIMUM_OBJECTS_PER_BUFFER = 32;
   
+  public LinkedList<Item> getObjectBuffer(int n) {
+    return objectBuffers.get(n);
+  }
+  
   public InventoryController(Machine machine, World world, int nObjectBuffers) {
     if (nObjectBuffers < 1 || nObjectBuffers > 16) {
       throw new IllegalArgumentException("number of object buffers must be between 1 and 16 inclusive");
@@ -153,7 +157,11 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
   
   private static final int MAXIMUM_NUMBER_OF_COMMANDS = 4;
   private Command[] commandQueue = new Command[MAXIMUM_NUMBER_OF_COMMANDS];
+  
   private int numberOfCommands = 0;
+  protected int getNumberOfCommands() {
+    return this.numberOfCommands;
+  }
   
   private boolean commandQueueStalled = false;
   private short errorCommand = 0;
@@ -186,7 +194,29 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
     int addr = translateAddress(pAddr);
     switch (addr) {
     case 0: // INV_STATUS
-      // TODO
+    {
+      int result = 0;
+      // bit 3: command queue error
+      if (commandQueueStalled) {
+        result |= (1 << 3);
+      }
+      // bits 2-0: number of outstanding commands
+      result |= (numberOfCommands & 0x00000007);
+      return result;
+    }
+    case 4: // INV_ERRSTAT
+    {
+      int result = 0;
+      if (commandQueueStalled) {
+        // bits 31-16: errored command
+        result |= (((int)errorCommand) & 0x0000FFFF) << 16;
+        // bits 15-0: error code
+        result |= ((int)errorCode) & 0x0000FFFF;
+      } else {
+        result = 0; // no error
+      }
+      return result;
+    }
     default:
       throw new AddressTrapException(5, pAddr);
     }
