@@ -10,7 +10,6 @@ import io.lp0onfire.ssi.microcontroller.InterruptSource;
 import io.lp0onfire.ssi.microcontroller.SystemBusPeripheral;
 import io.lp0onfire.ssi.model.Item;
 import io.lp0onfire.ssi.model.Machine;
-import io.lp0onfire.ssi.model.World;
 
 public class InventoryController implements SystemBusPeripheral, InterruptSource {
 
@@ -278,15 +277,36 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
       throw new AddressTrapException(6, pAddr);
     }
   }
-
+  
+  private int[][] uuidRawWords = new int[4][4];
+  private UUID[] uuidRegister = new UUID[4];
+  
   protected UUID readUUIDRegister(int index) {
-    // TODO
-    throw new UnsupportedOperationException("not yet implemented");
+    if (index < 0 || index >= 4) {
+      throw new IllegalArgumentException("UUID register #" + index + " does not exist");
+    }
+    if (uuidRegister[index] == null) {
+      // recompute UUID
+      long lsb = ((long)uuidRawWords[index][0]) & 0x00000000FFFFFFFFL
+          | ((long)uuidRawWords[index][1]) << 32;
+      long msb = ((long)uuidRawWords[index][2]) & 0x00000000FFFFFFFFL
+          | ((long)uuidRawWords[index][3]) << 32;
+      uuidRegister[index] = new UUID(msb, lsb);
+    }
+    return uuidRegister[index];
   }
   
   protected void writeUUIDRegister(int addr, int value) {
-    // TODO
-    throw new UnsupportedOperationException("not yet implemented");
+    // figure out which register is being written to
+    int registerIndex = ((addr & 0x000000F0) >>> 4) - 1;
+    if (registerIndex >= 4) {
+      throw new IllegalArgumentException("UUID register #" + registerIndex + " does not exist");
+    }
+    // figure out which word is being written to
+    int wordIndex = (addr & 0x0000000F) / 4;
+    uuidRawWords[registerIndex][wordIndex] = value;
+    // invalidate constructed UUID
+    uuidRegister[registerIndex] = null;
   }
   
   @Override
@@ -295,6 +315,7 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
     switch (addr) {
     case 0: // INV_CMD
       // TODO
+      throw new AddressTrapException(7, pAddr);
     case 0x10: case 0x14: case 0x18: case 0x1C:
     case 0x20: case 0x24: case 0x28: case 0x2C:
     case 0x30: case 0x34: case 0x38: case 0x3C:
