@@ -46,9 +46,9 @@ public abstract class Machine extends VoxelOccupant {
   
   // inventory controller interface
   private void initializeManipulatorInterface() {
-    this.lastManipulatorError = new ArrayList<InventoryController.ErrorCode>(getNumberOfManipulators());
+    this.lastManipulatorError = new InventoryController.ErrorCode[getNumberOfManipulators()];
     for (int i = 0; i < getNumberOfManipulators(); ++i) {
-      this.lastManipulatorError.set(i, InventoryController.ErrorCode.NO_ERROR);
+      this.lastManipulatorError[i] = InventoryController.ErrorCode.NO_ERROR;
     }
   }
   
@@ -71,11 +71,12 @@ public abstract class Machine extends VoxelOccupant {
     return manipulatorCommands.containsKey(mIdx);
   }
   
+  private InventoryController.ErrorCode[] lastManipulatorError;
+  
   // get the error code from the previous command
-  private ArrayList<InventoryController.ErrorCode> lastManipulatorError;
   public InventoryController.ErrorCode getManipulatorError(int mIdx) {
     checkManipulatorIndex(mIdx);
-    return lastManipulatorError.get(mIdx);
+    return lastManipulatorError[mIdx];
   }
   
   // make sure this always gets called correctly by anything that overrides this method
@@ -105,7 +106,7 @@ public abstract class Machine extends VoxelOccupant {
           manipulatorCommands.remove(i);
           if (result.wasSuccessful()) {
             // clear error code
-            lastManipulatorError.set(i, InventoryController.ErrorCode.NO_ERROR);
+            lastManipulatorError[i] = InventoryController.ErrorCode.NO_ERROR;
             // figure out what type of update just happened, and resolve it accordingly
             // TODO
           } else {
