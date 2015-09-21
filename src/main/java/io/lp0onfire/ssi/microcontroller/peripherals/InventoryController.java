@@ -3,6 +3,7 @@ package io.lp0onfire.ssi.microcontroller.peripherals;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.UUID;
 
 import io.lp0onfire.ssi.microcontroller.AddressTrapException;
 import io.lp0onfire.ssi.microcontroller.InterruptSource;
@@ -14,7 +15,6 @@ import io.lp0onfire.ssi.model.World;
 public class InventoryController implements SystemBusPeripheral, InterruptSource {
 
   private Machine machine;
-  private World world;
   
   private Map<Integer, LinkedList<Item>> objectBuffers = new HashMap<>();
   private static final int MAXIMUM_OBJECTS_PER_BUFFER = 32;
@@ -23,7 +23,7 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
     return objectBuffers.get(n);
   }
   
-  public InventoryController(Machine machine, World world, int nObjectBuffers) {
+  public InventoryController(Machine machine, int nObjectBuffers) {
     if (nObjectBuffers < 1 || nObjectBuffers > 16) {
       throw new IllegalArgumentException("number of object buffers must be between 1 and 16 inclusive");
     }
@@ -32,7 +32,6 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
     }
     
     this.machine = machine;
-    this.world = world;
   }
   
   public enum ErrorCode {
@@ -41,6 +40,8 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
     UNDERFLOW(2),
     OVERFLOW(3),
     NO_SUCH_BUFFER(4),
+    ILLEGAL_MANIP(5),
+    MANIP_ERROR(6),
     ;
     
     private final short code;
@@ -61,6 +62,36 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
     private final int type;
     public int getType() {
       return this.type;
+    }
+    
+    public boolean isManipulatorCommand() {
+      return (getType() == 2);
+    }
+    
+    private boolean manipulatorCommandIssued = false;
+    public boolean getManipulatorCommandIssued() {
+      return this.manipulatorCommandIssued;
+    }
+    public void setManipulatorCommandIssued(boolean b) {
+      this.manipulatorCommandIssued = b;
+    }
+    
+    private boolean manipulatorCommandCompleted = false;
+    public boolean getManipulatorCommandCompleted() {
+      return this.manipulatorCommandCompleted;
+    }
+    public void setManipulatorCommandCompleted(boolean b) {
+      this.manipulatorCommandCompleted = b;
+    }
+    
+    private int uuidReg;
+    public int getUUIDReg() {
+      return this.uuidReg;
+    }
+    
+    private int manipID;
+    public int getManipID() {
+      return this.manipID;
     }
     
     private final int opcode;
@@ -126,7 +157,16 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
     }
     
     private void type2Init() {
-      
+      if ((getOpcode() & 0x0000000C) == 0) {
+        // TAKE
+        uuidReg = (insn & 0b0000110000000000) >>> 10;
+        destBuffer = (insn & 0b0000001111000000) >>> 6;
+        destTail = (insn & 0b0000000000100000) != 0;
+        manipID = (insn & 0b0000000000011111);
+        totalCycles = 1;
+      } else {
+        this.illegalInstruction = true;
+      }
     }
     
     private void type3Init() {
@@ -239,12 +279,28 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
     }
   }
 
+  protected UUID readUUIDRegister(int index) {
+    // TODO
+    throw new UnsupportedOperationException("not yet implemented");
+  }
+  
+  protected void writeUUIDRegister(int addr, int value) {
+    // TODO
+    throw new UnsupportedOperationException("not yet implemented");
+  }
+  
   @Override
   public void writeWord(int pAddr, int value) throws AddressTrapException {
     int addr = translateAddress(pAddr);
     switch (addr) {
     case 0: // INV_CMD
       // TODO
+    case 0x10: case 0x14: case 0x18: case 0x1C:
+    case 0x20: case 0x24: case 0x28: case 0x2C:
+    case 0x30: case 0x34: case 0x38: case 0x3C:
+    case 0x40: case 0x44: case 0x48: case 0x4C:
+      // INV_UUID
+      writeUUIDRegister(addr, value); break;
     default:
       throw new AddressTrapException(7, pAddr);
     }
@@ -323,8 +379,29 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
   }
   
   protected boolean executeType2(Command cmd) {
-    // TODO
-    error(ErrorCode.ILLEGAL_INSN, cmd); return false;
+    if ((cmd.getOpcode() & 0x0000000C) == 0) {
+      // TAKE
+      int mIdx = cmd.getManipID();
+      ErrorCode errCode = machine.getManipulatorError(mIdx);
+      if (errCode == ErrorCode.NO_ERROR) {
+        // the manipulator should have an item available now;
+        // take it and insert it into the destination buffer
+        Item i = machine.takeManipulatorItem(mIdx);
+        int dstBuffer = cmd.getDestBuffer();
+        boolean dstTail = cmd.getDestTail();
+        LinkedList<Item> dst = objectBuffers.get(dstBuffer);
+        if (dstTail) {
+          dst.addLast(i);
+        } else {
+          dst.addFirst(i);
+        }
+        return true;
+      } else {
+        error(errCode, cmd); return false;
+      }
+    } else {
+      error(ErrorCode.ILLEGAL_INSN, cmd); return false;
+    }
   }
   
   protected boolean executeType3(Command cmd) {
@@ -350,6 +427,43 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
     }
   }
   
+  protected boolean issueManipulatorCommand(Command cmd) {
+    if (!cmd.isManipulatorCommand()) {
+      throw new IllegalStateException("attempt to issue non-manipulator command as though it were one");
+    }
+    if (cmd.isIllegalInstruction()) {
+      error(ErrorCode.ILLEGAL_INSN, cmd); return false;
+    }
+    if ((cmd.getOpcode() & 0x0000000C) == 0) {
+      // TAKE
+      int uuidReg = cmd.getUUIDReg();
+      int mIdx = cmd.getManipID();
+      int dstBuffer = cmd.getDestBuffer();
+      // check that the destination buffer exists
+      if (!objectBuffers.containsKey(dstBuffer)) {
+        error(ErrorCode.NO_SUCH_BUFFER, cmd); return false;
+      }
+      // check that the destination buffer is not full
+      LinkedList<Item> dst = objectBuffers.get(dstBuffer);
+      if (dst.size() == MAXIMUM_OBJECTS_PER_BUFFER) {
+        error(ErrorCode.OVERFLOW, cmd); return false;
+      }
+      // check that the specified manipulator exists
+      if (machine.getNumberOfManipulators() >= mIdx) {
+        error(ErrorCode.ILLEGAL_MANIP, cmd); return false;
+      }
+      UUID uuid = readUUIDRegister(uuidReg);
+      if (machine.manipulator_getItemByUUID(mIdx, uuid)) {
+        return true;
+      } else {
+        error(ErrorCode.MANIP_ERROR, cmd); return false;
+      }
+    } else {
+      // TODO
+      error(ErrorCode.ILLEGAL_INSN, cmd); return false;
+    }
+  }
+  
   @Override
   public void cycle() {
     if (commandQueueStalled) {
@@ -369,17 +483,31 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
             break;
           }
         }
+        // TODO check whether manipulator commands can execute;
+        // only one command per manipulator can be issued at a time
         if (commandCanExecute) {
-          cmd_later.cycle();
-          if (cmd_later.getExecutedCycles() >= cmd_later.getTotalCycles()) {
-            // execute command
-            boolean status = execute(cmd_later);
+          if (cmd_later.isManipulatorCommand() && !cmd_later.getManipulatorCommandIssued()) {
+            // attempt to issue the command
+            boolean status = issueManipulatorCommand(cmd_later);
             if (status) {
-              // success, clean up
-              commandQueue[i] = null;
+              // okay, the command was at least issued
+              cmd_later.setManipulatorCommandIssued(true);
             } else {
               // failure, abort processing
               break;
+            }
+          } else if (!cmd_later.isManipulatorCommand() || cmd_later.getManipulatorCommandCompleted()){
+            cmd_later.cycle();
+            if (cmd_later.getExecutedCycles() >= cmd_later.getTotalCycles()) {
+              // execute command
+              boolean status = execute(cmd_later);
+              if (status) {
+                // success, clean up
+                commandQueue[i] = null;
+              } else {
+                // failure, abort processing
+                break;
+              }
             }
           }
         }
@@ -401,8 +529,19 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
 
   @Override
   public void timestep() {
-    // TODO Auto-generated method stub
-    
+    // check whether each manipulator command has completed
+    for (int i = 0; i < numberOfCommands; ++i) {
+      Command cmd = commandQueue[i];
+      if (cmd.isManipulatorCommand() && cmd.getManipulatorCommandIssued()) {
+        int manipID = cmd.getManipID();
+        // check to see whether this manipulator is ready for a command
+        boolean manipReady = machine.canAcceptManipulatorCommand(manipID);
+        if (manipReady) {
+          // this command has completed
+          cmd.setManipulatorCommandCompleted(true);
+        }
+      }
+    }
   }
 
   @Override

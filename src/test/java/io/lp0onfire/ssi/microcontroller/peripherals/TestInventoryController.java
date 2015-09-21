@@ -41,7 +41,7 @@ public class TestInventoryController {
     try {
       ComponentBuilder builder = new ComponentBuilder();
       builder.setComponentName("foo");
-      builder.setType(42);
+      builder.setType(FOO_TYPE);
       ComponentLibrary.getInstance().addComponent(builder);
     } catch (Exception e) {
       fail("failed to add 'foo' component to library");
@@ -49,7 +49,7 @@ public class TestInventoryController {
     try {
       ComponentBuilder builder = new ComponentBuilder();
       builder.setComponentName("bar");
-      builder.setType(13);
+      builder.setType(BAR_TYPE);
       ComponentLibrary.getInstance().addComponent(builder);
     } catch (Exception e) {
       fail("failed to add 'bar' component to library");
