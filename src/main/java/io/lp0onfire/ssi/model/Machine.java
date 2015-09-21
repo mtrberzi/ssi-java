@@ -109,6 +109,7 @@ public abstract class Machine extends VoxelOccupant {
             lastManipulatorError[i] = InventoryController.ErrorCode.NO_ERROR;
             // figure out what type of update just happened, and resolve it accordingly
             // TODO
+            throw new UnsupportedOperationException("not yet implemented");
           } else {
             // TODO resolve error code
           }
