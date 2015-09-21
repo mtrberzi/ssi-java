@@ -189,5 +189,15 @@ public class RapidFabricator extends TransportEndpoint {
   public int getType() {
     return 2;
   }
+
+  @Override
+  public int getNumberOfManipulators() {
+    return 0;
+  }
+
+  @Override
+  public ManipulatorType getManipulatorType(int mIdx) {
+    return null;
+  }
   
 }

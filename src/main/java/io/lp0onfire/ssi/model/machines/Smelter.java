@@ -142,5 +142,15 @@ public class Smelter extends TransportEndpoint {
   public int getType() {
     return 1;
   }
+
+  @Override
+  public int getNumberOfManipulators() {
+    return 0;
+  }
+
+  @Override
+  public ManipulatorType getManipulatorType(int mIdx) {
+    return null;
+  }
   
 }
