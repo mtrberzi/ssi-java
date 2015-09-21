@@ -62,6 +62,16 @@ public class TestWorld {
     public int getType() {
       return 0;
     }
+
+    @Override
+    public int getNumberOfManipulators() {
+      return 0;
+    }
+
+    @Override
+    public ManipulatorType getManipulatorType(int mIdx) {
+      return null;
+    }
     
   };
   

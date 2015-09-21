@@ -63,13 +63,12 @@ public class TestInventoryController {
   
   private static final int NUMBER_OF_BUFFERS = 8;
   private Machine machine;
-  private World world;
   private InventoryController controller;
   
   @Before
   public void setup() {
-    // TODO initialize world and machine
-    controller = new InventoryController(machine, world, NUMBER_OF_BUFFERS);
+    // TODO initialize machine
+    controller = new InventoryController(machine, NUMBER_OF_BUFFERS);
   }
   
   private String getErrorString(short code) {
