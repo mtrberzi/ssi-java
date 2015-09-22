@@ -108,10 +108,16 @@ public abstract class Machine extends VoxelOccupant {
             // clear error code
             lastManipulatorError[i] = InventoryController.ErrorCode.NO_ERROR;
             // figure out what type of update just happened, and resolve it accordingly
-            // TODO
-            throw new UnsupportedOperationException("not yet implemented");
+            if (update instanceof TakeWithManipulatorByUUIDUpdate) {
+              TakeWithManipulatorByUUIDUpdate typedUpdate = (TakeWithManipulatorByUUIDUpdate)update;
+              Item item = typedUpdate.getTakenItem();
+              manipulatorItem.put(i, item);
+            } else {
+              throw new UnsupportedOperationException("not yet implemented");
+            }
           } else {
             // TODO resolve error code
+            throw new UnsupportedOperationException("not yet implemented");
           }
           break;
         }

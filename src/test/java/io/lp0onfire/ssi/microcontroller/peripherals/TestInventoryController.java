@@ -4,12 +4,14 @@ import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.UUID;
 
 import io.lp0onfire.ssi.microcontroller.AddressTrapException;
 import io.lp0onfire.ssi.model.Item;
 import io.lp0onfire.ssi.model.Machine;
 import io.lp0onfire.ssi.model.Material;
 import io.lp0onfire.ssi.model.MaterialBuilder;
+import io.lp0onfire.ssi.model.Vector;
 import io.lp0onfire.ssi.model.World;
 import io.lp0onfire.ssi.model.items.ComponentBuilder;
 import io.lp0onfire.ssi.model.items.ComponentLibrary;
@@ -21,6 +23,65 @@ import org.junit.Test;
 
 public class TestInventoryController {
 
+  class TestMachine extends Machine {
+    
+    @Override
+    public boolean impedesXYMovement() {
+      return false;
+    }
+    
+    @Override
+    public boolean impedesZMovement() {
+      return false;
+    }
+
+    @Override
+    public boolean impedesXYFluidFlow() {
+      return false;
+    }
+
+    @Override
+    public boolean impedesZFluidFlow() {
+      return false;
+    }
+
+    @Override
+    public boolean supportsOthers() {
+      return false;
+    }
+
+    @Override
+    public boolean needsSupport() {
+      return false;
+    }
+
+    @Override
+    public boolean canMove() {
+      return true;
+    }
+
+    @Override
+    public Vector getExtents() {
+      return new Vector(1, 1, 1);
+    }
+    
+    @Override
+    public int getType() {
+      return 0;
+    }
+
+    @Override
+    public int getNumberOfManipulators() {
+      return 1;
+    }
+
+    @Override
+    public ManipulatorType getManipulatorType(int mIdx) {
+      return ManipulatorType.LIGHT_ARM;
+    }
+    
+  };
+  
   private static Material testMaterial;
   
   private static final int FOO_TYPE = 42;
@@ -67,7 +128,7 @@ public class TestInventoryController {
   
   @Before
   public void setup() {
-    // TODO initialize machine
+    machine = new TestMachine();
     controller = new InventoryController(machine, NUMBER_OF_BUFFERS);
   }
   
@@ -131,6 +192,32 @@ public class TestInventoryController {
       }
     }
     fail("command processing timed out");
+  }
+  
+  @Test
+  public void testInstruction_TAKE() throws AddressTrapException {
+    World w = new World(5, 10);
+    // put down a test object at (0, 0, 1)
+    Item obj = ComponentLibrary.getInstance().createComponent("foo", testMaterial);
+    assertTrue(w.addOccupant(new Vector(0, 0, 1), new Vector(0,0,0), obj));
+    // put down our test machine occupying the same space
+    assertTrue(w.addOccupant(new Vector(0, 0, 1), new Vector(0,0,0), machine));
+    // write the UUID of obj to UUID register 0
+    UUID uuid = obj.getUUID();
+    controller.writeWord(0x10, (int)(uuid.getLeastSignificantBits() & 0x00000000FFFFFFFFL));
+    controller.writeWord(0x14, (int)((uuid.getLeastSignificantBits() & 0xFFFFFFFF00000000L) >>> 32));
+    controller.writeWord(0x18, (int)(uuid.getMostSignificantBits() & 0x00000000FFFFFFFFL));
+    controller.writeWord(0x1C, (int)((uuid.getMostSignificantBits() & 0xFFFFFFFF00000000L) >>> 32));
+    // enqueue TAKE.0 0H, #0
+    controller.writeHalfword(0x0, 0b1000000000000000);
+    // now simulate some really short timesteps
+    controller.cycle();
+    checkNoErrors();
+    w.timestep(); controller.timestep();
+    controller.cycle(); // is this necessary?
+    // now buffer #0 should contain the item, and the item should have been taken out
+    assertFalse(w.getOccupants(new Vector(0, 0, 1)).contains(obj));
+    assertTrue(controller.getObjectBuffer(0).contains(obj));
   }
   
 }
