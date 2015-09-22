@@ -158,10 +158,10 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
     private void type2Init() {
       if ((getOpcode() & 0x0000000C) == 0) {
         // TAKE
-        uuidReg = (insn & 0b0000110000000000) >>> 10;
+        uuidReg = (insn    & 0b0000110000000000) >>> 10;
         destBuffer = (insn & 0b0000001111000000) >>> 6;
-        destTail = (insn & 0b0000000000100000) != 0;
-        manipID = (insn & 0b0000000000011111);
+        destTail = (insn   & 0b0000000000100000) != 0;
+        manipID = (insn    & 0b0000000000011111);
         totalCycles = 1;
       } else {
         this.illegalInstruction = true;
@@ -470,7 +470,7 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
         error(ErrorCode.OVERFLOW, cmd); return false;
       }
       // check that the specified manipulator exists
-      if (machine.getNumberOfManipulators() >= mIdx) {
+      if (mIdx >= machine.getNumberOfManipulators()) {
         error(ErrorCode.ILLEGAL_MANIP, cmd); return false;
       }
       UUID uuid = readUUIDRegister(uuidReg);
