@@ -13,6 +13,16 @@ import io.lp0onfire.ssi.model.Machine;
 
 public class InventoryController implements SystemBusPeripheral, InterruptSource {
 
+  private boolean tracing = false;
+  public void setTracing(boolean b) {
+    this.tracing = b;
+  }
+  private void trace(String s) {
+    if (tracing) {
+      System.err.println(s);
+    }
+  }
+  
   private Machine machine;
   
   private Map<Integer, LinkedList<Item>> objectBuffers = new HashMap<>();
@@ -493,6 +503,7 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
       // check each command in turn, and see whether it can execute
       // concurrently with all commands ahead of it
       for (int i = 0; i < numberOfCommands; ++i) {
+        trace("check command #" + i);
         Command cmd_later = commandQueue[i];
         // TODO this can be cached, as it only needs to be recomputed
         // when the command queue changes
@@ -507,25 +518,33 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
         // TODO check whether manipulator commands can execute;
         // only one command per manipulator can be issued at a time
         if (commandCanExecute) {
+          trace("executing command #" + i);
           if (cmd_later.isManipulatorCommand() && !cmd_later.getManipulatorCommandIssued()) {
+            trace("attempting to issue manipulator command...");
             // attempt to issue the command
             boolean status = issueManipulatorCommand(cmd_later);
             if (status) {
+              trace("success");
               // okay, the command was at least issued
               cmd_later.setManipulatorCommandIssued(true);
             } else {
+              trace("failed");
               // failure, abort processing
               break;
             }
-          } else if (!cmd_later.isManipulatorCommand() || cmd_later.getManipulatorCommandCompleted()){
+          } else if (!cmd_later.isManipulatorCommand() || cmd_later.getManipulatorCommandCompleted()) {
+            trace("cycling command");
             cmd_later.cycle();
             if (cmd_later.getExecutedCycles() >= cmd_later.getTotalCycles()) {
+              trace("cycle count up, executing command");
               // execute command
               boolean status = execute(cmd_later);
               if (status) {
+                trace("success");
                 // success, clean up
                 commandQueue[i] = null;
               } else {
+                trace("fail");
                 // failure, abort processing
                 break;
               }

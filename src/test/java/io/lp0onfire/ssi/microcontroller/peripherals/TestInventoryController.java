@@ -152,6 +152,11 @@ public class TestInventoryController {
     }
   }
   
+  private int numberOfOutstandingCommands() throws AddressTrapException {
+    int status = controller.readWord(0x0);
+    return (status & 0x00000007);
+  }
+  
   @Test
   public void testInstruction_MOVE() throws AddressTrapException {
     // populate buffers like so:
@@ -196,6 +201,7 @@ public class TestInventoryController {
   
   @Test
   public void testInstruction_TAKE() throws AddressTrapException {
+    controller.setTracing(true);
     World w = new World(5, 10);
     // put down a test object at (0, 0, 1)
     Item obj = ComponentLibrary.getInstance().createComponent("foo", testMaterial);
@@ -214,7 +220,8 @@ public class TestInventoryController {
     controller.cycle();
     checkNoErrors();
     w.timestep(); controller.timestep();
-    controller.cycle(); // is this necessary?
+    controller.cycle(); checkNoErrors(); // is this necessary?
+    assertEquals("command execution not complete", 0, numberOfOutstandingCommands());
     // now buffer #0 should contain the item, and the item should have been taken out
     assertFalse(w.getOccupants(new Vector(0, 0, 1)).contains(obj));
     assertTrue(controller.getObjectBuffer(0).contains(obj));
