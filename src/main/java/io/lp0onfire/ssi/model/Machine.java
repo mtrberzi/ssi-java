@@ -68,7 +68,7 @@ public abstract class Machine extends VoxelOccupant {
   private Map<Integer, WorldUpdate> manipulatorCommands = new HashMap<>();
   public boolean canAcceptManipulatorCommand(int mIdx) {
     checkManipulatorIndex(mIdx);
-    return manipulatorCommands.containsKey(mIdx);
+    return !manipulatorCommands.containsKey(mIdx);
   }
   
   private InventoryController.ErrorCode[] lastManipulatorError;

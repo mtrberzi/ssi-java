@@ -201,7 +201,6 @@ public class TestInventoryController {
   
   @Test
   public void testInstruction_TAKE() throws AddressTrapException {
-    controller.setTracing(true);
     World w = new World(5, 10);
     // put down a test object at (0, 0, 1)
     Item obj = ComponentLibrary.getInstance().createComponent("foo", testMaterial);
