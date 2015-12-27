@@ -179,6 +179,12 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
         sourceTail = (insn     & 0b0000000000100000) != 0;
         manipID = (insn      & 0b0000000000011111);
         totalCycles = 1;
+      } else if (getOpcode() == 0b0101) {
+        // NEXT
+        destBuffer = (insn & 0b0000001111000000) >>> 6;
+        destTail = (insn   & 0b0000000000100000) != 0;
+        manipID = (insn    & 0b0000000000011111);
+        totalCycles = 1;
       } else {
         this.illegalInstruction = true;
       }
@@ -454,6 +460,26 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
       } else {
         error(errCode, cmd); return false;
       }
+    } else if (cmd.getOpcode() == 0b0101) {
+      // NEXT
+      int mIdx = cmd.getManipID();
+      ErrorCode errCode = machine.getManipulatorError(mIdx);
+      if (errCode == ErrorCode.NO_ERROR) {
+        // the manipulator should have an item available now;
+        // take it and insert it into the destination buffer
+        Item i = machine.takeManipulatorItem(mIdx);
+        int dstBuffer = cmd.getDestBuffer();
+        boolean dstTail = cmd.getDestTail();
+        LinkedList<Item> dst = objectBuffers.get(dstBuffer);
+        if (dstTail) {
+          dst.addLast(i);
+        } else {
+          dst.addFirst(i);
+        }
+        return true;
+      } else {
+        error(errCode, cmd); return false;
+      }
     } else {
       error(ErrorCode.ILLEGAL_INSN, cmd); return false;
     }
@@ -538,6 +564,28 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
         i = src.peekFirst();
       }
       if (machine.manipulator_putItem(mIdx, i)) {
+        return true;
+      } else {
+        error(ErrorCode.MANIP_ERROR, cmd); return false;
+      }
+    } else if (cmd.getOpcode() == 0b0101) {
+      // NEXT
+      int mIdx = cmd.getManipID();
+      int dstBuffer = cmd.getDestBuffer();
+      // check that the destination buffer exists
+      if (!objectBuffers.containsKey(dstBuffer)) {
+        error(ErrorCode.NO_SUCH_BUFFER, cmd); return false;
+      }
+      // check that the destination buffer is not full
+      LinkedList<Item> dst = objectBuffers.get(dstBuffer);
+      if (dst.size() == MAXIMUM_OBJECTS_PER_BUFFER) {
+        error(ErrorCode.OVERFLOW, cmd); return false;
+      }
+      // check that the specified manipulator exists
+      if (mIdx >= machine.getNumberOfManipulators()) {
+        error(ErrorCode.ILLEGAL_MANIP, cmd); return false;
+      }
+      if (machine.manipulator_getNextItem(mIdx)) {
         return true;
       } else {
         error(ErrorCode.MANIP_ERROR, cmd); return false;

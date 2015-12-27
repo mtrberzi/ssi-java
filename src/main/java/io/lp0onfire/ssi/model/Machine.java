@@ -177,8 +177,8 @@ public abstract class Machine extends VoxelOccupant {
     return true;
   }
   
-  // queue command: take the first available item that can be manipulated
-  public boolean manipulator_getAnyItem(int mIdx) {
+  // queue command: take the next available item
+  public boolean manipulator_getNextItem(int mIdx) {
     throw new UnsupportedOperationException("not yet implemented");
   }
   
