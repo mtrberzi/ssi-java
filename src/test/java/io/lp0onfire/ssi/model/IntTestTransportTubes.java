@@ -370,4 +370,37 @@ public class IntTestTransportTubes {
     assertTrue(controller.getObjectBuffer(0).contains(i));
   }
   
+  @Test
+  public void testControlledTransportEndpoint_Send() throws AddressTrapException {
+    World w = new World(5, 10);
+    TestEndpoint ept2 = new TestEndpoint();
+    TestControlledEndpoint ept1 = new TestControlledEndpoint();
+    assertTrue(w.addOccupant(new Vector(0, 0, 1), new Vector(0, 0, 0), ept1));
+    assertTrue(w.addOccupant(new Vector(1, 0, 1), new Vector(0, 0, 0), ept2));
+    
+    createTransportTube(w, new Vector(0, 0, 1), "a");
+    createTransportTube(w, new Vector(1, 0, 1), "a");
+    connectTransportTubes(w, "a", new Vector(0, 0, 1), new Vector(1, 0, 1));
+    connectEndpoint(w, "a", new Vector(0, 0, 1), ept1, "output");
+    connectEndpoint(w, "a", new Vector(1, 0, 1), ept2, "input");
+    
+    InventoryController controller = new InventoryController(ept1, 8);
+    
+    // insert an item into object buffer 0 of ept1
+    TestItem i = new TestItem();
+    controller.getObjectBuffer(0).addFirst(i);
+    
+    // queue the command GIVE #1, 0H
+    controller.writeHalfword(0x0, 0b1001000000000001);
+    
+    // 3 timesteps from now the item should arrive at ept2
+    controller.cycle(); checkNoErrors(controller); w.timestep(); controller.timestep(); controller.cycle(); checkNoErrors(controller);
+    controller.cycle(); checkNoErrors(controller); w.timestep(); controller.timestep(); controller.cycle(); checkNoErrors(controller);
+    controller.cycle(); checkNoErrors(controller); w.timestep(); controller.timestep(); controller.cycle(); checkNoErrors(controller);
+    
+    assertEquals("command execution not complete", 0, numberOfOutstandingCommands(controller));
+    assertFalse(controller.getObjectBuffer(0).contains(i));
+    assertTrue(ept2.getItemsReceived().contains(i));
+  }
+  
 }

@@ -236,7 +236,7 @@ public class TestInventoryController {
     buffer1.addLast(foo);
     // put down our test machine at (0, 0, 1)
     assertTrue(w.addOccupant(new Vector(0, 0, 1), new Vector(0,0,0), machine));
-    // enqueue GIVE 1H, #0
+    // enqueue GIVE #0, 1H
     controller.writeHalfword(0x0, 0b1001000001000000);
     // now simulate some really short timesteps
     controller.cycle();

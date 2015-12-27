@@ -144,8 +144,25 @@ public abstract class ControlledTransportEndpoint extends TransportEndpoint {
   
   @Override
   public boolean manipulator_putItem(int mIdx, Item item) {
-    // TODO
-    throw new UnsupportedOperationException("not yet implemented");
+    String endpoint = getEndpointOfManipulatorIndex(mIdx);
+    if (endpoint == null) {
+      return super.manipulator_getNextItem(mIdx);
+    } else {
+      if (!endpointCanSend(endpoint)) {
+        return false;
+      }
+      // if we're in the middle of a command, ignore this one
+      if (endpointState.get(endpoint) != EndpointCommand.CMD_NONE) {
+        return true;
+      }
+      // if we already have an item to send, ignore this one
+      if (endpointOutputBuffer.get(endpoint) != null) {
+        return true;
+      }
+      endpointState.put(endpoint, EndpointCommand.CMD_SEND);
+      endpointOutputBuffer.put(endpoint, item);
+      return true;
+    }
   }
   
 }
