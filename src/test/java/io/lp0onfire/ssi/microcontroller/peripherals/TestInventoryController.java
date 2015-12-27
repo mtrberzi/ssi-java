@@ -226,4 +226,27 @@ public class TestInventoryController {
     assertTrue(controller.getObjectBuffer(0).contains(obj));
   }
   
+  @Test
+  public void testInstruction_GIVE() throws AddressTrapException {
+    World w = new World(5, 10);
+    // populate buffers like so:
+    // 1: [H] FOO [T]
+    LinkedList<Item> buffer1 = controller.getObjectBuffer(1);
+    Item foo = ComponentLibrary.getInstance().createComponent("foo", testMaterial);
+    buffer1.addLast(foo);
+    // put down our test machine at (0, 0, 1)
+    assertTrue(w.addOccupant(new Vector(0, 0, 1), new Vector(0,0,0), machine));
+    // enqueue GIVE 1H, #0
+    controller.writeHalfword(0x0, 0b1001000001000000);
+    // now simulate some really short timesteps
+    controller.cycle();
+    checkNoErrors();
+    w.timestep(); controller.timestep();
+    controller.cycle(); checkNoErrors();
+    assertEquals("command execution not complete", 0, numberOfOutstandingCommands());
+    // now buffer #0 should not contain any items, and the item should be in the world
+    assertFalse(controller.getObjectBuffer(1).contains(foo));
+    assertTrue(w.getOccupants(new Vector(0,0,1)).contains(foo));
+  }
+  
 }

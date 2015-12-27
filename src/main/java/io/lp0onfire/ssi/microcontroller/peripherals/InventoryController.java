@@ -173,6 +173,12 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
         destTail = (insn   & 0b0000000000100000) != 0;
         manipID = (insn    & 0b0000000000011111);
         totalCycles = 1;
+      } else if (getOpcode() == 0b0100) {
+        // GIVE
+        sourceBuffer = (insn & 0b0000001111000000) >>> 6;
+        sourceTail = (insn     & 0b0000000000100000) != 0;
+        manipID = (insn      & 0b0000000000011111);
+        totalCycles = 1;
       } else {
         this.illegalInstruction = true;
       }
@@ -430,6 +436,24 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
       } else {
         error(errCode, cmd); return false;
       }
+    } else if (cmd.getOpcode() == 0b0100) {
+      // GIVE
+      int mIdx = cmd.getManipID();
+      ErrorCode errCode = machine.getManipulatorError(mIdx);
+      if (errCode == ErrorCode.NO_ERROR) {
+        // the manipulator has accepted the object, so get it out of the source buffer
+        int srcBuffer = cmd.getSourceBuffer();
+        boolean srcTail = cmd.getSourceTail();
+        LinkedList<Item> src = objectBuffers.get(srcBuffer);
+        if (srcTail) {
+          src.removeLast();
+        } else {
+          src.removeFirst();
+        }
+        return true;
+      } else {
+        error(errCode, cmd); return false;
+      }
     } else {
       error(ErrorCode.ILLEGAL_INSN, cmd); return false;
     }
@@ -485,6 +509,35 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
       }
       UUID uuid = readUUIDRegister(uuidReg);
       if (machine.manipulator_getItemByUUID(mIdx, uuid)) {
+        return true;
+      } else {
+        error(ErrorCode.MANIP_ERROR, cmd); return false;
+      }
+    } else if (cmd.getOpcode() == 0b0100) {
+      // GIVE
+      int mIdx = cmd.getManipID();
+      int srcBuffer = cmd.getSourceBuffer();
+      boolean srcTail = cmd.getSourceTail();
+      // check that the source buffer exists
+      if (!objectBuffers.containsKey(srcBuffer)) {
+        error(ErrorCode.NO_SUCH_BUFFER, cmd); return false;
+      }
+      // check that the source buffer is not empty
+      LinkedList<Item> src = objectBuffers.get(srcBuffer);
+      if (src.size() == 0) {
+        error(ErrorCode.UNDERFLOW, cmd); return false;
+      }
+      // check that the specified manipulator exists
+      if (mIdx >= machine.getNumberOfManipulators()) {
+        error(ErrorCode.ILLEGAL_MANIP, cmd); return false;
+      }
+      Item i;
+      if (srcTail) {
+        i = src.peekLast();
+      } else {
+        i = src.peekFirst();
+      }
+      if (machine.manipulator_putItem(mIdx, i)) {
         return true;
       } else {
         error(ErrorCode.MANIP_ERROR, cmd); return false;

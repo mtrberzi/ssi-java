@@ -112,6 +112,8 @@ public abstract class Machine extends VoxelOccupant {
               TakeWithManipulatorByUUIDUpdate typedUpdate = (TakeWithManipulatorByUUIDUpdate)update;
               Item item = typedUpdate.getTakenItem();
               manipulatorItem.put(i, item);
+            } else if (update instanceof PutWithManipulatorUpdate) {
+              // no action
             } else {
               throw new UnsupportedOperationException("not yet implemented");
             }
@@ -158,6 +160,9 @@ public abstract class Machine extends VoxelOccupant {
   // all manipulator queue commands return true if the command is legal on that
   // manipulator, and false if the command is not legal
   
+  // TODO some manipulators don't place the item into the world, but store it internally
+  // (e.g. a reaction vessel or an assembler)
+  
   // queue command: take the available item matching the given UUID
   public boolean manipulator_getItemByUUID(int mIdx, UUID uuid) {
     if (mIdx < 0 || mIdx >= getNumberOfManipulators()) {
@@ -179,7 +184,12 @@ public abstract class Machine extends VoxelOccupant {
   
   // queue command: attempt to output the provided item, if it can be manipulated and output
   public boolean manipulator_putItem(int mIdx, Item item) {
-    throw new UnsupportedOperationException("not yet implemented");
+    if (mIdx < 0 || mIdx >= getNumberOfManipulators()) {
+      return false;
+    }
+    if (!canAcceptManipulatorCommand(mIdx)) return true;
+    manipulatorCommands.put(mIdx, new PutWithManipulatorUpdate(this, mIdx, item));
+    return true;
   }
   
 }
