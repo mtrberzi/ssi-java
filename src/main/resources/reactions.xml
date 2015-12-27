@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <reactions>
-	<reaction name="Form metal plates" time="80">
+	<reaction id="1" name="Form metal plates" time="80">
 		<categories>
 			<category name="fabricator-1" />
 		</categories>
@@ -20,7 +20,7 @@
 		</products>
 	</reaction>
 	
-	<reaction name="Form transport tube segment" time="20">
+	<reaction id="2" name="Form transport tube segment" time="20">
 		<categories>
 			<category name="fabricator-1"/>
 		</categories>
@@ -40,7 +40,7 @@
 		</products>
 	</reaction>
 	
-	<reaction name="Fabricate actuator" time="30">
+	<reaction id="3" name="Fabricate actuator" time="30">
 		<categories>
 			<category name="fabricator-1"/>
 		</categories>
@@ -60,7 +60,7 @@
 		</products>
 	</reaction>
 	
-	<reaction name="Fabricate rapid fabricator frame" time="100">
+	<reaction id="4" name="Fabricate rapid fabricator frame" time="100">
 	<categories>
 			<category name="fabricator-1"/>
 		</categories>

@@ -31,21 +31,31 @@ public class ReactionLibrary {
   
   private ReactionLibrary() {
     reactions = new HashMap<>();
+    reactionsByID = new HashMap<>();
   }
   
   // maps reaction categories to every reaction in that category
   private Map<String, List<Reaction>> reactions;
   
+  // maps reaction ID to reaction
+  private Map<Integer, Reaction> reactionsByID;
+  
   public void clear() {
     reactions.clear();
   }
   
-  public void addReaction(String category, Reaction reaction) {
+  public void addReaction(String category, Reaction reaction) {    
     if (!reactions.containsKey(category)) {
       reactions.put(category, new LinkedList<Reaction>());
     }
     List<Reaction> rxs = reactions.get(category);
     rxs.add(reaction);
+    
+    reactionsByID.put(reaction.getID(), reaction);
+  }
+  
+  public Reaction getReactionByID(Integer id) {
+    return reactionsByID.get(id);
   }
   
   private List<String> parseCategories(Node categoriesNode) throws ParseException {
@@ -224,6 +234,13 @@ public class ReactionLibrary {
             builder.setReactionTime(time);
           } catch (NumberFormatException e) {
             throw new ParseException("value of attribute 'time' must be a positive integer");
+          }
+        } else if (subnode.getNodeName().equals("id")) {
+          try {
+            int id = Integer.parseInt(subnode.getNodeValue());
+            builder.setReactionID(id);
+          } catch (NumberFormatException e) {
+            throw new ParseException("value of attribute 'id' must be a positive integer");
           }
         } else {
           throw new ParseException("unexpected attribute in reaction definition: " + subnode.toString());

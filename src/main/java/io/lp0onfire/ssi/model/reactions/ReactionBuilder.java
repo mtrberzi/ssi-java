@@ -5,6 +5,11 @@ import java.util.List;
 
 public class ReactionBuilder {
 
+  private Integer reactionID = null;
+  public void setReactionID(Integer id) {
+    this.reactionID = id;
+  }
+  
   private String reactionName = null;
   public void setReactionName(String name) {
     this.reactionName = name;
@@ -31,6 +36,9 @@ public class ReactionBuilder {
   }
   
   public Reaction build() {
+    if (reactionID == null) {
+      throw new IllegalArgumentException("reaction ID not set");
+    }
     if (reactionName == null) {
       throw new IllegalArgumentException("reaction name not set");
     }
@@ -46,7 +54,7 @@ public class ReactionBuilder {
     if (products.isEmpty()) {
       throw new IllegalArgumentException("reaction has no products");
     }
-    return new Reaction(reactionName, reactionTime, reactionCategories,
+    return new Reaction(reactionID, reactionName, reactionTime, reactionCategories,
         reactants, products);
   }
   

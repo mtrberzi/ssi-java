@@ -8,6 +8,11 @@ import java.util.List;
 
 public class Reaction {
 
+  private final Integer reactionID;
+  public Integer getID() {
+    return this.reactionID;
+  }
+  
   private final String reactionName;
   public String getName() {
     return this.reactionName;
@@ -33,9 +38,10 @@ public class Reaction {
     return this.products;
   }
   
-  public Reaction(String reactionName, int reactionTime,
+  public Reaction(Integer reactionID, String reactionName, int reactionTime,
       List<String> reactionCategories, List<Reactant> reactants,
       List<Product> products) {
+    this.reactionID = reactionID;
     this.reactionName = reactionName;
     this.reactionTime = reactionTime;
     this.categories = reactionCategories;
