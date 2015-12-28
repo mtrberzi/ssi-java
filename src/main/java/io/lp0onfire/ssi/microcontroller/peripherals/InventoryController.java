@@ -209,7 +209,12 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
         responseRegister = (insn & 0b0000001111100000) >>> 5;
         sourceBuffer = (insn &     0b0000000000011110) >>> 1;
         sourceTail = (insn &       0b0000000000000001) != 0;
-        totalCycles = 32; // at least...
+        totalCycles = 32;
+        break;
+      case 1: // MSTAT
+        responseRegister = (insn & 0b0000001111100000) >>> 5;
+        manipID = (insn &          0b0000000000011111);
+        totalCycles = 3;
         break;
       default:
         this.illegalInstruction = true;
@@ -564,6 +569,21 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
         responseBuffer.putInt(obj.getType());
       }
       responseBuffer.position(0);
+      return true;
+    }
+    case 1: // MSTAT
+    {
+      int mIdx = cmd.getManipID();
+      if (mIdx >= machine.getNumberOfManipulators()) {
+        error(ErrorCode.ILLEGAL_MANIP, cmd); return false;
+      }
+      ByteBuffer response = machine.manipulator_MSTAT(mIdx);
+      if (response == null) {
+        error(ErrorCode.MANIP_ERROR, cmd); return false;
+      }
+      response.position(0);
+      cmd.responseBuffer = response;
+      cmd.currentAddress = responseAddressRegister[cmd.getResponseRegister()];
       return true;
     }
     default:

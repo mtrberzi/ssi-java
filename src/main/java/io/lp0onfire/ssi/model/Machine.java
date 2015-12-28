@@ -5,6 +5,8 @@ import io.lp0onfire.ssi.microcontroller.Microcontroller;
 import io.lp0onfire.ssi.microcontroller.peripherals.InventoryController;
 import io.lp0onfire.ssi.model.reactions.Reaction;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -82,6 +84,7 @@ public abstract class Machine extends VoxelOccupant {
       this.lastManipulatorError[i] = InventoryController.ErrorCode.NO_ERROR;
       // set up a private buffer
       manipulatorPrivateBuffer.put(i, new LinkedList<Item>());
+      manipulatorReactionStartSinceLastMSTAT.put(i, false);
     }
   }
   
@@ -198,6 +201,7 @@ public abstract class Machine extends VoxelOccupant {
   private Map<Integer, Boolean> manipulatorIsPerformingReaction = new HashMap<>();
   private Map<Integer, Integer> manipulatorReactionTimeRemaining = new HashMap<>();
   private Map<Integer, LinkedList<Item>> manipulatorPrivateBuffer = new HashMap<>();
+  private Map<Integer, Boolean> manipulatorReactionStartSinceLastMSTAT = new HashMap<>();
   
   public boolean manipulator_isReacting(int mIdx) {
     Boolean b = manipulatorIsPerformingReaction.get(mIdx);
@@ -232,6 +236,7 @@ public abstract class Machine extends VoxelOccupant {
     if (reaction.reactantsOK(manipulatorPrivateBuffer.get(mIdx))) {
       manipulatorIsPerformingReaction.put(mIdx, true);
       manipulatorReactionTimeRemaining.put(mIdx, reaction.getTime());
+      manipulatorReactionStartSinceLastMSTAT.put(mIdx, true);
     }
   }
   
@@ -342,6 +347,43 @@ public abstract class Machine extends VoxelOccupant {
     if (!canAcceptManipulatorCommand(mIdx)) return true;
     manipulatorCommands.put(mIdx, new PutWithManipulatorUpdate(this, mIdx, item));
     return true;
+  }
+  
+  // get manipulator status
+  public ByteBuffer manipulator_MSTAT(int mIdx) {
+    if (mIdx < 0 || mIdx >= getNumberOfManipulators()) {
+      return null;
+    }
+    
+    // total hack for reactor-type manipulators
+    if (manipulator_canSetReaction(mIdx)) {
+      // the report is a single uint32:
+      // the high bit is set if a reaction was started since the last time
+      // this manipulator received an MSTAT command, and the
+      // low 31 bits are the unsigned number of timesteps until 
+      // the reaction in progress, if any, is complete
+      ByteBuffer response = ByteBuffer.allocate(4);
+      response.order(ByteOrder.LITTLE_ENDIAN);
+      response.position(0);
+      int statusWord = 0;
+      Integer i = manipulatorReactionTimeRemaining.get(mIdx);
+      if (i != null && i >= 0) {
+        statusWord = (i & 0x7FFFFFFF);
+      }
+      // set bit 31
+      Boolean started = manipulatorReactionStartSinceLastMSTAT.get(mIdx);
+      if (started != null && started.booleanValue()) {
+        statusWord |= 0x80000000;
+      }
+      // clear "manipulator status checked" flag
+      manipulatorReactionStartSinceLastMSTAT.put(mIdx, false);
+      response.putInt(statusWord);
+      response.position(0);
+      return response;
+    }
+    
+    // no support
+    return null;
   }
   
 }

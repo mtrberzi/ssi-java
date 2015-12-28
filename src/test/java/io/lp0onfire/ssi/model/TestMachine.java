@@ -16,6 +16,8 @@ import io.lp0onfire.ssi.model.reactions.Reaction;
 import io.lp0onfire.ssi.model.reactions.ReactionBuilder;
 import io.lp0onfire.ssi.model.reactions.ReactionLibrary;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -232,6 +234,30 @@ public class TestMachine {
       Component product = (Component)i;
       assertEquals("incorrect reaction product", "bogus2", product.getComponentName());
     }
+  }
+  
+  @Test
+  public void inttest_MachineReactor_MSTAT() throws AddressTrapException {
+    // make sure we can get the reaction
+    Reaction reaction = ReactionLibrary.getInstance().getReactionByID(9001);
+    assertNotNull(reaction);
+    
+    TestPartBuilder machine = new TestPartBuilder();
+    InventoryController controller = new InventoryController(machine, 4);
+    
+    for (int i = 0; i < 2; ++i) {
+      controller.getObjectBuffer(0).addLast(ComponentLibrary.getInstance().createComponent("bogus1", metal));
+    }
+    
+    // load the reaction ID into ID register 0, and SET that reaction on manipulator 0
+    controller.writeWord(0x50, reaction.getID());
+    controller.writeHalfword(0x0, 0b1100000000000000);
+    
+    // cycle the controller a couple of times
+    for (int i = 0; i < 3; ++i) {
+      controller.cycle(); checkNoErrors(controller);
+    }
+    assertEquals("SET command did not execute", 0, numberOfOutstandingCommands(controller));
   }
   
 }

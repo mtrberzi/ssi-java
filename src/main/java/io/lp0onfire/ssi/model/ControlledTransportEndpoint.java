@@ -2,6 +2,8 @@ package io.lp0onfire.ssi.model;
 
 import io.lp0onfire.ssi.microcontroller.Microcontroller;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -174,4 +176,38 @@ public abstract class ControlledTransportEndpoint extends TransportEndpoint {
     }
   }
   
+ // get manipulator status -- the report is different for transport endpoints
+ @Override
+ public ByteBuffer manipulator_MSTAT(int mIdx) {
+   if (mIdx < 0 || mIdx >= getNumberOfManipulators()) {
+     return null;
+   }
+   if (getManipulatorType(mIdx) == ManipulatorType.TRANSPORT_TUBE_ENDPOINT) {
+     // if there is an item ready to be received, give a report of the following form:
+     // #1 (uint16) object kind (uint16) object type (uint32)
+     // otherwise, the report is:
+     // #0 (uint32) #0 (uint32)
+     ByteBuffer response = ByteBuffer.allocate(8);
+     response.order(ByteOrder.LITTLE_ENDIAN);
+     response.position(0);
+     
+     String endpoint = getEndpointOfManipulatorIndex(mIdx);
+     Item i = endpointInputBuffer.get(endpoint);
+     if (i == null) {
+       // no item
+       response.putInt(0);
+       response.putInt(0);
+     } else {
+       // item ready
+       response.putShort((short)1);
+       response.putShort(i.getKind());
+       response.putInt(i.getType());
+     }
+     
+     response.position(0);
+     return response;
+   } else {
+     return super.manipulator_MSTAT(mIdx);
+   }
+ }
 }
