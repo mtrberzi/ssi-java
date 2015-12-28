@@ -1,12 +1,16 @@
 package io.lp0onfire.ssi.microcontroller.peripherals;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.UUID;
 
 import io.lp0onfire.ssi.microcontroller.AddressTrapException;
 import io.lp0onfire.ssi.microcontroller.InterruptSource;
+import io.lp0onfire.ssi.microcontroller.RV32SystemBus;
 import io.lp0onfire.ssi.microcontroller.SystemBusPeripheral;
 import io.lp0onfire.ssi.model.Item;
 import io.lp0onfire.ssi.model.Machine;
@@ -45,6 +49,13 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
     this.machine = machine;
   }
   
+  private RV32SystemBus bus;
+  
+  @Override
+  public void setSystemBus(RV32SystemBus bus) {
+    this.bus = bus;
+  }
+  
   public enum ErrorCode {
     NO_ERROR(0),
     ILLEGAL_INSN(1),
@@ -75,6 +86,10 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
     private final int type;
     public int getType() {
       return this.type;
+    }
+    
+    public boolean isQueryCommand() {
+      return (getType() == 1);
     }
     
     public boolean isManipulatorCommand() {
@@ -142,6 +157,24 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
       return this.rxRegister;
     }
     
+    private int responseRegister = 0;
+    public int getResponseRegister() {
+      return this.responseRegister;
+    }
+    
+    private ByteBuffer responseBuffer = null;
+    public ByteBuffer getResponseBuffer() {
+      return this.responseBuffer;
+    }
+    
+    private int currentAddress;
+    public int getCurrentAddress() {
+      return this.currentAddress;
+    }
+    public void setCurrentAddress(int addr) {
+      this.currentAddress = addr;
+    }
+    
     private int totalCycles = 0;
     public int getTotalCycles() {
       return this.totalCycles;
@@ -171,7 +204,16 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
     }
     
     private void type1Init() {
-      
+      switch (opcode) {
+      case 0: // LIST
+        responseRegister = (insn & 0b0000001111100000) >>> 5;
+        sourceBuffer = (insn &     0b0000000000011110) >>> 1;
+        sourceTail = (insn &       0b0000000000000001) != 0;
+        totalCycles = 32; // at least...
+        break;
+      default:
+        this.illegalInstruction = true;
+      }
     }
     
     private void type2Init() {
@@ -359,6 +401,16 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
     reactionIDRegister[registerIndex] = value;
   }
   
+  private int[] responseAddressRegister = new int[32];
+  protected void writeResponseAddressRegister(int addr, int value) {
+    // first register is at 0xD0
+    int registerIndex = (addr - 0xD0) / 4;
+    if (registerIndex < 0 || registerIndex >= 31) {
+      throw new IllegalArgumentException("response address register #" + registerIndex + " does not exist");
+    }
+    responseAddressRegister[registerIndex] = value;
+  }
+  
   @Override
   public void writeWord(int pAddr, int value) throws AddressTrapException {
     int addr = translateAddress(pAddr);
@@ -382,6 +434,16 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
     case 0xC0: case 0xC4: case 0xC8: case 0xCC:
       // INV_RX
       writeReactionIDRegister(addr, value); break;
+    case 0x0D0: case 0x0D4: case 0x0D8: case 0x0DC:
+    case 0x0E0: case 0x0E4: case 0x0E8: case 0x0EC:
+    case 0x0F0: case 0x0F4: case 0x0F8: case 0x0FC:
+    case 0x100: case 0x104: case 0x108: case 0x10C:
+    case 0x110: case 0x114: case 0x118: case 0x11C:
+    case 0x120: case 0x124: case 0x128: case 0x12C:
+    case 0x130: case 0x134: case 0x138: case 0x13C:
+    case 0x140: case 0x144: case 0x148: case 0x14C:
+      // INV_RESPADDR
+      writeResponseAddressRegister(addr, value); break;
     default:
       throw new AddressTrapException(7, pAddr);
     }
@@ -455,8 +517,57 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
   }
   
   protected boolean executeType1(Command cmd) {
-    // TODO
-    error(ErrorCode.ILLEGAL_INSN, cmd); return false;
+    switch (cmd.getOpcode()) {
+    case 0: // LIST
+    {
+      int srcBuffer = cmd.getSourceBuffer();
+      boolean srcTail = cmd.getSourceTail();
+      if (!objectBuffers.containsKey(srcBuffer)) {
+        error(ErrorCode.NO_SUCH_BUFFER, cmd); return false;
+      }
+      
+      // find target address
+      cmd.currentAddress = responseAddressRegister[cmd.getResponseRegister()];
+      
+      LinkedList<Item> src = objectBuffers.get(srcBuffer);
+      ByteBuffer responseBuffer = ByteBuffer.allocate(4 + src.size()*8);
+      responseBuffer.order(ByteOrder.LITTLE_ENDIAN);
+      cmd.responseBuffer = responseBuffer;
+      // write out the header
+      responseBuffer.putShort((short)src.size()); // number of objects
+      responseBuffer.putShort((short)8); // record size
+      ListIterator<Item> iterator;
+      if (srcTail) {
+        // start at end
+        iterator = src.listIterator(src.size());
+      } else {
+        iterator = src.listIterator(0);
+      }
+      // now iterate over it
+      while (
+          (srcTail && iterator.hasPrevious())
+          ||
+          (!srcTail && iterator.hasNext())
+          ) {
+        Item obj;
+        if (srcTail) {
+          obj = iterator.previous();
+        } else {
+          obj = iterator.next();
+        }
+        // write object kind
+        responseBuffer.putShort(obj.getKind());
+        // write object flags
+        // TODO
+        responseBuffer.putShort((short)0);
+        // write object type
+        responseBuffer.putInt(obj.getType());
+      }
+      return true;
+    }
+    default:
+      error(ErrorCode.ILLEGAL_INSN, cmd); return false;
+    }
   }
   
   protected boolean executeType2(Command cmd) {
@@ -683,7 +794,40 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
         // only one command per manipulator can be issued at a time
         if (commandCanExecute) {
           trace("executing command #" + i);
-          if (cmd_later.isManipulatorCommand() && !cmd_later.getManipulatorCommandIssued()) {
+          if (cmd_later.isQueryCommand()) {
+            trace("cycling query command");
+            cmd_later.cycle();
+            if (cmd_later.getExecutedCycles() >= cmd_later.getTotalCycles()) {
+              if (cmd_later.getResponseBuffer() == null) {
+                trace("cycle count up, constructing response buffer");
+                boolean status = execute(cmd_later);
+                if (!status) {
+                  trace("fail");
+                  // abort processing
+                  break;
+                }
+              } else {
+                // we already have a response -- do one DMA cycle
+                trace("DMA cycle");
+                ByteBuffer responseBuffer = cmd_later.getResponseBuffer();
+                if (responseBuffer.position() == responseBuffer.capacity()) {
+                  // all done
+                  trace("finished DMA");
+                  commandQueue[i] = null;
+                } else {
+                  int tmp = responseBuffer.getInt();
+                  try {
+                    bus.storeWord(cmd_later.getCurrentAddress(), tmp);
+                    cmd_later.setCurrentAddress(cmd_later.getCurrentAddress() + 4);
+                  } catch (AddressTrapException e) {
+                    // failure
+                    trace("address exception");
+                    break;
+                  }
+                }
+              }
+            }
+          } else if (cmd_later.isManipulatorCommand() && !cmd_later.getManipulatorCommandIssued()) {
             trace("attempting to issue manipulator command...");
             // attempt to issue the command
             boolean status = issueManipulatorCommand(cmd_later);
