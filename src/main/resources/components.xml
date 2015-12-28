@@ -4,5 +4,10 @@
 	<component name="plate" type="2"></component>
 	<component name="transport tube segment" type="3"></component>
 	<component name="actuator" type="4"></component>
-	<component name="rapid fabricator frame" type="5"></component>
+	<component name="fabricator machine frame" type="5"></component>
+	<component name="photon thruster" type="6"></component>
+	<component name="field assembly device" type="7"></component>
+	<component name="light arm" type="8"></component>
+	<component name="engineering robot frame Mk.I" type="9"></component>
+	<component name="wire" type="10"></component>
 </components>
