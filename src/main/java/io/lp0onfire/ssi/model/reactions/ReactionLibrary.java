@@ -42,6 +42,7 @@ public class ReactionLibrary {
   
   public void clear() {
     reactions.clear();
+    reactionsByID.clear();
   }
   
   public void addReaction(String category, Reaction reaction) {    
@@ -267,6 +268,11 @@ public class ReactionLibrary {
     }
     
     Reaction rx = builder.build();
+    // check for a duplicate
+    if (getReactionByID(rx.getID()) != null) {
+      throw new ParseException("duplicate reaction ID: " + Integer.toString(rx.getID()));
+    }
+    
     for (String category : rx.getCategories()) {
       addReaction(category, rx);
     }
