@@ -1,5 +1,7 @@
 package io.lp0onfire.ssi.model;
 
+import io.lp0onfire.ssi.microcontroller.Microcontroller;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -9,6 +11,14 @@ import java.util.Set;
  * It is always stationary.
  */
 public abstract class TransportEndpoint extends Machine implements TransportDevice {
+  
+  public TransportEndpoint() {
+    super();
+  }
+  
+  public TransportEndpoint(Microcontroller mcu) {
+    super(mcu);
+  }
 
   @Override
   public boolean impedesXYMovement() {

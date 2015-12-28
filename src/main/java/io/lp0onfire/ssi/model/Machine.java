@@ -1,8 +1,10 @@
 package io.lp0onfire.ssi.model;
 
+import io.lp0onfire.ssi.TimeConstants;
+import io.lp0onfire.ssi.microcontroller.Microcontroller;
 import io.lp0onfire.ssi.microcontroller.peripherals.InventoryController;
+import io.lp0onfire.ssi.model.reactions.Reaction;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -20,6 +22,26 @@ public abstract class Machine extends VoxelOccupant {
 
   public Machine() {
     initializeManipulatorInterface();
+    this.mcu = null;
+    this.invController = null;
+  }
+  
+  public Machine(Microcontroller mcu) {
+    initializeManipulatorInterface();
+    this.mcu = mcu;
+    this.invController = null;
+  }
+  
+  private Microcontroller mcu;
+  protected Microcontroller getMCU() {
+    return this.mcu;
+  }
+  
+  private InventoryController invController;
+  
+  protected void makeInventoryController(int nObjectBuffers) {
+    this.invController = new InventoryController(this, nObjectBuffers);
+    mcu.attachInventoryController(invController);
   }
   
   private Vector position;
@@ -36,6 +58,15 @@ public abstract class Machine extends VoxelOccupant {
   }
   
   @Override
+  public void preprocess() {
+    // run the microcontroller, if there is one
+    if (mcu == null) return;
+    for (int i = 0; i < TimeConstants.CLOCK_CYCLES_PER_TIMESTEP; ++i) {
+      mcu.cycle();
+    }
+  }
+  
+  @Override
   public boolean requiresTimestep() {
     return true;
   }
@@ -49,6 +80,8 @@ public abstract class Machine extends VoxelOccupant {
     this.lastManipulatorError = new InventoryController.ErrorCode[getNumberOfManipulators()];
     for (int i = 0; i < getNumberOfManipulators(); ++i) {
       this.lastManipulatorError[i] = InventoryController.ErrorCode.NO_ERROR;
+      // set up a private buffer
+      manipulatorPrivateBuffer.put(i, new LinkedList<Item>());
     }
   }
   
@@ -62,6 +95,7 @@ public abstract class Machine extends VoxelOccupant {
   public enum ManipulatorType {
     TRANSPORT_TUBE_ENDPOINT,
     LIGHT_ARM,
+    PART_BUILDER, // for Robot Part Builder
   }
   public abstract ManipulatorType getManipulatorType(int mIdx);
   
@@ -137,6 +171,8 @@ public abstract class Machine extends VoxelOccupant {
       return true;
     case TRANSPORT_TUBE_ENDPOINT:
       return true;
+    case PART_BUILDER:
+      return true;
     default:
       throw new UnsupportedOperationException("unknown manipulator type " + mType);
     }
@@ -157,11 +193,104 @@ public abstract class Machine extends VoxelOccupant {
     }
   }
   
+  // non-queue manipulator commands
+  private Map<Integer, Reaction> manipulatorReaction = new HashMap<>();
+  private Map<Integer, Boolean> manipulatorIsPerformingReaction = new HashMap<>();
+  private Map<Integer, Integer> manipulatorReactionTimeRemaining = new HashMap<>();
+  private Map<Integer, LinkedList<Item>> manipulatorPrivateBuffer = new HashMap<>();
+  
+  public boolean manipulator_isReacting(int mIdx) {
+    Boolean b = manipulatorIsPerformingReaction.get(mIdx);
+    return (b != null && b.booleanValue());
+  }
+  
+  public boolean manipulator_canSetReaction(int mIdx) {
+    if (mIdx < 0 || mIdx >= getNumberOfManipulators()) {
+      return false;
+    }
+    ManipulatorType mType = getManipulatorType(mIdx);
+    switch (mType) {
+    case PART_BUILDER:
+      return true;
+    default: return false;
+    }
+  }
+  
+  protected boolean isReactionLegal(int mIdx, Reaction reaction) {
+    ManipulatorType mType = getManipulatorType(mIdx);
+    switch (mType) {
+    case PART_BUILDER:
+      return reaction.getCategories().contains("part-builder-1");
+    default: return false;
+    }
+  }
+  
+  protected void tryToStartReaction(int mIdx) {
+    Reaction reaction = manipulatorReaction.get(mIdx);
+    if (reaction == null) return;
+    
+    if (reaction.reactantsOK(manipulatorPrivateBuffer.get(mIdx))) {
+      manipulatorIsPerformingReaction.put(mIdx, true);
+      manipulatorReactionTimeRemaining.put(mIdx, reaction.getTime());
+    }
+  }
+  
+  @Override
+  public void timestep() {
+    super.timestep();
+    if (mcu != null) {
+      mcu.timestep();
+    }
+    // check reaction progress for all reactors
+    for (Map.Entry<Integer, Boolean> entry : manipulatorIsPerformingReaction.entrySet()) {
+      Integer mIdx = entry.getKey();
+      Boolean isReacting = entry.getValue();
+      if (isReacting) {
+        int newRxTime = manipulatorReactionTimeRemaining.get(mIdx) - 1;
+        if (newRxTime <= 0) {
+          Reaction currentReaction = manipulatorReaction.get(mIdx);
+          List<Item> currentItems = manipulatorPrivateBuffer.get(mIdx);
+          Reaction.Result result = currentReaction.react(currentItems);
+          if (!result.successful()) {
+            // TODO better error handling
+            throw new IllegalStateException("reaction unexpectedly failed");
+          }
+          List<Item> consumedReactants = result.getConsumedReactants();
+          currentItems.removeAll(consumedReactants);
+          List<Item> products = result.getOutputProducts();
+          for (Item i : products) {
+            currentItems.add(i);
+          }
+          manipulatorIsPerformingReaction.put(mIdx, false);
+          manipulatorReactionTimeRemaining.remove(mIdx);
+        } else {
+          manipulatorReactionTimeRemaining.put(mIdx, newRxTime);
+        }
+      }
+    }
+  }
+  
+  public boolean manipulator_setReaction(int mIdx, Reaction reaction) {
+    if (!manipulator_canSetReaction(mIdx)) {
+      return false;
+    }
+    // check whether this reaction type is legal on this manipulator
+    if (!isReactionLegal(mIdx, reaction)) {
+      return false;
+    }
+    // can't change the reaction during a reaction
+    if (manipulator_isReacting(mIdx)) {
+      return false;
+    }
+    manipulatorReaction.put(mIdx, reaction);
+    tryToStartReaction(mIdx);
+    return true;
+  }
+  
   // all manipulator queue commands return true if the command is legal on that
   // manipulator, and false if the command is not legal
   
-  // TODO some manipulators don't place the item into the world, but store it internally
-  // (e.g. a reaction vessel or an assembler)
+  // TODO double-check error handling for all of these, especially the non-world-update ones
   
   // queue command: take the available item matching the given UUID
   public boolean manipulator_getItemByUUID(int mIdx, UUID uuid) {
@@ -179,7 +308,17 @@ public abstract class Machine extends VoxelOccupant {
   
   // queue command: take the next available item
   public boolean manipulator_getNextItem(int mIdx) {
-    throw new UnsupportedOperationException("not yet implemented");
+    // special check for reactor-type manipulators
+    // TODO fast command completion in this case
+    if (manipulator_canSetReaction(mIdx)) { // this is such a cheeky way of doing the test...
+      if (!manipulator_isReacting(mIdx)) {
+        manipulatorItem.put(mIdx, manipulatorPrivateBuffer.get(mIdx).removeFirst());
+        return true;
+      } else {
+        return false; // can't take items out while a reaction is being performed
+      }
+    }
+    return false;
   }
   
   // queue command: attempt to output the provided item, if it can be manipulated and output
@@ -187,6 +326,19 @@ public abstract class Machine extends VoxelOccupant {
     if (mIdx < 0 || mIdx >= getNumberOfManipulators()) {
       return false;
     }
+    
+    // special check for reactor-type manipulators
+    // TODO fast command completion in this case
+    if (manipulator_canSetReaction(mIdx)) { // this is such a cheeky way of doing the test...
+      if (!manipulator_isReacting(mIdx)) {
+        manipulatorPrivateBuffer.get(mIdx).addLast(item);
+        tryToStartReaction(mIdx);
+        return true;
+      } else {
+        return false; // can't accept new items while a reaction is being performed
+      }
+    }
+    
     if (!canAcceptManipulatorCommand(mIdx)) return true;
     manipulatorCommands.put(mIdx, new PutWithManipulatorUpdate(this, mIdx, item));
     return true;

@@ -1,5 +1,7 @@
 package io.lp0onfire.ssi.model;
 
+import io.lp0onfire.ssi.microcontroller.Microcontroller;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -45,6 +47,13 @@ public abstract class ControlledTransportEndpoint extends TransportEndpoint {
   protected Map<String, Item> endpointOutputBuffer = new HashMap<>();
   
   public ControlledTransportEndpoint() {
+    for (String endpoint : getTransportEndpoints()) {
+      endpointState.put(endpoint, EndpointCommand.CMD_NONE);
+    }
+  }
+  
+  public ControlledTransportEndpoint(Microcontroller mcu) {
+    super(mcu);
     for (String endpoint : getTransportEndpoints()) {
       endpointState.put(endpoint, EndpointCommand.CMD_NONE);
     }

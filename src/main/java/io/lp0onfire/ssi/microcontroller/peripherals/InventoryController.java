@@ -10,6 +10,8 @@ import io.lp0onfire.ssi.microcontroller.InterruptSource;
 import io.lp0onfire.ssi.microcontroller.SystemBusPeripheral;
 import io.lp0onfire.ssi.model.Item;
 import io.lp0onfire.ssi.model.Machine;
+import io.lp0onfire.ssi.model.reactions.Reaction;
+import io.lp0onfire.ssi.model.reactions.ReactionLibrary;
 
 public class InventoryController implements SystemBusPeripheral, InterruptSource {
 
@@ -51,6 +53,8 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
     NO_SUCH_BUFFER(4),
     ILLEGAL_MANIP(5),
     MANIP_ERROR(6),
+    NO_SUCH_RX(7),
+    ILLEGAL_RX(8),
     ;
     
     private final short code;
@@ -133,6 +137,11 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
       return this.sourceTail;
     }
     
+    private int rxRegister = 0;
+    public int getRxRegister() {
+      return this.rxRegister;
+    }
+    
     private int totalCycles = 0;
     public int getTotalCycles() {
       return this.totalCycles;
@@ -191,7 +200,16 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
     }
     
     private void type3Init() {
-      
+      switch (opcode) {
+      case 0:
+        // SET
+        rxRegister = (insn & 0b0000001111100000) >>> 5;
+        manipID = (insn    & 0b0000000000011111);
+        totalCycles = 3;
+        break;
+      default:
+        this.illegalInstruction = true;
+      }
     }
     
     public Command(int insn) {
@@ -331,6 +349,16 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
     uuidRegister[registerIndex] = null;
   }
   
+  private int[] reactionIDRegister = new int[32];
+  protected void writeReactionIDRegister(int addr, int value) {
+    // first register is at 0x50
+    int registerIndex = (addr - 0x50) / 4;
+    if (registerIndex < 0 || registerIndex >= 31) {
+      throw new IllegalArgumentException("reaction ID register #" + registerIndex + " does not exist");
+    }
+    reactionIDRegister[registerIndex] = value;
+  }
+  
   @Override
   public void writeWord(int pAddr, int value) throws AddressTrapException {
     int addr = translateAddress(pAddr);
@@ -344,6 +372,16 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
     case 0x40: case 0x44: case 0x48: case 0x4C:
       // INV_UUID
       writeUUIDRegister(addr, value); break;
+    case 0x50: case 0x54: case 0x58: case 0x5C:
+    case 0x60: case 0x64: case 0x68: case 0x6C:
+    case 0x70: case 0x74: case 0x78: case 0x7C:
+    case 0x80: case 0x84: case 0x88: case 0x8C:
+    case 0x90: case 0x94: case 0x98: case 0x9C:
+    case 0xA0: case 0xA4: case 0xA8: case 0xAC:
+    case 0xB0: case 0xB4: case 0xB8: case 0xBC:
+    case 0xC0: case 0xC4: case 0xC8: case 0xCC:
+      // INV_RX
+      writeReactionIDRegister(addr, value); break;
     default:
       throw new AddressTrapException(7, pAddr);
     }
@@ -486,8 +524,33 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
   }
   
   protected boolean executeType3(Command cmd) {
-    // TODO
-    error(ErrorCode.ILLEGAL_INSN, cmd); return false;
+    switch (cmd.getOpcode()) {
+    case 0: // SET
+    {
+      int mIdx = cmd.getManipID();
+      // check that the specified manipulator exists
+      if (mIdx >= machine.getNumberOfManipulators()) {
+        error(ErrorCode.ILLEGAL_MANIP, cmd); return false;
+      }
+      // check that the specified manipulator can accept SET commands
+      if (!machine.manipulator_canSetReaction(mIdx)) {
+        error(ErrorCode.MANIP_ERROR, cmd); return false;
+      }
+      // try to find a reaction with this ID
+      int reactionID = reactionIDRegister[cmd.getRxRegister()];
+      Reaction reaction = ReactionLibrary.getInstance().getReactionByID(reactionID);
+      if (reaction == null) {
+        error(ErrorCode.NO_SUCH_RX, cmd); return false;
+      }
+      // tell the manipulator to do this reaction now
+      if (!machine.manipulator_setReaction(mIdx, reaction)) {
+        error(ErrorCode.ILLEGAL_RX, cmd); return false;
+      }
+      return true;
+    }
+    default:
+      error(ErrorCode.ILLEGAL_INSN, cmd); return false;
+    }
   }
   
   protected boolean execute(Command cmd) {

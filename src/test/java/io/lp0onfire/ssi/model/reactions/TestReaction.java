@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -24,6 +25,9 @@ public class TestReaction {
   
   @BeforeClass
   public static void setupclass() throws ParseException {
+    ComponentLibrary.getInstance().clear();
+    ReactionLibrary.getInstance().clear();
+    
     // create a fake metal and non-metal material
     MaterialBuilder metalBuilder = new MaterialBuilder();
     metalBuilder.setMaterialName("bogusite");
@@ -47,6 +51,12 @@ public class TestReaction {
     ComponentLibrary.getInstance().addComponent(cBuilder2);
   }
   
+  @AfterClass
+  public static void finishclass() {
+    ComponentLibrary.getInstance().clear();
+    ReactionLibrary.getInstance().clear();
+  }
+  
   /*
    * our test reaction is:
    * 2 [metal] bogus1 -> 3 [#0] bogus2
@@ -67,6 +77,7 @@ public class TestReaction {
     products.add(pBuilder.build());
     
     ReactionBuilder reactionBuilder = new ReactionBuilder();
+    reactionBuilder.setReactionID(9001);
     reactionBuilder.setReactionName("fabricate bogus2");
     reactionBuilder.setReactionTime(1);
     reactionBuilder.setCategories(Arrays.asList("test"));
