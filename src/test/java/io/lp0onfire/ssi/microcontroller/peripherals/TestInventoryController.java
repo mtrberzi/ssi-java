@@ -2,11 +2,14 @@ package io.lp0onfire.ssi.microcontroller.peripherals;
 
 import static org.junit.Assert.*;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.UUID;
 
 import io.lp0onfire.ssi.microcontroller.AddressTrapException;
+import io.lp0onfire.ssi.microcontroller.RV32SystemBus;
 import io.lp0onfire.ssi.model.Item;
 import io.lp0onfire.ssi.model.Machine;
 import io.lp0onfire.ssi.model.Material;
@@ -126,10 +129,90 @@ public class TestInventoryController {
   private Machine machine;
   private InventoryController controller;
   
+  private RV32SystemBus bus;
+  private RAM ram;
+  private int ramBaseAddress = 0x10000000;
+  private int controllerBaseAddress = 0xF0000000;
+  
   @Before
   public void setup() {
     machine = new TestMachine();
     controller = new InventoryController(machine, NUMBER_OF_BUFFERS);
+    
+    bus = new RV32SystemBus();
+    ram = new RAM(8);
+    bus.attachPeripheral(ram, ramBaseAddress);
+    controller.setSystemBus(bus);
+    bus.attachPeripheral(controller, controllerBaseAddress);
+  }
+  
+  /** harness for executing a LIST command
+    * @returns a non-null ByteBuffer corresponding to the result of the command,
+    * if it was successful
+    */
+  private ByteBuffer perform_LIST(int objectBuffer, boolean startFromTail) {
+    try {
+      boolean noPending;
+      
+      // wait up to 100 cycles for all pending commands to finish
+      noPending = false;
+      for (int cycle = 0; cycle < 100; ++cycle) {
+        if (numberOfOutstandingCommands() == 0) {
+          noPending = true;
+          break;
+        }
+        controller.cycle();
+      }
+      if (!noPending) {
+        fail("timed out waiting for controller to finish before starting LIST");
+      }
+      
+      // write the base address of the RAM to Response Address Register 0
+      bus.storeWord(controllerBaseAddress + 0xD0, ramBaseAddress);
+      short opcode = 0b0100000000000000;
+      opcode |= (objectBuffer << 1);
+      if (startFromTail) {
+        opcode |= 0x01;
+      }
+      // start command
+      bus.storeHalfword(controllerBaseAddress + 0x0, opcode);
+      
+      // wait up to 128 cycles for this command to finish
+      noPending = false;
+      for (int cycle = 0; cycle < 128; ++cycle) {
+        if (numberOfOutstandingCommands() == 0) {
+          noPending = true;
+          break;
+        }
+        controller.cycle();
+      }
+      if (!noPending) {
+        fail("timed out waiting for LIST command to finish");
+      }
+      
+      checkNoErrors();
+      
+      int numberOfObjects = bus.loadHalfword(ramBaseAddress);
+      int objectRecordSize = bus.loadHalfword(ramBaseAddress + 2);
+      ByteBuffer responseBuffer = ByteBuffer.allocate(4 + numberOfObjects * objectRecordSize);
+      responseBuffer.order(ByteOrder.LITTLE_ENDIAN);
+      // write header
+      responseBuffer.putInt(bus.loadWord(ramBaseAddress));
+      int srcAddr = ramBaseAddress + 4;
+      for (int i = 0; i < numberOfObjects; ++i) {
+        for (int b = 0; b < objectRecordSize; ++b) {
+          byte tmp = (byte)bus.loadByte(srcAddr);
+          responseBuffer.put(tmp);
+          srcAddr += 1;
+        }
+      }
+      return responseBuffer;
+    } catch (AddressTrapException e) {
+      e.printStackTrace();
+      fail("bus error");
+    }
+    // unreachable
+    return null;
   }
   
   private String getErrorString(short code) {
@@ -247,6 +330,83 @@ public class TestInventoryController {
     // now buffer #0 should not contain any items, and the item should be in the world
     assertFalse(controller.getObjectBuffer(1).contains(foo));
     assertTrue(w.getOccupants(new Vector(0,0,1)).contains(foo));
+  }
+  
+  @Test
+  public void testInstruction_LIST_EmptyBuffer() {
+    // LIST #0, 0H
+    ByteBuffer response = perform_LIST(0, false);
+    assertNotNull(response);
+    response.position(0);
+    short nObjects = response.getShort();
+    assertEquals("incorrect number of objects", 0, nObjects);
+  }
+  
+  @Test
+  public void testInstruction_LIST_OneItem() {
+    // populate buffers like so:
+    // 1: [H] FOO [T]
+    LinkedList<Item> buffer1 = controller.getObjectBuffer(1);
+    Item foo = ComponentLibrary.getInstance().createComponent("foo", testMaterial);
+    buffer1.addLast(foo);
+    
+    // LIST #0, 1H
+    ByteBuffer response = perform_LIST(1, false);
+    assertNotNull(response);
+    response.position(0);
+    
+    short nObjects = response.getShort();
+    assertEquals("incorrect number of objects", 1, nObjects);
+    
+    short recordLength = response.getShort();
+    assertEquals("unexpected record length", 8, recordLength);
+    
+    // check object kind = 2 (component)
+    short objKind = response.getShort();
+    assertEquals("object kind not component", 2, objKind);
+    // skip flags
+    response.getShort();
+    // check object type = FOO_TYPE
+    int objType = response.getInt();
+    assertEquals("incorrect object type", FOO_TYPE, objType);
+  }
+  
+  @Test
+  public void testInstruction_LIST_TwoItems() {
+    // populate buffers like so:
+    // 1: [H] FOO BAR [T]
+    LinkedList<Item> buffer1 = controller.getObjectBuffer(1);
+    buffer1.addLast(ComponentLibrary.getInstance().createComponent("foo", testMaterial));
+    buffer1.addLast(ComponentLibrary.getInstance().createComponent("bar", testMaterial));
+    
+    // LIST #0, 1H
+    ByteBuffer response = perform_LIST(1, false);
+    assertNotNull(response);
+    response.position(0);
+    
+    short nObjects = response.getShort();
+    assertEquals("incorrect number of objects", 2, nObjects);
+    
+    short recordLength = response.getShort();
+    assertEquals("unexpected record length", 8, recordLength);
+    
+    // check object kind = 2 (component)
+    short objKind = response.getShort();
+    assertEquals("object kind not component", 2, objKind);
+    // skip flags
+    response.getShort();
+    // check object type = FOO_TYPE
+    int objType = response.getInt();
+    assertEquals("incorrect object type", FOO_TYPE, objType);
+    
+    // check object kind = 2 (component)
+    objKind = response.getShort();
+    assertEquals("object kind not component", 2, objKind);
+    // skip flags
+    response.getShort();
+    // check object type = FOO_TYPE
+    objType = response.getInt();
+    assertEquals("incorrect object type", BAR_TYPE, objType);
   }
   
 }

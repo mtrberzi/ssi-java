@@ -563,6 +563,7 @@ public class InventoryController implements SystemBusPeripheral, InterruptSource
         // write object type
         responseBuffer.putInt(obj.getType());
       }
+      responseBuffer.position(0);
       return true;
     }
     default:
