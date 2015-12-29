@@ -195,7 +195,7 @@
 		</products>
 	</reaction>
 	
-	<reaction name="Build engineering robot Mk.I" id="10" time="200">
+	<reaction id="10" name="Build engineering robot Mk.I" time="200">
 		<categories>
 			<category name="robot-assembly-1"/>
 		</categories>

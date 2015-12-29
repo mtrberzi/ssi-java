@@ -3,10 +3,13 @@ package io.lp0onfire.ssi.model;
 import static org.junit.Assert.*;
 import io.lp0onfire.ssi.ParseException;
 import io.lp0onfire.ssi.microcontroller.AddressTrapException;
+import io.lp0onfire.ssi.microcontroller.Microcontroller;
 import io.lp0onfire.ssi.microcontroller.peripherals.InventoryController;
 import io.lp0onfire.ssi.model.items.Component;
 import io.lp0onfire.ssi.model.items.ComponentBuilder;
 import io.lp0onfire.ssi.model.items.ComponentLibrary;
+import io.lp0onfire.ssi.model.reactions.CreatedObject;
+import io.lp0onfire.ssi.model.reactions.CreatedRobotBuilder;
 import io.lp0onfire.ssi.model.reactions.MaterialCategoryConstraint;
 import io.lp0onfire.ssi.model.reactions.Product;
 import io.lp0onfire.ssi.model.reactions.ProductBuilder;
@@ -16,11 +19,10 @@ import io.lp0onfire.ssi.model.reactions.Reaction;
 import io.lp0onfire.ssi.model.reactions.ReactionBuilder;
 import io.lp0onfire.ssi.model.reactions.ReactionLibrary;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -62,29 +64,59 @@ public class TestMachine {
      * our test reaction is:
      * 2 [metal] bogus1 -> 3 [#0] bogus2
      */
-    List<Reactant> reactants = new LinkedList<>();
-    ReactantBuilder rBuilder = new ReactantBuilder();
-    rBuilder.setQuantity(2);
-    rBuilder.setComponentName("bogus1");
-    rBuilder.setConstraints(Arrays.asList(new MaterialCategoryConstraint("metal")));
-    reactants.add(rBuilder.build());
+    {
+      List<Reactant> reactants = new LinkedList<>();
+      ReactantBuilder rBuilder = new ReactantBuilder();
+      rBuilder.setQuantity(2);
+      rBuilder.setComponentName("bogus1");
+      rBuilder.setConstraints(Arrays.asList(new MaterialCategoryConstraint("metal")));
+      reactants.add(rBuilder.build());
+      
+      List<Product> products = new LinkedList<>();
+      ProductBuilder pBuilder = new ProductBuilder();
+      pBuilder.setQuantity(3);
+      pBuilder.setComponentName("bogus2");
+      pBuilder.setCopiedMaterial(0);
+      products.add(pBuilder.build());
+      
+      ReactionBuilder reactionBuilder = new ReactionBuilder();
+      reactionBuilder.setReactionID(9001);
+      reactionBuilder.setReactionName("fabricate bogus2");
+      reactionBuilder.setReactionTime(1);
+      reactionBuilder.setCategories(Arrays.asList("part-builder-1"));
+      reactionBuilder.setReactants(reactants);
+      reactionBuilder.setProducts(products);
+      Reaction rx = reactionBuilder.build();
+      ReactionLibrary.getInstance().addReaction("part-builder-1", rx);
+    }
     
-    List<Product> products = new LinkedList<>();
-    ProductBuilder pBuilder = new ProductBuilder();
-    pBuilder.setQuantity(3);
-    pBuilder.setComponentName("bogus2");
-    pBuilder.setCopiedMaterial(0);
-    products.add(pBuilder.build());
+    /*
+     * our test robot-assembly reaction is:
+     * 1 bogus1 -> 1 TestRobot
+     */
+    {
+      List<Reactant> reactants = new LinkedList<>();
+      ReactantBuilder rBuilder = new ReactantBuilder();
+      rBuilder.setQuantity(1);
+      rBuilder.setComponentName("bogus1");
+      reactants.add(rBuilder.build());
+      
+      List<CreatedObject> objs = new LinkedList<>();
+      CreatedRobotBuilder oBuilder = new CreatedRobotBuilder();
+      oBuilder.setRobotClass("robots.TestRobot");
+      objs.add(oBuilder.build());
+      
+      ReactionBuilder reactionBuilder = new ReactionBuilder();
+      reactionBuilder.setReactionID(9002);
+      reactionBuilder.setReactionName("build test robot");
+      reactionBuilder.setReactionTime(1);
+      reactionBuilder.setCategories(Arrays.asList("robot-assembly-1"));
+      reactionBuilder.setReactants(reactants);
+      reactionBuilder.setCreatedObjects(objs);
+      Reaction rx = reactionBuilder.build();
+      ReactionLibrary.getInstance().addReaction("robot-assembly-1", rx);
+    }
     
-    ReactionBuilder reactionBuilder = new ReactionBuilder();
-    reactionBuilder.setReactionID(9001);
-    reactionBuilder.setReactionName("fabricate bogus2");
-    reactionBuilder.setReactionTime(1);
-    reactionBuilder.setCategories(Arrays.asList("part-builder-1"));
-    reactionBuilder.setReactants(reactants);
-    reactionBuilder.setProducts(products);
-    Reaction rx = reactionBuilder.build();
-    ReactionLibrary.getInstance().addReaction("part-builder-1", rx);
   }
   
   @AfterClass
@@ -153,6 +185,68 @@ public class TestMachine {
       return new Vector(1, 1, 1);
     }
     
+  }
+  
+  // A test machine with a robot assembler (#0)
+  class TestRobotBuilder extends Machine {
+
+    @Override
+    public int getNumberOfManipulators() {
+      return 1;
+    }
+
+    @Override
+    public ManipulatorType getManipulatorType(int mIdx) {
+      if (mIdx == 0) {
+        return ManipulatorType.ROBOT_ASSEMBLER;
+      } else return null;
+    }
+
+    @Override
+    public boolean impedesXYMovement() {
+      return false;
+    }
+
+    @Override
+    public boolean impedesZMovement() {
+      return false;
+    }
+
+    @Override
+    public boolean impedesXYFluidFlow() {
+      return false;
+    }
+
+    @Override
+    public boolean impedesZFluidFlow() {
+      return false;
+    }
+
+    @Override
+    public boolean supportsOthers() {
+      return false;
+    }
+
+    @Override
+    public boolean needsSupport() {
+      return false;
+    }
+
+    @Override
+    public boolean canMove() {
+      return false;
+    }
+
+    @Override
+    public int getType() {
+      return 0;
+    }
+
+    @Override
+    public Vector getExtents() {
+      return new Vector(1, 1, 1);
+    }
+
   }
   
   // Integration test for simple reactions -- requires behaviour from InventoryController
@@ -234,6 +328,61 @@ public class TestMachine {
       Component product = (Component)i;
       assertEquals("incorrect reaction product", "bogus2", product.getComponentName());
     }
+  }
+  
+  @Test
+  public void inttest_MachineBuildsRobot() throws AddressTrapException {
+    World w = new World(2, 2);
+    
+    // make sure we can get the reaction
+    Reaction reaction = ReactionLibrary.getInstance().getReactionByID(9002);
+    assertNotNull(reaction);
+    
+    TestRobotBuilder machine = new TestRobotBuilder();
+    InventoryController controller = new InventoryController(machine, 4);
+    
+    assertTrue(w.addOccupant(new Vector(0,0,1), new Vector(0,0,0), machine));
+    
+    for (int i = 0; i < 1; ++i) {
+      controller.getObjectBuffer(0).addLast(ComponentLibrary.getInstance().createComponent("bogus1", metal));
+    }
+    
+    // load the reaction ID into ID register 0, and SET that reaction on manipulator 0
+    controller.writeWord(0x50, reaction.getID());
+    controller.writeHalfword(0x0, 0b1100000000000000);
+    
+    // cycle the controller a couple of times
+    for (int i = 0; i < 3; ++i) {
+      controller.cycle(); checkNoErrors(controller);
+    }
+    assertEquals("SET command did not execute", 0, numberOfOutstandingCommands(controller));
+    
+    // run the command GIVE #0, 0H once
+    for (int pass = 0; pass < 1; ++pass) {
+      controller.writeHalfword(0x0, 0b1001000000000000);
+      controller.cycle(); checkNoErrors(controller); controller.timestep(); controller.cycle(); checkNoErrors(controller);
+      assertEquals("GIVE command did not execute (pass " + pass + ")", 0, numberOfOutstandingCommands(controller));
+    }
+    
+    // now look into the machine and see if we are reacting
+    assertTrue("reaction did not start", machine.manipulator_isReacting(0));
+    
+    // timestep the machine until the reaction is done
+    for (int timestep = 0; timestep < reaction.getTime(); ++timestep) {
+      controller.timestep();
+      w.timestep();
+    }
+    
+    assertFalse("reaction not finished", machine.manipulator_isReacting(0));
+    
+    // now check (0, 0, 1) for the robot we should have just made
+    List<Robot> robots = w.getOccupants(new Vector(0, 0, 1)).stream()
+        .filter((o -> o instanceof Robot)).map((o -> (Robot)o)).collect(Collectors.toList());
+    
+    assertFalse("no robots were created and placed into the world", robots.isEmpty());
+    assertEquals("too many robots were created", 1, robots.size());
+    Robot r = robots.get(0);
+    assertTrue("wrong kind of robot", r instanceof robots.TestRobot);
   }
   
   @Test

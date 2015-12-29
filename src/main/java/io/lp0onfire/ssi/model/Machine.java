@@ -8,9 +8,11 @@ import io.lp0onfire.ssi.model.reactions.Reaction;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -99,6 +101,7 @@ public abstract class Machine extends VoxelOccupant {
     TRANSPORT_TUBE_ENDPOINT,
     LIGHT_ARM,
     PART_BUILDER, // for Robot Part Builder
+    ROBOT_ASSEMBLER,
   }
   public abstract ManipulatorType getManipulatorType(int mIdx);
   
@@ -119,12 +122,13 @@ public abstract class Machine extends VoxelOccupant {
   // make sure this always gets called correctly by anything that overrides this method
   @Override
   public boolean hasWorldUpdates() {
-    return !manipulatorCommands.isEmpty();
+    return !manipulatorCommands.isEmpty() || !reactionObjectUpdates.isEmpty();
   }
   
   public List<WorldUpdate> getWorldUpdates() {
     List<WorldUpdate> updates = new LinkedList<>();
     updates.addAll(manipulatorCommands.values());
+    updates.addAll(reactionObjectUpdates);
     updates.addAll(super.getWorldUpdates());
     return updates;
   }
@@ -136,29 +140,39 @@ public abstract class Machine extends VoxelOccupant {
     for (Map.Entry<WorldUpdate, WorldUpdateResult> entry : results.entrySet()) {
       WorldUpdate update = entry.getKey();
       WorldUpdateResult result = entry.getValue();
-      // find the manipulator that issued this command
-      // TODO this is expensive
-      for (int i = 0; i < getNumberOfManipulators(); ++i) {
-        if (manipulatorCommands.containsKey(i) && manipulatorCommands.get(i).equals(update)) {
-          manipulatorCommands.remove(i);
-          if (result.wasSuccessful()) {
-            // clear error code
-            lastManipulatorError[i] = InventoryController.ErrorCode.NO_ERROR;
-            // figure out what type of update just happened, and resolve it accordingly
-            if (update instanceof TakeWithManipulatorByUUIDUpdate) {
-              TakeWithManipulatorByUUIDUpdate typedUpdate = (TakeWithManipulatorByUUIDUpdate)update;
-              Item item = typedUpdate.getTakenItem();
-              manipulatorItem.put(i, item);
-            } else if (update instanceof PutWithManipulatorUpdate) {
-              // no action
+      if (reactionObjectUpdates.contains(update)) {
+        reactionObjectUpdates.remove(update);
+        if (!result.wasSuccessful()) {
+          // oops, we couldn't place the object, or something.
+          // this is very bad and should never happen, so we
+          // consider this an internal error
+          throw new IllegalStateException("internal error: failed to place object created as a result of a reaction");
+        }
+      } else {
+        // find the manipulator that issued this command
+        // TODO this is expensive
+        for (int i = 0; i < getNumberOfManipulators(); ++i) {
+          if (manipulatorCommands.containsKey(i) && manipulatorCommands.get(i).equals(update)) {
+            manipulatorCommands.remove(i);
+            if (result.wasSuccessful()) {
+              // clear error code
+              lastManipulatorError[i] = InventoryController.ErrorCode.NO_ERROR;
+              // figure out what type of update just happened, and resolve it accordingly
+              if (update instanceof TakeWithManipulatorByUUIDUpdate) {
+                TakeWithManipulatorByUUIDUpdate typedUpdate = (TakeWithManipulatorByUUIDUpdate)update;
+                Item item = typedUpdate.getTakenItem();
+                manipulatorItem.put(i, item);
+              } else if (update instanceof PutWithManipulatorUpdate) {
+                // no action
+              } else {
+                throw new UnsupportedOperationException("not yet implemented");
+              }
             } else {
+              // TODO resolve error code
               throw new UnsupportedOperationException("not yet implemented");
             }
-          } else {
-            // TODO resolve error code
-            throw new UnsupportedOperationException("not yet implemented");
+            break;
           }
-          break;
         }
       }
     }
@@ -175,6 +189,8 @@ public abstract class Machine extends VoxelOccupant {
     case TRANSPORT_TUBE_ENDPOINT:
       return true;
     case PART_BUILDER:
+      return true;
+    case ROBOT_ASSEMBLER:
       return true;
     default:
       throw new UnsupportedOperationException("unknown manipulator type " + mType);
@@ -202,6 +218,7 @@ public abstract class Machine extends VoxelOccupant {
   private Map<Integer, Integer> manipulatorReactionTimeRemaining = new HashMap<>();
   private Map<Integer, LinkedList<Item>> manipulatorPrivateBuffer = new HashMap<>();
   private Map<Integer, Boolean> manipulatorReactionStartSinceLastMSTAT = new HashMap<>();
+  private Set<WorldUpdate> reactionObjectUpdates = new HashSet<>();
   
   public boolean manipulator_isReacting(int mIdx) {
     Boolean b = manipulatorIsPerformingReaction.get(mIdx);
@@ -215,6 +232,7 @@ public abstract class Machine extends VoxelOccupant {
     ManipulatorType mType = getManipulatorType(mIdx);
     switch (mType) {
     case PART_BUILDER:
+    case ROBOT_ASSEMBLER:
       return true;
     default: return false;
     }
@@ -225,6 +243,8 @@ public abstract class Machine extends VoxelOccupant {
     switch (mType) {
     case PART_BUILDER:
       return reaction.getCategories().contains("part-builder-1");
+    case ROBOT_ASSEMBLER:
+      return reaction.getCategories().contains("robot-assembly-1");
     default: return false;
     }
   }
@@ -266,6 +286,13 @@ public abstract class Machine extends VoxelOccupant {
           for (Item i : products) {
             currentItems.add(i);
           }
+          // if the reaction creates any objects, try to place them at (0, 0, 0)
+          List<VoxelOccupant> newObjects = result.getCreatedObjects();
+          for (VoxelOccupant obj : newObjects) {
+            WorldUpdate update = new RelativeAddObjectUpdate(this, new Vector(0, 0, 0), obj);
+            reactionObjectUpdates.add(update);
+          }
+          
           manipulatorIsPerformingReaction.put(mIdx, false);
           manipulatorReactionTimeRemaining.remove(mIdx);
         } else {
