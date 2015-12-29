@@ -194,4 +194,31 @@
 			</product>
 		</products>
 	</reaction>
+	
+	<reaction name="Build engineering robot Mk.I" id="10" time="200">
+		<categories>
+			<category name="robot-assembly-1"/>
+		</categories>
+		<reactants>
+			<!-- TODO MCU requirement -->
+			<!-- TODO power supply requirement -->
+			<reactant quantity="1">
+				<component name="engineering robot frame Mk.I" />
+			</reactant>
+			<reactant quantity="6">
+				<component name="photon thruster" />
+			</reactant>
+			<reactant quantity="1">
+				<component name="field assembly device" />
+			</reactant>
+			<reactant quantity="1">
+				<component name="light arm" />
+			</reactant>
+		</reactants>
+		<createdObjects>
+			<robot class="io.lp0onfire.ssi.model.robots.EngineeringRobotMarkOne">
+				<!-- TODO robot modules, materials, etc. -->
+			</robot>
+		</createdObjects>
+	</reaction>
 </reactions>

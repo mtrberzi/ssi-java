@@ -139,6 +139,22 @@ public class ReactionLibrary {
     return builder.build();
   }
   
+  private CreatedRobot parseCreatedRobot(Node robotNode) throws ParseException {
+    CreatedRobotBuilder builder = new CreatedRobotBuilder();
+    
+    NamedNodeMap attrs = robotNode.getAttributes();
+    for (int i = 0; i < attrs.getLength(); ++i) {
+      Node attr = attrs.item(i);
+      if (attr.getNodeName().equals("class")) {
+        builder.setRobotClass(attr.getNodeValue());
+      } else {
+        throw new ParseException("unexpected attribute in product definition: " + attr.toString());
+      }
+    }
+    
+    return builder.build();
+  }
+  
   private Product parseProduct(Node productNode) throws ParseException {
     ProductBuilder builder = new ProductBuilder();
     
@@ -218,6 +234,22 @@ public class ReactionLibrary {
     return products;
   }
   
+  private List<CreatedObject> parseCreatedObjects(Node createdObjectsNode) throws ParseException {
+    List<CreatedObject> createdObjects = new LinkedList<>();
+    NodeList subnodes = createdObjectsNode.getChildNodes();
+    for (int i = 0; i < subnodes.getLength(); ++i) {
+      Node subnode = subnodes.item(i);
+      if (subnode.getNodeType() == Node.ELEMENT_NODE) {
+        if (subnode.getNodeName().equals("robot")) {
+          createdObjects.add(parseCreatedRobot(subnode));
+        } else {
+          throw new ParseException("unexpected node, expecting created object definition: " + subnode.toString());
+        }
+      }
+    }
+    return createdObjects;
+  }
+  
   private void parseReaction(Node reactionNode) throws ParseException {
     if (!reactionNode.getNodeName().equals("reaction")) {
       throw new ParseException("not a reaction definition: " + reactionNode.toString());
@@ -261,6 +293,9 @@ public class ReactionLibrary {
         } else if (subnode.getNodeName().equals("products")) {
           List<Product> products = parseProducts(subnode);
           builder.setProducts(products);
+        } else if (subnode.getNodeName().equals("createdObjects")) {
+          List<CreatedObject> createdObjects = parseCreatedObjects(subnode);
+          builder.setCreatedObjects(createdObjects);
         } else {
           throw new ParseException("unexpected node in reaction definition: " + subnode.toString());
         }

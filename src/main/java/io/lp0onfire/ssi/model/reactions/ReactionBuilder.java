@@ -35,6 +35,11 @@ public class ReactionBuilder {
     this.products = new ArrayList<>(products);
   }
   
+  private List<CreatedObject> createdObjects = new ArrayList<>();
+  public void setCreatedObjects(List<CreatedObject> objs) {
+    this.createdObjects = new ArrayList<>(objs);
+  }
+  
   public Reaction build() {
     if (reactionID == null) {
       throw new IllegalArgumentException("reaction ID not set");
@@ -51,11 +56,11 @@ public class ReactionBuilder {
     if (reactants.isEmpty()) {
       throw new IllegalArgumentException("reaction has no reactants");
     }
-    if (products.isEmpty()) {
-      throw new IllegalArgumentException("reaction has no products");
+    if (products.isEmpty() && createdObjects.isEmpty()) {
+      throw new IllegalArgumentException("reaction has no products or created objects");
     }
     return new Reaction(reactionID, reactionName, reactionTime, reactionCategories,
-        reactants, products);
+        reactants, products, createdObjects);
   }
   
 }

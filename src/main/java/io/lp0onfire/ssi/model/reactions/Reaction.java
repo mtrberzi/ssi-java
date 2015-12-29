@@ -1,6 +1,7 @@
 package io.lp0onfire.ssi.model.reactions;
 
 import io.lp0onfire.ssi.model.Item;
+import io.lp0onfire.ssi.model.VoxelOccupant;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -38,15 +39,21 @@ public class Reaction {
     return this.products;
   }
   
+  private final List<CreatedObject> createdObjects;
+  public List<CreatedObject> getCreatedObjects() {
+    return this.createdObjects;
+  }
+  
   public Reaction(Integer reactionID, String reactionName, int reactionTime,
       List<String> reactionCategories, List<Reactant> reactants,
-      List<Product> products) {
+      List<Product> products, List<CreatedObject> createdObjects) {
     this.reactionID = reactionID;
     this.reactionName = reactionName;
     this.reactionTime = reactionTime;
     this.categories = reactionCategories;
     this.reactants = reactants;
     this.products = products;
+    this.createdObjects = createdObjects;
   }
   
   // cached items from reactantsOK() check
@@ -107,14 +114,20 @@ public class Reaction {
       return this.outputProducts;
     }
     
+    private List<VoxelOccupant> createdObjects;
+    public List<VoxelOccupant> getCreatedObjects() {
+      return this.createdObjects;
+    }
+    
     public Result() {
       this.success = false;
     }
     
-    public Result(List<Item> consumedReactants, List<Item> outputProducts) {
+    public Result(List<Item> consumedReactants, List<Item> outputProducts, List<VoxelOccupant> createdObjects) {
       this.success = true;
       this.consumedReactants = consumedReactants;
       this.outputProducts = outputProducts;
+      this.createdObjects = createdObjects;
     }
   }
   
@@ -132,6 +145,11 @@ public class Reaction {
       outputProducts.addAll(p.produce(reactantItems));
     }
     
+    List<VoxelOccupant> newObjs = new LinkedList<>();
+    for (CreatedObject objTemplate : createdObjects) {
+      newObjs.add(objTemplate.createObject(reactantItems));
+    }
+    
     // build the list of reagents
     List<Item> consumedReactants = new LinkedList<>();
     for (List<Item> rx : reactantItems) {
@@ -139,7 +157,7 @@ public class Reaction {
     }
     
     // success
-    return new Result(consumedReactants, outputProducts);
+    return new Result(consumedReactants, outputProducts, newObjs);
   }
   
 }
