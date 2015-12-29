@@ -66,7 +66,6 @@ public class TestAxialThrustRobot {
   @Before
   public void setup() {
     mcu = new Microcontroller(4, 4);
-    // TODO maybe attach a fake ROM here so the mcu doesn't immediately bus-error?
   }
   
   @Test
