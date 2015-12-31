@@ -25,7 +25,7 @@ public class AddToStagingAreaUpdate extends WorldUpdate {
       }
     }
     
-    if (staging == null) {
+    if (staging == null || !staging.canAcceptReactants()) {
       return new WorldUpdateResult(false);
     } else {
       staging.addReactant(addedObject);

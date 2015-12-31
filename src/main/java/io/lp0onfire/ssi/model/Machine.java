@@ -167,6 +167,8 @@ public abstract class Machine extends VoxelOccupant {
                 // no action
               } else if (update instanceof RelativeAddObjectUpdate && manipulator_isBuildingConstructor(i)) {
                 // construction successful, no action
+              } else if (update instanceof AddToStagingAreaUpdate) {
+                // TODO start cooldown
               } else {
                 throw new UnsupportedOperationException("not yet implemented");
               }

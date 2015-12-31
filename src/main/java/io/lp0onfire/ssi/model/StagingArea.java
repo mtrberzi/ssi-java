@@ -107,6 +107,11 @@ public class StagingArea extends VoxelOccupant {
   
   private List<Item> reactants = new LinkedList<>();
   private boolean changedReactants = false;
+
+  private boolean acceptsReactants = true;
+  public boolean canAcceptReactants() {
+    return this.acceptsReactants;
+  }
   
   public void addReactant(Item i) {
     reactants.add(i);
@@ -137,6 +142,10 @@ public class StagingArea extends VoxelOccupant {
         }
         // remove this staging area from the world
         updates.add(new RelativeRemoveObjectUpdate(this, new Vector(0,0,0), this));
+        // prevent stuff from being added after we've already tried to start building;
+        // this should avert a potentially nasty concurrency issue where stuff
+        // can be added to this and lost forever after we've issued these updates
+        acceptsReactants = false;
       }
     }
   }
