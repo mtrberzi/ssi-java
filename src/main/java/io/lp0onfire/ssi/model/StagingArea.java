@@ -135,6 +135,8 @@ public class StagingArea extends VoxelOccupant {
         for (Item i : reactants) {
           updates.add(new RelativeAddObjectUpdate(this, new Vector(0, 0, 0), i));
         }
+        // remove this staging area from the world
+        updates.add(new RelativeRemoveObjectUpdate(this, new Vector(0,0,0), this));
       }
     }
   }
