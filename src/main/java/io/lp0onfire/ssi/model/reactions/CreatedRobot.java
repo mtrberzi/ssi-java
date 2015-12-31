@@ -44,6 +44,7 @@ public class CreatedRobot extends CreatedObject {
       mcu.attachPeripheral(ecu, 0x4A000000);
       InventoryController inv = new InventoryController(robot, 4); // TODO number of buffers from template or something
       mcu.attachInventoryController(inv);
+      // TODO sensor system?
       // finally
       return robot;
     } catch (ClassNotFoundException e) {

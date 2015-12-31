@@ -102,6 +102,7 @@ public abstract class Machine extends VoxelOccupant {
     LIGHT_ARM,
     PART_BUILDER, // for Robot Part Builder
     ROBOT_ASSEMBLER,
+    FIELD_ASSEMBLY_DEVICE,
   }
   public abstract ManipulatorType getManipulatorType(int mIdx);
   

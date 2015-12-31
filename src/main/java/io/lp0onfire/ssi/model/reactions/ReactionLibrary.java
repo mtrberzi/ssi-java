@@ -155,6 +155,24 @@ public class ReactionLibrary {
     return builder.build();
   }
   
+  private CreatedMachine parseCreatedMachine(Node robotNode) throws ParseException {
+    CreatedMachineBuilder builder = new CreatedMachineBuilder();
+    
+    NamedNodeMap attrs = robotNode.getAttributes();
+    for (int i = 0; i < attrs.getLength(); ++i) {
+      Node attr = attrs.item(i);
+      if (attr.getNodeName().equals("class")) {
+        builder.setMachineClass(attr.getNodeValue());
+      } else if (attr.getNodeName().equals("mcu")) {
+        builder.setRequiresMCU(Boolean.parseBoolean(attr.getNodeValue()));
+      } else {
+        throw new ParseException("unexpected attribute in product definition: " + attr.toString());
+      }
+    }
+    
+    return builder.build();
+  }
+  
   private Product parseProduct(Node productNode) throws ParseException {
     ProductBuilder builder = new ProductBuilder();
     
@@ -242,6 +260,8 @@ public class ReactionLibrary {
       if (subnode.getNodeType() == Node.ELEMENT_NODE) {
         if (subnode.getNodeName().equals("robot")) {
           createdObjects.add(parseCreatedRobot(subnode));
+        } else if (subnode.getNodeName().equals("machine")) {
+          createdObjects.add(parseCreatedMachine(subnode));
         } else {
           throw new ParseException("unexpected node, expecting created object definition: " + subnode.toString());
         }

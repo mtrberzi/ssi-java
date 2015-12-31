@@ -221,4 +221,23 @@
 			</robot>
 		</createdObjects>
 	</reaction>
+	
+	<reaction id="11" name="Construct rapid fabricator" time="1">
+		<categories>
+			<category name="construction-1"/>
+		</categories>
+		<reactants>
+			<reactant quantity="1">
+				<component name="fabricator machine frame" />
+			</reactant>
+			<reactant quantity="1">
+				<component name="actuator"/>
+			</reactant>
+		</reactants>
+		<createdObjects>
+			<machine class="io.lp0onfire.ssi.model.machines.RapidFabricator" mcu="false">
+				<!-- TODO materials, etc. -->
+			</machine>
+		</createdObjects>
+	</reaction>
 </reactions>
