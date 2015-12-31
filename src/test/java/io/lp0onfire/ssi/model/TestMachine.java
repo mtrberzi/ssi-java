@@ -8,6 +8,7 @@ import io.lp0onfire.ssi.microcontroller.peripherals.InventoryController;
 import io.lp0onfire.ssi.model.items.Component;
 import io.lp0onfire.ssi.model.items.ComponentBuilder;
 import io.lp0onfire.ssi.model.items.ComponentLibrary;
+import io.lp0onfire.ssi.model.reactions.CreatedMachineBuilder;
 import io.lp0onfire.ssi.model.reactions.CreatedObject;
 import io.lp0onfire.ssi.model.reactions.CreatedRobotBuilder;
 import io.lp0onfire.ssi.model.reactions.MaterialCategoryConstraint;
@@ -117,6 +118,34 @@ public class TestMachine {
       ReactionLibrary.getInstance().addReaction("robot-assembly-1", rx);
     }
     
+    /*
+     * our test machine-assembly reaction is:
+     * 1 bogus1 -> 1 TestMachine
+     */
+    {
+      List<Reactant> reactants = new LinkedList<>();
+      ReactantBuilder rBuilder = new ReactantBuilder();
+      rBuilder.setQuantity(1);
+      rBuilder.setComponentName("bogus1");
+      reactants.add(rBuilder.build());
+      
+      List<CreatedObject> objs = new LinkedList<>();
+      CreatedMachineBuilder oBuilder = new CreatedMachineBuilder();
+      oBuilder.setMachineClass("machines.TestMachine");
+      oBuilder.setRequiresMCU(false);
+      objs.add(oBuilder.build());
+      
+      ReactionBuilder reactionBuilder = new ReactionBuilder();
+      reactionBuilder.setReactionID(9003);
+      reactionBuilder.setReactionName("construct test machine");
+      reactionBuilder.setReactionTime(1);
+      reactionBuilder.setCategories(Arrays.asList("construction-1"));
+      reactionBuilder.setReactants(reactants);
+      reactionBuilder.setCreatedObjects(objs);
+      Reaction rx = reactionBuilder.build();
+      ReactionLibrary.getInstance().addReaction("construction-1", rx);
+    }
+    
   }
   
   @AfterClass
@@ -199,6 +228,68 @@ public class TestMachine {
     public ManipulatorType getManipulatorType(int mIdx) {
       if (mIdx == 0) {
         return ManipulatorType.ROBOT_ASSEMBLER;
+      } else return null;
+    }
+
+    @Override
+    public boolean impedesXYMovement() {
+      return false;
+    }
+
+    @Override
+    public boolean impedesZMovement() {
+      return false;
+    }
+
+    @Override
+    public boolean impedesXYFluidFlow() {
+      return false;
+    }
+
+    @Override
+    public boolean impedesZFluidFlow() {
+      return false;
+    }
+
+    @Override
+    public boolean supportsOthers() {
+      return false;
+    }
+
+    @Override
+    public boolean needsSupport() {
+      return false;
+    }
+
+    @Override
+    public boolean canMove() {
+      return false;
+    }
+
+    @Override
+    public int getType() {
+      return 0;
+    }
+
+    @Override
+    public Vector getExtents() {
+      return new Vector(1, 1, 1);
+    }
+
+  }
+  
+  // A test machine with a field assembly device (#0)
+  class TestMachineBuilder extends Machine {
+
+    @Override
+    public int getNumberOfManipulators() {
+      return 1;
+    }
+
+    @Override
+    public ManipulatorType getManipulatorType(int mIdx) {
+      if (mIdx == 0) {
+        return ManipulatorType.FIELD_ASSEMBLY_DEVICE;
       } else return null;
     }
 
@@ -383,6 +474,61 @@ public class TestMachine {
     assertEquals("too many robots were created", 1, robots.size());
     Robot r = robots.get(0);
     assertTrue("wrong kind of robot", r instanceof robots.TestRobot);
+  }
+  
+  @Test
+  public void inttest_MachineBuildsMachine() throws AddressTrapException {
+    World w = new World(2, 2);
+    
+    // make sure we can get the reaction
+    Reaction reaction = ReactionLibrary.getInstance().getReactionByID(9003);
+    assertNotNull(reaction);
+    
+    TestMachineBuilder builder = new TestMachineBuilder();
+    InventoryController controller = new InventoryController(builder, 4);
+    
+    assertTrue(w.addOccupant(new Vector(0,0,1), new Vector(0,0,0), builder));
+    
+    for (int i = 0; i < 1; ++i) {
+      controller.getObjectBuffer(0).addLast(ComponentLibrary.getInstance().createComponent("bogus1", metal));
+    }
+    
+    // load and SET reaction ID
+    controller.writeWord(0x50, reaction.getID());
+    controller.writeHalfword(0x0, 0b1100000000000000);
+    
+    // cycle the controller a couple of times
+    for (int i = 0; i < 3; ++i) {
+      controller.cycle(); checkNoErrors(controller); w.timestep(); checkNoErrors(controller);
+    }
+    assertEquals("SET command did not execute", 0, numberOfOutstandingCommands(controller));
+    // this should have created a StagingArea at (0, 0, 1)
+    List<StagingArea> stagingAreas = w.getOccupants(new Vector(0, 0, 1)).stream()
+        .filter((o -> o instanceof StagingArea)).map((o -> (StagingArea)o)).collect(Collectors.toList());
+    assertFalse("staging area not created", stagingAreas.isEmpty());
+    assertEquals("too many staging areas created", 1, stagingAreas.size());
+    StagingArea staging = stagingAreas.get(0);
+    assertEquals("wrong reaction set on staging area", reaction.getID(), staging.getReaction().getID());
+    
+    // now add the item to the staging area by running GIVE #0, 0H
+    controller.writeHalfword(0x0, 0b1001000000000000);
+    controller.cycle(); checkNoErrors(controller);
+    w.timestep(); // this applies the AddToStagingAreaUpdate
+    w.timestep(); // and this gives the staging area a chance to build
+    stagingAreas = w.getOccupants(new Vector(0, 0, 1)).stream()
+        .filter((o -> o instanceof StagingArea)).map((o -> (StagingArea)o)).collect(Collectors.toList());
+    assertTrue("staging area not removed", stagingAreas.isEmpty());
+    // check for our TestMachine
+    List<Machine> machines = w.getOccupants(new Vector(0, 0, 1)).stream()
+        .filter((o -> o instanceof Machine)).map((o -> (Machine)o)).collect(Collectors.toList());
+    boolean found = false;
+    for (Machine machine : machines) {
+      if (machine instanceof machines.TestMachine) {
+        found = true;
+        break;
+      }
+    }
+    assertTrue("test machine not built", found);
   }
   
   @Test
