@@ -165,12 +165,18 @@ public abstract class Machine extends VoxelOccupant {
                 manipulatorItem.put(i, item);
               } else if (update instanceof PutWithManipulatorUpdate) {
                 // no action
+              } else if (update instanceof RelativeAddObjectUpdate && manipulator_isBuildingConstructor(i)) {
+                // construction successful, no action
               } else {
                 throw new UnsupportedOperationException("not yet implemented");
               }
             } else {
-              // TODO resolve error code
-              throw new UnsupportedOperationException("not yet implemented");
+              if (update instanceof RelativeAddObjectUpdate && manipulator_isBuildingConstructor(i)) {
+                // don't do anything in this case, a race condition was averted
+              } else {
+                // TODO resolve error code
+                throw new UnsupportedOperationException("not yet implemented");
+              }
             }
             break;
           }
@@ -234,6 +240,19 @@ public abstract class Machine extends VoxelOccupant {
     switch (mType) {
     case PART_BUILDER:
     case ROBOT_ASSEMBLER:
+    case FIELD_ASSEMBLY_DEVICE:
+      return true;
+    default: return false;
+    }
+  }
+  
+  protected boolean manipulator_isBuildingConstructor(int mIdx) {
+    if (mIdx < 0 || mIdx >= getNumberOfManipulators()) {
+      return false;
+    }
+    ManipulatorType mType = getManipulatorType(mIdx);
+    switch (mType) {
+    case FIELD_ASSEMBLY_DEVICE:
       return true;
     default: return false;
     }
@@ -246,6 +265,8 @@ public abstract class Machine extends VoxelOccupant {
       return reaction.getCategories().contains("part-builder-1");
     case ROBOT_ASSEMBLER:
       return reaction.getCategories().contains("robot-assembly-1");
+    case FIELD_ASSEMBLY_DEVICE:
+      return reaction.getCategories().contains("construction-1");
     default: return false;
     }
   }
@@ -311,13 +332,24 @@ public abstract class Machine extends VoxelOccupant {
     if (!isReactionLegal(mIdx, reaction)) {
       return false;
     }
-    // can't change the reaction during a reaction
-    if (manipulator_isReacting(mIdx)) {
-      return false;
+    
+    if (manipulator_isBuildingConstructor(mIdx)) {
+      // special case: queue a world update that sets up a staging area
+      // TODO get real extents
+      // TODO don't allow this more than once per timestep
+      Vector extents = new Vector(1, 1, 1);
+      StagingArea staging = new StagingArea(extents, reaction);
+      manipulatorCommands.put(mIdx, new RelativeAddObjectUpdate(this, new Vector(0, 0, 0), staging));
+      return true;
+    } else {
+      // can't change the reaction during a reaction
+      if (manipulator_isReacting(mIdx)) {
+        return false;
+      }
+      manipulatorReaction.put(mIdx, reaction);
+      tryToStartReaction(mIdx);
+      return true;
     }
-    manipulatorReaction.put(mIdx, reaction);
-    tryToStartReaction(mIdx);
-    return true;
   }
   
   // all manipulator queue commands return true if the command is legal on that
@@ -344,14 +376,20 @@ public abstract class Machine extends VoxelOccupant {
     // special check for reactor-type manipulators
     // TODO fast command completion in this case
     if (manipulator_canSetReaction(mIdx)) { // this is such a cheeky way of doing the test...
+      if (manipulator_isBuildingConstructor(mIdx)) {
+        // TODO some way of taking stuff out of a staging area would be nice
+        return false;
+      }
+      
       if (!manipulator_isReacting(mIdx)) {
         manipulatorItem.put(mIdx, manipulatorPrivateBuffer.get(mIdx).removeFirst());
         return true;
       } else {
         return false; // can't take items out while a reaction is being performed
       }
+    } else {
+      return false;
     }
-    return false;
   }
   
   // queue command: attempt to output the provided item, if it can be manipulated and output
@@ -363,18 +401,27 @@ public abstract class Machine extends VoxelOccupant {
     // special check for reactor-type manipulators
     // TODO fast command completion in this case
     if (manipulator_canSetReaction(mIdx)) { // this is such a cheeky way of doing the test...
-      if (!manipulator_isReacting(mIdx)) {
-        manipulatorPrivateBuffer.get(mIdx).addLast(item);
-        tryToStartReaction(mIdx);
+      if (manipulator_isBuildingConstructor(mIdx)) {
+        // put item into staging area
+        if (!canAcceptManipulatorCommand(mIdx)) return true;
+        manipulatorCommands.put(mIdx, new AddToStagingAreaUpdate(this, item));
         return true;
       } else {
-        return false; // can't accept new items while a reaction is being performed
+        // normal reactor
+        if (!manipulator_isReacting(mIdx)) {
+          manipulatorPrivateBuffer.get(mIdx).addLast(item);
+          tryToStartReaction(mIdx);
+          return true;
+        } else {
+          return false; // can't accept new items while a reaction is being performed
+        }
       }
+    } else {
+      // world manipulator
+      if (!canAcceptManipulatorCommand(mIdx)) return true;
+      manipulatorCommands.put(mIdx, new PutWithManipulatorUpdate(this, mIdx, item));
+      return true;
     }
-    
-    if (!canAcceptManipulatorCommand(mIdx)) return true;
-    manipulatorCommands.put(mIdx, new PutWithManipulatorUpdate(this, mIdx, item));
-    return true;
   }
   
   // get manipulator status
@@ -385,29 +432,35 @@ public abstract class Machine extends VoxelOccupant {
     
     // total hack for reactor-type manipulators
     if (manipulator_canSetReaction(mIdx)) {
-      // the report is a single uint32:
-      // the high bit is set if a reaction was started since the last time
-      // this manipulator received an MSTAT command, and the
-      // low 31 bits are the unsigned number of timesteps until 
-      // the reaction in progress, if any, is complete
-      ByteBuffer response = ByteBuffer.allocate(4);
-      response.order(ByteOrder.LITTLE_ENDIAN);
-      response.position(0);
-      int statusWord = 0;
-      Integer i = manipulatorReactionTimeRemaining.get(mIdx);
-      if (i != null && i >= 0) {
-        statusWord = (i & 0x7FFFFFFF);
+      if (manipulator_isBuildingConstructor(mIdx)) {
+        // TODO
+        throw new UnsupportedOperationException("not implemented yet");
+      } else {
+        // normal reactor
+        // the report is a single uint32:
+        // the high bit is set if a reaction was started since the last time
+        // this manipulator received an MSTAT command, and the
+        // low 31 bits are the unsigned number of timesteps until 
+        // the reaction in progress, if any, is complete
+        ByteBuffer response = ByteBuffer.allocate(4);
+        response.order(ByteOrder.LITTLE_ENDIAN);
+        response.position(0);
+        int statusWord = 0;
+        Integer i = manipulatorReactionTimeRemaining.get(mIdx);
+        if (i != null && i >= 0) {
+          statusWord = (i & 0x7FFFFFFF);
+        }
+        // set bit 31
+        Boolean started = manipulatorReactionStartSinceLastMSTAT.get(mIdx);
+        if (started != null && started.booleanValue()) {
+          statusWord |= 0x80000000;
+        }
+        // clear "manipulator status checked" flag
+        manipulatorReactionStartSinceLastMSTAT.put(mIdx, false);
+        response.putInt(statusWord);
+        response.position(0);
+        return response;
       }
-      // set bit 31
-      Boolean started = manipulatorReactionStartSinceLastMSTAT.get(mIdx);
-      if (started != null && started.booleanValue()) {
-        statusWord |= 0x80000000;
-      }
-      // clear "manipulator status checked" flag
-      manipulatorReactionStartSinceLastMSTAT.put(mIdx, false);
-      response.putInt(statusWord);
-      response.position(0);
-      return response;
     }
     
     // no support
