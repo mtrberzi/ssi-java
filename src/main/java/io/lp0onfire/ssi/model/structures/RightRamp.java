@@ -8,5 +8,10 @@ public class RightRamp extends Ramp {
   public RightRamp(Material material) {
     super(material, new Vector(1, 0, 0));
   }
+  
+  @Override
+  public int getType() {
+    return 4;
+  }
 
 }

@@ -60,8 +60,7 @@ public class World {
   
   public boolean canOccupy(Vector position, VoxelOccupant obj) {
     if (!inBounds(position)) return false;
-    
-    boolean canMoveThere = true;
+
     for (int x = position.getX(); x < position.getX() + obj.getExtents().getX(); ++x) {
       for (int y = position.getY(); y < position.getY() + obj.getExtents().getY(); ++y) {
         for (int z = position.getZ(); z < position.getZ() + obj.getExtents().getZ(); ++z) {
@@ -70,15 +69,22 @@ public class World {
           Set<VoxelOccupant> occupants = getOccupants(v);
           for (VoxelOccupant occ : occupants) {
             if (occ.impedesXYMovement() && occ.impedesZMovement()) {
-              canMoveThere = false;
-              break;
+              // cannot move there
+              return false;
+            }
+            if (occ instanceof TransportTube && obj instanceof TransportTube) {
+              TransportTube tThis = (TransportTube)obj;
+              TransportTube tThat = (TransportTube)occ;
+              if (tThis.getTransportID().equals(tThat.getTransportID())) {
+                // two transport tubes with the same transport ID can't share a voxel
+                return false;
+              }
             }
           }
         } 
       } 
     }
 
-    if (!canMoveThere) return false;
     return true;
   }
   
@@ -109,12 +115,27 @@ public class World {
     return true;
   }
   
+  protected void removeTransportTube(TransportTube transport) {
+    TransportDevice connA = transport.getConnectionA();
+    if (connA != null) {
+      connA.disconnect(transport);
+    }
+    TransportDevice connB = transport.getConnectionB();
+    if (connB != null) {
+      connB.disconnect(transport);
+    }
+    // TODO get contents and dump them somewhere
+  }
+  
   public void removeOccupant(VoxelOccupant obj) {
     for (int x = obj.getPosition().getX(); x < obj.getPosition().getX() + obj.getExtents().getX(); ++x) {
       for (int y = obj.getPosition().getY(); y < obj.getPosition().getY() + obj.getExtents().getY(); ++y) {
         for (int z = obj.getPosition().getZ(); z < obj.getPosition().getZ() + obj.getExtents().getZ(); ++z) {
           Set<VoxelOccupant> occupants = getOccupants(new Vector(x, y, z));
           if (occupants.contains(obj)) {
+            if (obj instanceof TransportTube) {
+              removeTransportTube((TransportTube)obj);
+            }
             occupants.remove(obj);
           }
         } 

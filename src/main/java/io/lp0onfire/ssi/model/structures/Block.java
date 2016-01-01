@@ -39,4 +39,9 @@ public class Block extends Structure {
     return true;
   }
 
+  @Override
+  public int getType() {
+    return 1;
+  }
+  
 }

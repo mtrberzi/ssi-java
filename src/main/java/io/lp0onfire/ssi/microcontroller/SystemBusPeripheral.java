@@ -26,4 +26,6 @@ public interface SystemBusPeripheral {
   // called exactly once per timestep, and after all global cycles have completed
   void timestep();
   
+  default void setSystemBus(RV32SystemBus bus) {}
+  
 }

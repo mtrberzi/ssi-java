@@ -3,9 +3,28 @@ package io.lp0onfire.ssi.model;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public abstract class VoxelOccupant {
 
+  // when UUIDs are transferred to and from the microcontroller,
+  // the least significant long always appears at the lower address in memory
+  private UUID uuid;
+  public UUID getUUID() {
+    return this.uuid;
+  }
+  public void setUUID(UUID id) {
+    this.uuid = id;
+  }
+  
+  public VoxelOccupant() {
+    this.uuid = UUID.randomUUID();
+  }
+  
+  public VoxelOccupant(UUID uuid) {
+    this.uuid = uuid;
+  }
+  
   public abstract boolean impedesXYMovement();
   public abstract boolean impedesZMovement();
   public abstract boolean impedesXYFluidFlow();
@@ -13,6 +32,9 @@ public abstract class VoxelOccupant {
   public abstract boolean supportsOthers();
   public abstract boolean needsSupport();
   public abstract boolean canMove();
+  
+  public abstract short getKind();
+  public abstract int getType(); // more specific than kind
   
   private Vector position;
   public Vector getPosition() {

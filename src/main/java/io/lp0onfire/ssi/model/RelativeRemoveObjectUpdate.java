@@ -6,6 +6,10 @@ public class RelativeRemoveObjectUpdate extends WorldUpdate {
   private final Vector displacement;
   private final VoxelOccupant removedObject;
   
+  public VoxelOccupant getRemovedObject() {
+    return this.removedObject;
+  }
+  
   public RelativeRemoveObjectUpdate(VoxelOccupant baseObject, Vector displacement, VoxelOccupant removedObject) {
     this.baseObject = baseObject;
     this.displacement = displacement;

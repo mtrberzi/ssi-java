@@ -39,4 +39,8 @@ public abstract class Structure extends VoxelOccupant {
     return false;
   }
   
+  public short getKind() {
+    return (short)4;
+  }
+  
 }

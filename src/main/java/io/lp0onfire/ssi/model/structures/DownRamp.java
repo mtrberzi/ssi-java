@@ -9,4 +9,9 @@ public class DownRamp extends Ramp {
     super(material, new Vector(0, -1, 0));
   }
 
+  @Override
+  public int getType() {
+    return 5;
+  }
+  
 }

@@ -8,6 +8,7 @@ import org.apache.commons.lang3.ArrayUtils;
 
 import io.lp0onfire.ssi.microcontroller.ELFImage.HeaderType;
 import io.lp0onfire.ssi.microcontroller.peripherals.InterruptController;
+import io.lp0onfire.ssi.microcontroller.peripherals.InventoryController;
 import io.lp0onfire.ssi.microcontroller.peripherals.RAM;
 import io.lp0onfire.ssi.microcontroller.peripherals.ROM;
 
@@ -46,11 +47,17 @@ public class Microcontroller {
     // interrupt controller at 0xEA001000
     interruptController = new InterruptController(cpu);
     cpu.getSystemBus().attachPeripheral(interruptController, 0xEA001000);
+    
+    // TODO attach timer 0 at 0xE9000000 and route interrupt
   }
   
   public void attachPeripheral(SystemBusPeripheral peripheral, int baseAddress) {
     peripherals.add(peripheral);
     cpu.getSystemBus().attachPeripheral(peripheral, baseAddress);
+  }
+  
+  public void attachInventoryController(InventoryController controller) {
+    attachPeripheral(controller, 0x4A001000);
   }
   
   public void registerInterrupt(InterruptSource source, int irq) {
@@ -109,6 +116,13 @@ public class Microcontroller {
       p.cycle();
     }
     interruptController.cycle();
+  }
+  
+  public void timestep() {
+    for (SystemBusPeripheral p : peripherals) {
+      p.timestep();
+    }
+    interruptController.timestep();
   }
   
 }
