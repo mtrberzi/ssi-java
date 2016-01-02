@@ -4,5 +4,8 @@
 		<categories>
 			<category name="metal"/>
 		</categories>
+		<miningProducts>
+			<ore prob="0.4" />
+		</miningProducts>
 	</material>
 </materials>

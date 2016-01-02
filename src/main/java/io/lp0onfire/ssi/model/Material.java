@@ -39,9 +39,14 @@ public class Material {
     return this.categories;
   }
   
+  private final List<MiningProduct> miningProducts;
+  public List<MiningProduct> getMiningProducts() {
+    return this.miningProducts;
+  }
+  
   public Material(String name, int type, double durabilityModifier,
       boolean canBeSmelted, int smeltingTimesteps, int numberOfSmeltedBars,
-      List<String> categories) {
+      List<String> categories, List<MiningProduct> miningProducts) {
     this.name = name;
     this.type = type;
     this.durabilityModifier = durabilityModifier;
@@ -49,6 +54,7 @@ public class Material {
     this.smeltingTimesteps = smeltingTimesteps;
     this.numberOfSmeltedBars = numberOfSmeltedBars;
     this.categories = new LinkedList<String>(categories);
+    this.miningProducts = new LinkedList<MiningProduct>(miningProducts);
   }
   
 }

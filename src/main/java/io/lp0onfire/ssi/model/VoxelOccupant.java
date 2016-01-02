@@ -1,6 +1,7 @@
 package io.lp0onfire.ssi.model;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -97,5 +98,11 @@ public abstract class VoxelOccupant {
   public void setCurrentDurability(int d) { this.durability = d; }
   
   public abstract int getMaximumDurability();
+  
+  public List<WorldUpdate> onDestroy() {
+    List<WorldUpdate> updates = new LinkedList<>();
+    updates.add(new RemoveObjectUpdate(this));
+    return updates;
+  }
   
 }

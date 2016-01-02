@@ -40,6 +40,11 @@ public class MaterialBuilder {
     this.categories = new LinkedList<String>(categories);
   }
   
+  private List<MiningProduct> miningProducts = new LinkedList<>();
+  public void setMiningProducts(List<MiningProduct> products) {
+    this.miningProducts = new LinkedList<MiningProduct>(products);
+  }
+  
   public Material build() {
     if (name == null) {
       throw new IllegalArgumentException("must specify material name");
@@ -59,7 +64,8 @@ public class MaterialBuilder {
       throw new IllegalArgumentException("must specify durability modifier");
     }
     return new Material(name, type, durabilityModifier,
-        canBeSmelted, smeltingTimesteps, numberOfSmeltedBars, categories);
+        canBeSmelted, smeltingTimesteps, numberOfSmeltedBars, 
+        categories, miningProducts);
   }
   
 }
