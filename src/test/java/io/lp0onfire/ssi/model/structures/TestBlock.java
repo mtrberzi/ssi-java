@@ -15,7 +15,6 @@ import io.lp0onfire.ssi.model.MaterialBuilder;
 import io.lp0onfire.ssi.model.MiningProduct;
 import io.lp0onfire.ssi.model.OreMiningProduct;
 import io.lp0onfire.ssi.model.ReduceDurabilityUpdate;
-import io.lp0onfire.ssi.model.TransportTube;
 import io.lp0onfire.ssi.model.Vector;
 import io.lp0onfire.ssi.model.World;
 import io.lp0onfire.ssi.model.WorldUpdate;

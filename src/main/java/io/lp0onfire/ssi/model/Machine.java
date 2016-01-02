@@ -39,7 +39,7 @@ public abstract class Machine extends VoxelOccupant {
   }
   
   private Microcontroller mcu;
-  protected Microcontroller getMCU() {
+  public Microcontroller getMCU() {
     return this.mcu;
   }
   
