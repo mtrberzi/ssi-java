@@ -55,12 +55,14 @@ public abstract class AxialThrustRobot extends Robot {
     if (eIdx < 0 || eIdx >= getNumberOfEngines()) {
       return;
     }
-    if (powerLevel > 0 && powerLevel > getThrusterMaxPowerLevel()) {
-      engineCommandedPower[eIdx] = getThrusterMaxPowerLevel();
-    } else if (powerLevel < 0 && powerLevel < -getThrusterMaxPowerLevel()) {
-      engineCommandedPower[eIdx] = -getThrusterMaxPowerLevel();
-    } else {
-      engineCommandedPower[eIdx] = powerLevel;
+    if (powerLevel > 0) {
+      if (powerLevel > getThrusterMaxPowerLevel()) {
+        engineCommandedPower[eIdx] = getThrusterMaxPowerLevel();
+      } else {
+        engineCommandedPower[eIdx] = powerLevel;
+      }
+    } else { // powerLevel <= 0
+      engineCommandedPower[eIdx] = 0;
     }
   }
   
