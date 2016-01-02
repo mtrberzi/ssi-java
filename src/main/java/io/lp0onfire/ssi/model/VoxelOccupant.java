@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.UUID;
 
 public abstract class VoxelOccupant {
-
+  
   // when UUIDs are transferred to and from the microcontroller,
   // the least significant long always appears at the lower address in memory
   private UUID uuid;
@@ -90,5 +90,12 @@ public abstract class VoxelOccupant {
     return new ArrayList<>();
   }
   public void collectUpdateResults(Map<WorldUpdate, WorldUpdateResult> results) {}
+  
+  // really, really simplistic "damage" system
+  private int durability = 1;
+  public int getCurrentDurability() { return this.durability; }
+  public void setCurrentDurability(int d) { this.durability = d; }
+  
+  public abstract int getMaximumDurability();
   
 }

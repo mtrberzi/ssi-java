@@ -7,6 +7,8 @@ package io.lp0onfire.ssi.model;
  * They also cannot be directly manipulated by robots, but can be manipulated
  * indirectly (e.g. mining out a block or placing a floor tile).
  * Structures always occupy exactly one voxel.
+ * Every structure has a base durability, which is modified by the material's durability factor
+ * to compute the structure's maximum durability.
  */
 public abstract class Structure extends VoxelOccupant {
 
@@ -17,6 +19,7 @@ public abstract class Structure extends VoxelOccupant {
   
   public Structure(Material material) {
     this.material = material;
+    setCurrentDurability(getMaximumDurability());
   }
   
   public Vector getExtents() {
@@ -41,6 +44,13 @@ public abstract class Structure extends VoxelOccupant {
   
   public short getKind() {
     return (short)4;
+  }
+  
+  protected abstract int getBaseDurability();
+  
+  @Override
+  public int getMaximumDurability() {
+    return (int)Math.floor(getBaseDurability() * getMaterial().getDurabilityModifier());
   }
   
 }

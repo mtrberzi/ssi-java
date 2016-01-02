@@ -14,6 +14,11 @@ public class Material {
     return this.type;
   }
   
+  private final double durabilityModifier;
+  public double getDurabilityModifier() {
+    return this.durabilityModifier;
+  }
+  
   private final boolean canBeSmelted;
   public boolean getCanBeSmelted() {
     return this.canBeSmelted;
@@ -34,11 +39,12 @@ public class Material {
     return this.categories;
   }
   
-  public Material(String name, int type,
+  public Material(String name, int type, double durabilityModifier,
       boolean canBeSmelted, int smeltingTimesteps, int numberOfSmeltedBars,
       List<String> categories) {
     this.name = name;
     this.type = type;
+    this.durabilityModifier = durabilityModifier;
     this.canBeSmelted = canBeSmelted;
     this.smeltingTimesteps = smeltingTimesteps;
     this.numberOfSmeltedBars = numberOfSmeltedBars;

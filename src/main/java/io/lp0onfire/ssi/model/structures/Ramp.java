@@ -46,4 +46,7 @@ public abstract class Ramp extends Structure {
     return true;
   }
 
+  @Override
+  protected int getBaseDurability() { return 100; }
+  
 }

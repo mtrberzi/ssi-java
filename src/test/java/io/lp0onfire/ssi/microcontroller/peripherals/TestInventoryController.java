@@ -96,6 +96,7 @@ public class TestInventoryController {
       MaterialBuilder builder = new MaterialBuilder();
       builder.setMaterialName("bogusite");
       builder.setType(0);
+      builder.setDurabilityModifier(1.0);
       builder.setCategories(Arrays.asList("metal"));
       builder.setCanBeSmelted(false);
       testMaterial = builder.build();

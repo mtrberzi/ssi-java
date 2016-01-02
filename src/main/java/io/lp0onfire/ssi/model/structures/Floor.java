@@ -43,5 +43,8 @@ public class Floor extends Structure {
   public int getType() {
     return 2;
   }
+  
+  @Override
+  protected int getBaseDurability() { return 75; }
 
 }

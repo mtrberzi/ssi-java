@@ -85,6 +85,7 @@ public class TestSmelter {
     MaterialBuilder builder = new MaterialBuilder();
     builder.setMaterialName("bogusite");
     builder.setType(0);
+    builder.setDurabilityModifier(1.0);
     builder.setCategories(Arrays.asList("metal"));
     builder.setCanBeSmelted(true);
     builder.setNumberOfSmeltedBars(NUMBER_OF_BARS_TO_PRODUCE);

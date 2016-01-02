@@ -22,6 +22,7 @@ public class StagingArea extends VoxelOccupant {
   public StagingArea(Vector extents, Reaction reaction) {
     this.extents = extents;
     this.reaction = reaction;
+    setCurrentDurability(getMaximumDurability());
   }
   
   @Override
@@ -71,6 +72,9 @@ public class StagingArea extends VoxelOccupant {
     return 0;
   }
 
+  @Override
+  public int getMaximumDurability() { return 1; }
+  
   @Override
   public boolean requiresTimestep() {
     return true;

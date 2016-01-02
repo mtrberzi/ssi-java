@@ -43,12 +43,14 @@ public class TestMachine {
     MaterialBuilder metalBuilder = new MaterialBuilder();
     metalBuilder.setMaterialName("bogusite");
     metalBuilder.setType(0);
+    metalBuilder.setDurabilityModifier(1.0);
     metalBuilder.setCategories(Arrays.asList("metal"));
     metal = metalBuilder.build();
     
     MaterialBuilder nonMetalBuilder = new MaterialBuilder();
     nonMetalBuilder.setMaterialName("fakelite");
     nonMetalBuilder.setType(0);
+    nonMetalBuilder.setDurabilityModifier(1.0);
     nonmetal = nonMetalBuilder.build();
     
     ComponentBuilder cBuilder1 = new ComponentBuilder();

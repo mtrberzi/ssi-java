@@ -40,6 +40,7 @@ public class MaterialLibrary {
     MaterialBuilder bedrockBuilder = new MaterialBuilder();
     bedrockBuilder.setMaterialName("bedrock");
     bedrockBuilder.setType(0);
+    bedrockBuilder.setDurabilityModifier(9999.0);
     addMaterial("bedrock", bedrockBuilder.build());
   }
   
@@ -105,6 +106,12 @@ public class MaterialLibrary {
             builder.setType(Integer.parseInt(subnode.getNodeValue()));
           } catch (NumberFormatException e) {
             throw new ParseException("type ID must be an integer");
+          }
+        } else if (subnode.getNodeName().equals("durabilityModifier")) {
+          try {
+            builder.setDurabilityModifier(Double.parseDouble(subnode.getNodeValue()));
+          } catch (NumberFormatException e) {
+            throw new ParseException("durability modifier must be a decimal value");
           }
         } else {
           throw new ParseException("unexpected attribute in material definition: " + subnode.toString());

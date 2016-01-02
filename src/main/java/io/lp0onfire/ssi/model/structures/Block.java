@@ -44,4 +44,7 @@ public class Block extends Structure {
     return 1;
   }
   
+  @Override
+  public int getBaseDurability() { return 200; }
+  
 }
