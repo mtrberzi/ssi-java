@@ -10,4 +10,7 @@
 	<component name="light arm" type="8"></component>
 	<component name="engineering robot frame Mk.I" type="9"></component>
 	<component name="wire" type="10"></component>
+	<component name="mining robot frame Mk.I" type="10"></component>
+	<component name="G-class beam focuser" type="11"></component>
+	<component name="crystal" type="12"></component>
 </components>

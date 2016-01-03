@@ -113,6 +113,19 @@ public class MaterialLibrary {
           } else {
             products.add(new OreMiningProduct(nameNode.getNodeValue(), probability));
           }
+        } else if (subnode.getNodeName().equals("component")) {
+          // "name" attribute must be specified; "material" attribute is optional
+          Node componentNameNode = productAttrs.getNamedItem("name");
+          if (componentNameNode == null) {
+            throw new ParseException("component mining product must specify component name");
+          }
+          String componentName = componentNameNode.getNodeValue();
+          Node componentMaterialNode = productAttrs.getNamedItem("material");
+          if (componentMaterialNode == null) {
+            products.add(new ComponentMiningProduct(componentName, probability));
+          } else {
+            products.add(new ComponentMiningProduct(componentName, componentMaterialNode.getNodeValue(), probability));
+          }
         } else {
           throw new ParseException("mining product type '" + subnode.getNodeName() + "' not recognized");
         }

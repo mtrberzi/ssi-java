@@ -27,6 +27,4 @@ public class OreMiningProduct extends MiningProduct {
     }
   }
   
-  
-
 }
