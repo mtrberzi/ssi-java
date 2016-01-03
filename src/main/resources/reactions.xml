@@ -288,11 +288,11 @@
 				</constraints>
 			</reactant>
 		</reactants>
+		<products>
 			<product quantity="1">
 				<component name="G-class beam focuser" />
 				<copyMaterial index="0" />
 			</product>
-		<products>
 		</products>
 	</reaction>
 	
