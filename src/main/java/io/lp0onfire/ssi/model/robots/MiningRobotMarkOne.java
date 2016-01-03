@@ -1,61 +1,73 @@
 package io.lp0onfire.ssi.model.robots;
 
 import io.lp0onfire.ssi.microcontroller.Microcontroller;
+import io.lp0onfire.ssi.microcontroller.peripherals.MiningLaserController;
 
 public class MiningRobotMarkOne extends AxialThrustRobot {
 
+  private MiningLaserController laserCtrl;
+  
   public MiningRobotMarkOne(Microcontroller mcu) {
     super(mcu);
-    // TODO
-    throw new UnsupportedOperationException("not implemented yet");
+    laserCtrl = new MiningLaserController(this);
+    mcu.attachMiningLaserController(laserCtrl);
   }
 
   @Override
   public int engine_getIdentification(int eIdx) {
-    // TODO Auto-generated method stub
+    // TODO standardize engine identification table
     return 0;
   }
 
   @Override
   protected double getThrusterForce() {
-    // TODO Auto-generated method stub
-    return 0;
+    return 10.0;
   }
 
   @Override
   protected int getThrusterMaxPowerLevel() {
-    // TODO Auto-generated method stub
-    return 0;
+    return 1024;
   }
 
   @Override
   protected int getThrusterPowerSlewRate() {
-    // TODO Auto-generated method stub
-    return 0;
+    return 1024;
   }
 
   @Override
   public double getMass() {
-    // TODO Auto-generated method stub
-    return 0;
+    // TODO calculate mass from chassis material + mass of items
+    return 1.0;
   }
 
   @Override
   public int getNumberOfManipulators() {
-    // TODO Auto-generated method stub
-    return 0;
+    return 1;
   }
 
   @Override
   public ManipulatorType getManipulatorType(int mIdx) {
-    // TODO Auto-generated method stub
-    return null;
+    if (mIdx == 0) {
+      return ManipulatorType.LIGHT_ARM;
+    } else {
+      return null;
+    }
   }
 
   @Override
   public int getType() {
-    // TODO Auto-generated method stub
+    // TODO standardized robot identification table
     return 0;
+  }
+  
+  public boolean hasMiningLaser() {
+    return true;
+  }
+  public int miningLaser_getMaximumPowerLevel() { 
+    return 256;
+  }
+  public int miningLaser_getMaximumDamage() { 
+    return 5; 
   }
 
 }
