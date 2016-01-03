@@ -44,4 +44,7 @@ public class Bedrock extends Structure {
     return 0;
   }
   
+  @Override
+  protected int getBaseDurability() { return 999999; }
+  
 }

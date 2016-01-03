@@ -240,4 +240,87 @@
 			</machine>
 		</createdObjects>
 	</reaction>
+	
+	<reaction id="12" name="Construct mining robot frame Mk.I" time="180">
+		<categories>
+			<category name="part-builder-1"/>
+		</categories>
+		<reactants>
+			<reactant quantity="10">
+				<component name="plate" />
+			</reactant>
+			<reactant quantity="5">
+				<component name="wire" />
+				<constraints>
+					<materialCategoryConstraint category="metal" />
+				</constraints>
+			</reactant>
+		</reactants>
+		<products>
+			<product quantity="1">
+				<component name="mining robot frame Mk.I" />
+				<copyMaterial index="0" />
+			</product>
+		</products>
+	</reaction>
+	
+	<reaction id="13" name="Build G-class beam focuser" time="100">
+		<categories>
+			<category name="part-builder-1" />
+		</categories>
+		<reactants>
+			<reactant quantity="4">
+				<component name="plate" />
+				<constraints>
+					<materialCategoryConstraint category="metal" />
+				</constraints>
+			</reactant>
+			<reactant quantity="1">
+				<component name="wire" />
+				<constraints>
+					<materialCategoryConstraint category="metal" />
+				</constraints>
+			</reactant>
+			<reactant quantity="1">
+				<component name="crystal" />
+				<constraints>
+					<materialConstraint name="quartz" />
+				</constraints>
+			</reactant>
+		</reactants>
+		<products>
+			<product quantity="1">
+				<component name="G-class beam focuser" />
+				<copyMaterial index="0" />
+			</product>
+		</products>
+	</reaction>
+	
+	<reaction id="14" name="Build mining robot Mk.I" time="200">
+		<categories>
+			<category name="robot-assembly-1"/>
+		</categories>
+		<reactants>
+			<!-- TODO MCU requirement -->
+			<!-- TODO power supply requirement -->
+			<reactant quantity="1">
+				<component name="mining robot frame Mk.I" />
+			</reactant>
+			<reactant quantity="6">
+				<component name="photon thruster" />
+			</reactant>
+			<reactant quantity="1">
+				<component name="G-class beam focuser" />
+			</reactant>
+			<reactant quantity="1">
+				<component name="light arm" />
+			</reactant>
+		</reactants>
+		<createdObjects>
+			<robot class="io.lp0onfire.ssi.model.robots.MiningRobotMarkOne">
+				<!-- TODO robot modules, materials, etc. -->
+			</robot>
+		</createdObjects>
+	</reaction>
+	
 </reactions>

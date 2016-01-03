@@ -40,6 +40,7 @@ public class MaterialLibrary {
     MaterialBuilder bedrockBuilder = new MaterialBuilder();
     bedrockBuilder.setMaterialName("bedrock");
     bedrockBuilder.setType(0);
+    bedrockBuilder.setDurabilityModifier(9999.0);
     addMaterial("bedrock", bedrockBuilder.build());
   }
   
@@ -87,6 +88,52 @@ public class MaterialLibrary {
     return categories;
   }
   
+  private List<MiningProduct> parseMiningProducts(Node productsNode) throws ParseException {
+    List<MiningProduct> products = new LinkedList<>();
+    NodeList children = productsNode.getChildNodes();
+    for (int i = 0; i < children.getLength(); ++i) {
+      Node subnode = children.item(i);
+      if (subnode.getNodeType() == Node.ELEMENT_NODE) {
+        NamedNodeMap productAttrs = subnode.getAttributes();
+        // we must ALWAYS see a "prob=X" attribute
+        Node probabilityNode = productAttrs.getNamedItem("prob");
+        if (probabilityNode == null) {
+          throw new ParseException("mining product missing 'prob' attribute");
+        }
+        double probability;
+        try {
+          probability = Double.parseDouble(probabilityNode.getNodeValue());
+        } catch (NumberFormatException e) {
+          throw new ParseException("mining product probability must be a decimal value between 0 and 1");
+        }
+        if (subnode.getNodeName().equals("ore")) {
+          Node nameNode = productAttrs.getNamedItem("name");
+          if (nameNode == null) {
+            products.add(new OreMiningProduct(probability));
+          } else {
+            products.add(new OreMiningProduct(nameNode.getNodeValue(), probability));
+          }
+        } else if (subnode.getNodeName().equals("component")) {
+          // "name" attribute must be specified; "material" attribute is optional
+          Node componentNameNode = productAttrs.getNamedItem("name");
+          if (componentNameNode == null) {
+            throw new ParseException("component mining product must specify component name");
+          }
+          String componentName = componentNameNode.getNodeValue();
+          Node componentMaterialNode = productAttrs.getNamedItem("material");
+          if (componentMaterialNode == null) {
+            products.add(new ComponentMiningProduct(componentName, probability));
+          } else {
+            products.add(new ComponentMiningProduct(componentName, componentMaterialNode.getNodeValue(), probability));
+          }
+        } else {
+          throw new ParseException("mining product type '" + subnode.getNodeName() + "' not recognized");
+        }
+      }
+    }
+    return products;
+  }
+  
   private void parseMaterial(Node materialNode) throws ParseException {
     if (!materialNode.getNodeName().equals("material")) {
       throw new ParseException("not a material definition: " + materialNode.toString());
@@ -106,6 +153,12 @@ public class MaterialLibrary {
           } catch (NumberFormatException e) {
             throw new ParseException("type ID must be an integer");
           }
+        } else if (subnode.getNodeName().equals("durabilityModifier")) {
+          try {
+            builder.setDurabilityModifier(Double.parseDouble(subnode.getNodeValue()));
+          } catch (NumberFormatException e) {
+            throw new ParseException("durability modifier must be a decimal value");
+          }
         } else {
           throw new ParseException("unexpected attribute in material definition: " + subnode.toString());
         }
@@ -119,6 +172,9 @@ public class MaterialLibrary {
         if (subnode.getNodeName().equals("categories")) {
           List<String> categories = parseCategories(subnode);
           builder.setCategories(categories);
+        } else if (subnode.getNodeName().equals("miningProducts")) {
+          List<MiningProduct> products = parseMiningProducts(subnode);
+          builder.setMiningProducts(products);
         } else {
           throw new ParseException("unexpected subnode in material definition: " + subnode.toString());
         }

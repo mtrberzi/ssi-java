@@ -16,6 +16,7 @@ public abstract class Item extends VoxelOccupant {
   
   public Item(Material material) {
     this.material = material;
+    setCurrentDurability(getMaximumDurability());
   }
   
   @Override
@@ -67,5 +68,9 @@ public abstract class Item extends VoxelOccupant {
   public boolean hasWorldUpdates() {
     return false;
   }
+  
+  // TODO item durability
+  @Override
+  public int getMaximumDurability() { return 1; }
 
 }

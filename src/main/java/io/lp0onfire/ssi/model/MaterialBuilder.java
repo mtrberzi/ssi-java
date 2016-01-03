@@ -30,9 +30,19 @@ public class MaterialBuilder {
     this.numberOfSmeltedBars = i;
   }
   
+  private Double durabilityModifier = null;
+  public void setDurabilityModifier(double m) {
+    this.durabilityModifier = m;
+  }
+  
   private List<String> categories = new LinkedList<>();
   public void setCategories(List<String> categories) {
     this.categories = new LinkedList<String>(categories);
+  }
+  
+  private List<MiningProduct> miningProducts = new LinkedList<>();
+  public void setMiningProducts(List<MiningProduct> products) {
+    this.miningProducts = new LinkedList<MiningProduct>(products);
   }
   
   public Material build() {
@@ -50,8 +60,12 @@ public class MaterialBuilder {
         throw new IllegalArgumentException("must specify number of smelted bars");
       }
     }
-    return new Material(name, type,
-        canBeSmelted, smeltingTimesteps, numberOfSmeltedBars, categories);
+    if (durabilityModifier == null) {
+      throw new IllegalArgumentException("must specify durability modifier");
+    }
+    return new Material(name, type, durabilityModifier,
+        canBeSmelted, smeltingTimesteps, numberOfSmeltedBars, 
+        categories, miningProducts);
   }
   
 }

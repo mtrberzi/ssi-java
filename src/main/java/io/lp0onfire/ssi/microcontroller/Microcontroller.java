@@ -9,6 +9,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import io.lp0onfire.ssi.microcontroller.ELFImage.HeaderType;
 import io.lp0onfire.ssi.microcontroller.peripherals.InterruptController;
 import io.lp0onfire.ssi.microcontroller.peripherals.InventoryController;
+import io.lp0onfire.ssi.microcontroller.peripherals.MiningLaserController;
 import io.lp0onfire.ssi.microcontroller.peripherals.RAM;
 import io.lp0onfire.ssi.microcontroller.peripherals.ROM;
 
@@ -58,6 +59,10 @@ public class Microcontroller {
   
   public void attachInventoryController(InventoryController controller) {
     attachPeripheral(controller, 0x4A001000);
+  }
+  
+  public void attachMiningLaserController(MiningLaserController laserCtrl) {
+    attachPeripheral(laserCtrl, 0x4A002000);
   }
   
   public void registerInterrupt(InterruptSource source, int irq) {

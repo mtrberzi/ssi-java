@@ -94,6 +94,14 @@ public class ReactionLibrary {
           } else {
             throw new ParseException("materialCategoryConstraint must contain category attribute");
           }
+        } else if (constraint.getNodeName().equals("materialConstraint")) {
+          Node matName = constraint.getAttributes().getNamedItem("name");
+          if (matName != null) {
+            MaterialConstraint c = new MaterialConstraint(matName.getNodeValue());
+            results.add(c);
+          } else {
+            throw new ParseException("materialConstraint must contain name attribute");
+          }
         } else {
           throw new ParseException("unknown reactant constraint: " + constraint.toString());
         }

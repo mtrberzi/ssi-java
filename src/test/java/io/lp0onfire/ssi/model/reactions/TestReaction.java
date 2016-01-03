@@ -33,11 +33,13 @@ public class TestReaction {
     metalBuilder.setMaterialName("bogusite");
     metalBuilder.setType(0);
     metalBuilder.setCategories(Arrays.asList("metal"));
+    metalBuilder.setDurabilityModifier(1.0);
     metal = metalBuilder.build();
     
     MaterialBuilder nonMetalBuilder = new MaterialBuilder();
     nonMetalBuilder.setMaterialName("fakelite");
     nonMetalBuilder.setType(0);
+    nonMetalBuilder.setDurabilityModifier(1.0);
     nonmetal = nonMetalBuilder.build();
     
     ComponentBuilder cBuilder1 = new ComponentBuilder();

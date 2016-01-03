@@ -26,6 +26,9 @@ public class TransportTube extends VoxelOccupant implements TransportDevice {
     return 0;
   }
   
+  @Override
+  public int getMaximumDurability() { return 1; }
+  
   private TransportDevice connectionA = null;
   public TransportDevice getConnectionA() {
     return this.connectionA;

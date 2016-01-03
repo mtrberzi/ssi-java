@@ -28,16 +28,18 @@ public abstract class Machine extends VoxelOccupant {
     initializeManipulatorInterface();
     this.mcu = null;
     this.invController = null;
+    setCurrentDurability(getMaximumDurability());
   }
   
   public Machine(Microcontroller mcu) {
     initializeManipulatorInterface();
     this.mcu = mcu;
     this.invController = null;
+    setCurrentDurability(getMaximumDurability());
   }
   
   private Microcontroller mcu;
-  protected Microcontroller getMCU() {
+  public Microcontroller getMCU() {
     return this.mcu;
   }
   
@@ -78,6 +80,10 @@ public abstract class Machine extends VoxelOccupant {
   public short getKind() {
     return (short)3;
   }
+  
+  // TODO machine durability
+  @Override
+  public int getMaximumDurability() { return 1; }
   
   // inventory controller interface
   private void initializeManipulatorInterface() {
