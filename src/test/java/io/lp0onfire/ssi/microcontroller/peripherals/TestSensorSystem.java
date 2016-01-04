@@ -132,7 +132,6 @@ public class TestSensorSystem {
   // returns: a non-null ByteBuffer corresponding to the scan response,
   // iff the scan completed successfully
   private ByteBuffer performScan(ByteBuffer queryBuffer, int responseBufferAddress, int cycleTimeout) {
-    System.err.println();
     try {
       queryBuffer.position(0);
       // write the entire query buffer into RAM
